@@ -232,7 +232,7 @@ if __name__ == "__main__":
     bench = KatibBenchmark(1,1,resources={
         # "dockerUserLogin":"",
         # "dockerUserPassword":"",
-        # "studyName":"jprd1"
+        # "studyName":""
         "jobs_Count":20,
         "workerCount":20
         })
@@ -241,60 +241,5 @@ if __name__ == "__main__":
     bench.run()
     bench.collect_run_results()
 
-   # bench.setup()
-    #bench.run()
-      #  deploy()   
-      #    try:
-    #bench.collect_run_results() config.load_kube_config() group="kubeflow.org", version="v1beta1", namespace="kubeflow",
-        # get the cluster scoped resource
-    # bench.collect_run_results()
-    # config.load_kube_config()
-    # api = client.CustomObjectsApi()
-    # resource = api.get_namespaced_custom_object_status(
-    #             group="kubeflow.org",
-    #             version="v1beta1",
-    #             namespace="kubeflow",
-    #             name="katib-study-17",
-    #             plural="experiments",
-    #         )
-    # print(resource) 
-# print(resource["status"]["currentOptimalTrial"
-    # bench.run()
-    # api = client.CustomObjectsApi()
 
-    # it's my custom resource defined as Dict
-    # my_resource = {
-    #     "apiVersion": "stable.example.com/v1",
-    #     "kind": "CronTab",
-    #     "metadata": {"name": "my-new-cron-object2"},
-    #     "spec": {
-    #         "cronSpec": "* * * * */5",
-    #         "image": "my-awesome-cron-image"
-    #     }
-    # }
-
-    # patch to update the `spec.cronSpec` field
-    # patch_body = {
-    #     "spec": {"cronSpec": "* * * * */10", "image": "my-awesome-cron-image"}
-    # }
-
-    # create the resource
-    # try:
-    #     res = api.create_namespaced_custom_object(
-    #         group="stable.example.com",
-    #         version="v1",
-    #         namespace="default",
-    #         plural="crontabs",
-    #         body=my_resource,
-    #     )
-    #     print(res)
-    #     print("Resource created")
-    # except ApiException as e:
-    #     print("Exception when calling CustomObjectsApi->create_cluster_custom_object: %s\n" % e)
-    
-    # bench.run()
-    
-
-
-     
 
