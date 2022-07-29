@@ -1,0 +1,21 @@
+version: 1.1
+kind: operation
+name: $study_name
+matrix:
+  kind: grid
+  numRuns: $jobs_num
+  concurrency: $worker_num
+  params:
+    lr:
+      kind: logspace
+      value: 0.01:0.1:$jobs_num
+component:
+  inputs:
+    - name: lr
+      type: float
+  run:
+    kind: job
+    container:
+      image: $worker_image
+      command: [python3, /opt/mnist_task/task.py]
+      args: ["--batch-size=64", "--lr={{ lr }}"]

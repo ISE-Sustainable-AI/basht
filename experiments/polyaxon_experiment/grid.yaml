@@ -1,0 +1,21 @@
+version: 1.1
+kind: operation
+name: polyaxon-study-52
+matrix:
+  kind: grid
+  numRuns: 22
+  concurrency: 20
+  params:
+    lr:
+      kind: logspace
+      value: 0.01:0.1:22
+component:
+  inputs:
+    - name: lr
+      type: float
+  run:
+    kind: job
+    container:
+      image: witja46/mnist_polyaxon:latest
+      command: [python3, /opt/mnist_task/task.py]
+      args: ["--batch-size=64", "--lr={{ lr }}"]

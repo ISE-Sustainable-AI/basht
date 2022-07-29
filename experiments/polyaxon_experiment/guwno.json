@@ -1,0 +1,2233 @@
+{
+  "kind": "PodList",
+  "apiVersion": "v1",
+  "metadata": {
+    "resourceVersion": "1317"
+  },
+  "items": [
+    {
+      "metadata": {
+        "name": "polyaxon-polyaxon-api-684578b67d-l5cpv",
+        "generateName": "polyaxon-polyaxon-api-684578b67d-",
+        "namespace": "polyaxon",
+        "uid": "735a18b9-e653-4d82-bcad-5b1b9e24107f",
+        "resourceVersion": "915",
+        "creationTimestamp": "2022-07-29T08:03:04Z",
+        "labels": {
+          "app.kubernetes.io/component": "polyaxon-api",
+          "app.kubernetes.io/instance": "polyaxon-1.18.2",
+          "app.kubernetes.io/managed-by": "helm",
+          "app.kubernetes.io/name": "polyaxon-polyaxon-api",
+          "app.kubernetes.io/part-of": "polyaxon-core",
+          "app.kubernetes.io/version": "1.18.2",
+          "heritage": "Helm",
+          "pod-template-hash": "684578b67d",
+          "release": "polyaxon"
+        },
+        "annotations": {
+          "chart": "polyaxon-1.18.2",
+          "checksum/common-config": "4e90a4f210f6440c30e5f73881012839a311e31b21c0d2b85473524fdf1cdcff",
+          "checksum/platform-config": "249ec79b7367ba2addcc2d3067d9c937a74dccf7d451aac546ef7cab4a331220",
+          "checksum/platform-secrets": "2db60ad10495b57135ecfbdf22bf903c2dd1782ef68b4a6afa4f08282572bf89",
+          "checksum/proxies-config": "c778b2a985a5ffd08ed7e3d85f5dae264083f2d0525ef23921336d219f48ef3b"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "ReplicaSet",
+            "name": "polyaxon-polyaxon-api-684578b67d",
+            "uid": "04fb6e5f-0cdb-496e-a872-55b58077854d",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ],
+        "managedFields": [
+          {
+            "manager": "kube-controller-manager",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2022-07-29T08:03:04Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:metadata": {
+                "f:annotations": {
+                  ".": {},
+                  "f:chart": {},
+                  "f:checksum/common-config": {},
+                  "f:checksum/platform-config": {},
+                  "f:checksum/platform-secrets": {},
+                  "f:checksum/proxies-config": {}
+                },
+                "f:generateName": {},
+                "f:labels": {
+                  ".": {},
+                  "f:app.kubernetes.io/component": {},
+                  "f:app.kubernetes.io/instance": {},
+                  "f:app.kubernetes.io/managed-by": {},
+                  "f:app.kubernetes.io/name": {},
+                  "f:app.kubernetes.io/part-of": {},
+                  "f:app.kubernetes.io/version": {},
+                  "f:heritage": {},
+                  "f:pod-template-hash": {},
+                  "f:release": {}
+                },
+                "f:ownerReferences": {
+                  ".": {},
+                  "k:{\"uid\":\"04fb6e5f-0cdb-496e-a872-55b58077854d\"}": {}
+                }
+              },
+              "f:spec": {
+                "f:affinity": {
+                  ".": {},
+                  "f:podAffinity": {
+                    ".": {},
+                    "f:preferredDuringSchedulingIgnoredDuringExecution": {}
+                  }
+                },
+                "f:containers": {
+                  "k:{\"name\":\"polyaxon-api\"}": {
+                    ".": {},
+                    "f:env": {
+                      ".": {},
+                      "k:{\"name\":\"POLYAXON_DB_PASSWORD\"}": {
+                        ".": {},
+                        "f:name": {},
+                        "f:valueFrom": {
+                          ".": {},
+                          "f:secretKeyRef": {}
+                        }
+                      }
+                    },
+                    "f:envFrom": {},
+                    "f:image": {},
+                    "f:imagePullPolicy": {},
+                    "f:livenessProbe": {
+                      ".": {},
+                      "f:failureThreshold": {},
+                      "f:httpGet": {
+                        ".": {},
+                        "f:path": {},
+                        "f:port": {},
+                        "f:scheme": {}
+                      },
+                      "f:initialDelaySeconds": {},
+                      "f:periodSeconds": {},
+                      "f:successThreshold": {},
+                      "f:timeoutSeconds": {}
+                    },
+                    "f:name": {},
+                    "f:ports": {
+                      ".": {},
+                      "k:{\"containerPort\":8000,\"protocol\":\"TCP\"}": {
+                        ".": {},
+                        "f:containerPort": {},
+                        "f:protocol": {}
+                      }
+                    },
+                    "f:readinessProbe": {
+                      ".": {},
+                      "f:failureThreshold": {},
+                      "f:httpGet": {
+                        ".": {},
+                        "f:path": {},
+                        "f:port": {},
+                        "f:scheme": {}
+                      },
+                      "f:initialDelaySeconds": {},
+                      "f:periodSeconds": {},
+                      "f:successThreshold": {},
+                      "f:timeoutSeconds": {}
+                    },
+                    "f:resources": {
+                      ".": {},
+                      "f:requests": {
+                        ".": {},
+                        "f:cpu": {},
+                        "f:memory": {}
+                      }
+                    },
+                    "f:terminationMessagePath": {},
+                    "f:terminationMessagePolicy": {}
+                  }
+                },
+                "f:dnsPolicy": {},
+                "f:enableServiceLinks": {},
+                "f:restartPolicy": {},
+                "f:schedulerName": {},
+                "f:securityContext": {},
+                "f:serviceAccount": {},
+                "f:serviceAccountName": {},
+                "f:terminationGracePeriodSeconds": {}
+              }
+            }
+          },
+          {
+            "manager": "Go-http-client",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2022-07-29T08:04:34Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:status": {
+                "f:conditions": {
+                  "k:{\"type\":\"ContainersReady\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  },
+                  "k:{\"type\":\"Initialized\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  },
+                  "k:{\"type\":\"Ready\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  }
+                },
+                "f:containerStatuses": {},
+                "f:hostIP": {},
+                "f:phase": {},
+                "f:podIP": {},
+                "f:podIPs": {
+                  ".": {},
+                  "k:{\"ip\":\"172.17.0.3\"}": {
+                    ".": {},
+                    "f:ip": {}
+                  }
+                },
+                "f:startTime": {}
+              }
+            },
+            "subresource": "status"
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "kube-api-access-q2vgv",
+            "projected": {
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "name": "kube-root-ca.crt",
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "path": "namespace",
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "polyaxon-api",
+            "image": "polyaxon/polyaxon-api:1.18.2",
+            "ports": [
+              {
+                "containerPort": 8000,
+                "protocol": "TCP"
+              }
+            ],
+            "envFrom": [
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-config"
+                }
+              },
+              {
+                "secretRef": {
+                  "name": "polyaxon-polyaxon-platform-secret"
+                }
+              },
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-platform-config"
+                }
+              },
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-agent-config"
+                }
+              },
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-proxies-config"
+                }
+              }
+            ],
+            "env": [
+              {
+                "name": "POLYAXON_DB_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "polyaxon-postgresql",
+                    "key": "postgresql-password"
+                  }
+                }
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "128m",
+                "memory": "300Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "kube-api-access-q2vgv",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/healthz/",
+                "port": 8000,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 60,
+              "timeoutSeconds": 4,
+              "periodSeconds": 30,
+              "successThreshold": 1,
+              "failureThreshold": 10
+            },
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/healthz/",
+                "port": 8000,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 60,
+              "timeoutSeconds": 4,
+              "periodSeconds": 30,
+              "successThreshold": 1,
+              "failureThreshold": 10
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent"
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "polyaxon-polyaxon-agent-sa",
+        "serviceAccount": "polyaxon-polyaxon-agent-sa",
+        "nodeName": "minikube",
+        "securityContext": {},
+        "affinity": {
+          "podAffinity": {
+            "preferredDuringSchedulingIgnoredDuringExecution": [
+              {
+                "weight": 100,
+                "podAffinityTerm": {
+                  "labelSelector": {
+                    "matchExpressions": [
+                      {
+                        "key": "type",
+                        "operator": "In",
+                        "values": ["polyaxon-core"]
+                      }
+                    ]
+                  },
+                  "topologyKey": "kubernetes.io/hostname"
+                }
+              }
+            ]
+          }
+        },
+        "schedulerName": "default-scheduler",
+        "tolerations": [
+          {
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          },
+          {
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          }
+        ],
+        "priority": 0,
+        "enableServiceLinks": true,
+        "preemptionPolicy": "PreemptLowerPriority"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:04Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:04:34Z"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:04:34Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:04Z"
+          }
+        ],
+        "hostIP": "172.26.47.178",
+        "podIP": "172.17.0.3",
+        "podIPs": [
+          {
+            "ip": "172.17.0.3"
+          }
+        ],
+        "startTime": "2022-07-29T08:03:04Z",
+        "containerStatuses": [
+          {
+            "name": "polyaxon-api",
+            "state": {
+              "running": {
+                "startedAt": "2022-07-29T08:03:19Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "polyaxon/polyaxon-api:1.18.2",
+            "imageID": "docker-pullable://polyaxon/polyaxon-api@sha256:8d98071b62e40aa9880b1772a793fdf8aa8528fead08fc975628d3e0d4e25829",
+            "containerID": "docker://7257578ee8209ecb9294dd1d3d194776667ae413d2da02d4999d1d95b48dab34",
+            "started": true
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    },
+    {
+      "metadata": {
+        "name": "polyaxon-polyaxon-gateway-68b67d8cb8-dkf4k",
+        "generateName": "polyaxon-polyaxon-gateway-68b67d8cb8-",
+        "namespace": "polyaxon",
+        "uid": "05a975ae-7ff2-405a-876d-efd9c15c3c68",
+        "resourceVersion": "839",
+        "creationTimestamp": "2022-07-29T08:03:04Z",
+        "labels": {
+          "app.kubernetes.io/component": "polyaxon-api",
+          "app.kubernetes.io/instance": "polyaxon-1.18.2",
+          "app.kubernetes.io/managed-by": "helm",
+          "app.kubernetes.io/name": "polyaxon-polyaxon-gateway",
+          "app.kubernetes.io/part-of": "polyaxon-core",
+          "app.kubernetes.io/version": "1.18.2",
+          "heritage": "Helm",
+          "pod-template-hash": "68b67d8cb8",
+          "release": "polyaxon"
+        },
+        "annotations": {
+          "chart": "polyaxon-1.18.2",
+          "checksum/common-config": "4e90a4f210f6440c30e5f73881012839a311e31b21c0d2b85473524fdf1cdcff",
+          "checksum/proxies-config": "c778b2a985a5ffd08ed7e3d85f5dae264083f2d0525ef23921336d219f48ef3b"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "ReplicaSet",
+            "name": "polyaxon-polyaxon-gateway-68b67d8cb8",
+            "uid": "8c2935fa-0a66-419a-83af-6313dc07f693",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ],
+        "managedFields": [
+          {
+            "manager": "kube-controller-manager",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2022-07-29T08:03:04Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:metadata": {
+                "f:annotations": {
+                  ".": {},
+                  "f:chart": {},
+                  "f:checksum/common-config": {},
+                  "f:checksum/proxies-config": {}
+                },
+                "f:generateName": {},
+                "f:labels": {
+                  ".": {},
+                  "f:app.kubernetes.io/component": {},
+                  "f:app.kubernetes.io/instance": {},
+                  "f:app.kubernetes.io/managed-by": {},
+                  "f:app.kubernetes.io/name": {},
+                  "f:app.kubernetes.io/part-of": {},
+                  "f:app.kubernetes.io/version": {},
+                  "f:heritage": {},
+                  "f:pod-template-hash": {},
+                  "f:release": {}
+                },
+                "f:ownerReferences": {
+                  ".": {},
+                  "k:{\"uid\":\"8c2935fa-0a66-419a-83af-6313dc07f693\"}": {}
+                }
+              },
+              "f:spec": {
+                "f:affinity": {
+                  ".": {},
+                  "f:podAffinity": {
+                    ".": {},
+                    "f:preferredDuringSchedulingIgnoredDuringExecution": {}
+                  }
+                },
+                "f:containers": {
+                  "k:{\"name\":\"polyaxon-gateway\"}": {
+                    ".": {},
+                    "f:envFrom": {},
+                    "f:image": {},
+                    "f:imagePullPolicy": {},
+                    "f:livenessProbe": {
+                      ".": {},
+                      "f:failureThreshold": {},
+                      "f:httpGet": {
+                        ".": {},
+                        "f:path": {},
+                        "f:port": {},
+                        "f:scheme": {}
+                      },
+                      "f:initialDelaySeconds": {},
+                      "f:periodSeconds": {},
+                      "f:successThreshold": {},
+                      "f:timeoutSeconds": {}
+                    },
+                    "f:name": {},
+                    "f:ports": {
+                      ".": {},
+                      "k:{\"containerPort\":8000,\"protocol\":\"TCP\"}": {
+                        ".": {},
+                        "f:containerPort": {},
+                        "f:protocol": {}
+                      }
+                    },
+                    "f:readinessProbe": {
+                      ".": {},
+                      "f:failureThreshold": {},
+                      "f:httpGet": {
+                        ".": {},
+                        "f:path": {},
+                        "f:port": {},
+                        "f:scheme": {}
+                      },
+                      "f:initialDelaySeconds": {},
+                      "f:periodSeconds": {},
+                      "f:successThreshold": {},
+                      "f:timeoutSeconds": {}
+                    },
+                    "f:resources": {
+                      ".": {},
+                      "f:requests": {
+                        ".": {},
+                        "f:cpu": {},
+                        "f:memory": {}
+                      }
+                    },
+                    "f:terminationMessagePath": {},
+                    "f:terminationMessagePolicy": {}
+                  }
+                },
+                "f:dnsPolicy": {},
+                "f:enableServiceLinks": {},
+                "f:restartPolicy": {},
+                "f:schedulerName": {},
+                "f:securityContext": {},
+                "f:terminationGracePeriodSeconds": {}
+              }
+            }
+          },
+          {
+            "manager": "Go-http-client",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2022-07-29T08:04:04Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:status": {
+                "f:conditions": {
+                  "k:{\"type\":\"ContainersReady\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  },
+                  "k:{\"type\":\"Initialized\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  },
+                  "k:{\"type\":\"Ready\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  }
+                },
+                "f:containerStatuses": {},
+                "f:hostIP": {},
+                "f:phase": {},
+                "f:podIP": {},
+                "f:podIPs": {
+                  ".": {},
+                  "k:{\"ip\":\"172.17.0.5\"}": {
+                    ".": {},
+                    "f:ip": {}
+                  }
+                },
+                "f:startTime": {}
+              }
+            },
+            "subresource": "status"
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "kube-api-access-57mt2",
+            "projected": {
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "name": "kube-root-ca.crt",
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "path": "namespace",
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "polyaxon-gateway",
+            "image": "polyaxon/polyaxon-gateway:1.18.2",
+            "ports": [
+              {
+                "containerPort": 8000,
+                "protocol": "TCP"
+              }
+            ],
+            "envFrom": [
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-config"
+                }
+              },
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-proxies-config"
+                }
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "50Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "kube-api-access-57mt2",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/healthz/",
+                "port": 8000,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 20,
+              "timeoutSeconds": 2,
+              "periodSeconds": 30,
+              "successThreshold": 1,
+              "failureThreshold": 10
+            },
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/healthz/",
+                "port": 8000,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 20,
+              "timeoutSeconds": 2,
+              "periodSeconds": 30,
+              "successThreshold": 1,
+              "failureThreshold": 10
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent"
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "default",
+        "serviceAccount": "default",
+        "nodeName": "minikube",
+        "securityContext": {},
+        "affinity": {
+          "podAffinity": {
+            "preferredDuringSchedulingIgnoredDuringExecution": [
+              {
+                "weight": 100,
+                "podAffinityTerm": {
+                  "labelSelector": {
+                    "matchExpressions": [
+                      {
+                        "key": "type",
+                        "operator": "In",
+                        "values": ["polyaxon-core"]
+                      }
+                    ]
+                  },
+                  "topologyKey": "kubernetes.io/hostname"
+                }
+              }
+            ]
+          }
+        },
+        "schedulerName": "default-scheduler",
+        "tolerations": [
+          {
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          },
+          {
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          }
+        ],
+        "priority": 0,
+        "enableServiceLinks": true,
+        "preemptionPolicy": "PreemptLowerPriority"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:04Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:04:04Z"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:04:04Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:04Z"
+          }
+        ],
+        "hostIP": "172.26.47.178",
+        "podIP": "172.17.0.5",
+        "podIPs": [
+          {
+            "ip": "172.17.0.5"
+          }
+        ],
+        "startTime": "2022-07-29T08:03:04Z",
+        "containerStatuses": [
+          {
+            "name": "polyaxon-gateway",
+            "state": {
+              "running": {
+                "startedAt": "2022-07-29T08:03:38Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "polyaxon/polyaxon-gateway:1.18.2",
+            "imageID": "docker-pullable://polyaxon/polyaxon-gateway@sha256:524f499f9eeb0f83abb9c0ab40a0599d7327be953f90cccc3432d9c1c7cb2fd6",
+            "containerID": "docker://d5789912ccdd5bd4686db4418b2c4a6ca58ba0cf835c8b4dd6dcbc70c7ad53e2",
+            "started": true
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    },
+    {
+      "metadata": {
+        "name": "polyaxon-polyaxon-operator-7df7d846f-55dct",
+        "generateName": "polyaxon-polyaxon-operator-7df7d846f-",
+        "namespace": "polyaxon",
+        "uid": "ec047955-5896-4ea5-901f-cda1cc7e7ca5",
+        "resourceVersion": "737",
+        "creationTimestamp": "2022-07-29T08:03:04Z",
+        "labels": {
+          "app.kubernetes.io/component": "polyaxon-agent",
+          "app.kubernetes.io/instance": "polyaxon-1.18.2",
+          "app.kubernetes.io/managed-by": "helm",
+          "app.kubernetes.io/name": "polyaxon-polyaxon-operator",
+          "app.kubernetes.io/part-of": "polyaxon-core",
+          "app.kubernetes.io/version": "1.18.2",
+          "heritage": "Helm",
+          "pod-template-hash": "7df7d846f",
+          "release": "polyaxon"
+        },
+        "annotations": {
+          "chart": "polyaxon-1.18.2",
+          "checksum/agent-config": "81b20e3bbd0117cf1811be4160da7c4a25fa6484ba52bf76c3887b6feef1eb03",
+          "checksum/agent-secrets": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+          "checksum/common-config": "4e90a4f210f6440c30e5f73881012839a311e31b21c0d2b85473524fdf1cdcff",
+          "checksum/proxies-config": "c778b2a985a5ffd08ed7e3d85f5dae264083f2d0525ef23921336d219f48ef3b"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "ReplicaSet",
+            "name": "polyaxon-polyaxon-operator-7df7d846f",
+            "uid": "7816afd1-258a-485f-b4d9-936dbe9e27cf",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ],
+        "managedFields": [
+          {
+            "manager": "kube-controller-manager",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2022-07-29T08:03:04Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:metadata": {
+                "f:annotations": {
+                  ".": {},
+                  "f:chart": {},
+                  "f:checksum/agent-config": {},
+                  "f:checksum/agent-secrets": {},
+                  "f:checksum/common-config": {},
+                  "f:checksum/proxies-config": {}
+                },
+                "f:generateName": {},
+                "f:labels": {
+                  ".": {},
+                  "f:app.kubernetes.io/component": {},
+                  "f:app.kubernetes.io/instance": {},
+                  "f:app.kubernetes.io/managed-by": {},
+                  "f:app.kubernetes.io/name": {},
+                  "f:app.kubernetes.io/part-of": {},
+                  "f:app.kubernetes.io/version": {},
+                  "f:heritage": {},
+                  "f:pod-template-hash": {},
+                  "f:release": {}
+                },
+                "f:ownerReferences": {
+                  ".": {},
+                  "k:{\"uid\":\"7816afd1-258a-485f-b4d9-936dbe9e27cf\"}": {}
+                }
+              },
+              "f:spec": {
+                "f:affinity": {
+                  ".": {},
+                  "f:podAffinity": {
+                    ".": {},
+                    "f:preferredDuringSchedulingIgnoredDuringExecution": {}
+                  }
+                },
+                "f:containers": {
+                  "k:{\"name\":\"polyaxon-operator\"}": {
+                    ".": {},
+                    "f:command": {},
+                    "f:envFrom": {},
+                    "f:image": {},
+                    "f:imagePullPolicy": {},
+                    "f:name": {},
+                    "f:resources": {
+                      ".": {},
+                      "f:requests": {
+                        ".": {},
+                        "f:cpu": {},
+                        "f:memory": {}
+                      }
+                    },
+                    "f:terminationMessagePath": {},
+                    "f:terminationMessagePolicy": {}
+                  }
+                },
+                "f:dnsPolicy": {},
+                "f:enableServiceLinks": {},
+                "f:restartPolicy": {},
+                "f:schedulerName": {},
+                "f:securityContext": {},
+                "f:serviceAccount": {},
+                "f:serviceAccountName": {},
+                "f:terminationGracePeriodSeconds": {}
+              }
+            }
+          },
+          {
+            "manager": "Go-http-client",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2022-07-29T08:03:42Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:status": {
+                "f:conditions": {
+                  "k:{\"type\":\"ContainersReady\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  },
+                  "k:{\"type\":\"Initialized\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  },
+                  "k:{\"type\":\"Ready\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  }
+                },
+                "f:containerStatuses": {},
+                "f:hostIP": {},
+                "f:phase": {},
+                "f:podIP": {},
+                "f:podIPs": {
+                  ".": {},
+                  "k:{\"ip\":\"172.17.0.6\"}": {
+                    ".": {},
+                    "f:ip": {}
+                  }
+                },
+                "f:startTime": {}
+              }
+            },
+            "subresource": "status"
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "kube-api-access-7cfxc",
+            "projected": {
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "name": "kube-root-ca.crt",
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "path": "namespace",
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "polyaxon-operator",
+            "image": "polyaxon/polyaxon-operator:1.18.2",
+            "command": ["/manager"],
+            "envFrom": [
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-agent-config"
+                }
+              },
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-config"
+                }
+              },
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-proxies-config"
+                }
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "50Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "kube-api-access-7cfxc",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent"
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 10,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "polyaxon-polyaxon-operator-sa",
+        "serviceAccount": "polyaxon-polyaxon-operator-sa",
+        "nodeName": "minikube",
+        "securityContext": {},
+        "affinity": {
+          "podAffinity": {
+            "preferredDuringSchedulingIgnoredDuringExecution": [
+              {
+                "weight": 100,
+                "podAffinityTerm": {
+                  "labelSelector": {
+                    "matchExpressions": [
+                      {
+                        "key": "type",
+                        "operator": "In",
+                        "values": ["polyaxon-core"]
+                      }
+                    ]
+                  },
+                  "topologyKey": "kubernetes.io/hostname"
+                }
+              }
+            ]
+          }
+        },
+        "schedulerName": "default-scheduler",
+        "tolerations": [
+          {
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          },
+          {
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          }
+        ],
+        "priority": 0,
+        "enableServiceLinks": true,
+        "preemptionPolicy": "PreemptLowerPriority"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:04Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:42Z"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:42Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:04Z"
+          }
+        ],
+        "hostIP": "172.26.47.178",
+        "podIP": "172.17.0.6",
+        "podIPs": [
+          {
+            "ip": "172.17.0.6"
+          }
+        ],
+        "startTime": "2022-07-29T08:03:04Z",
+        "containerStatuses": [
+          {
+            "name": "polyaxon-operator",
+            "state": {
+              "running": {
+                "startedAt": "2022-07-29T08:03:42Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "polyaxon/polyaxon-operator:1.18.2",
+            "imageID": "docker-pullable://polyaxon/polyaxon-operator@sha256:260edb516a4e89e7fe10bbea86f2e66a296921d3a125a9e8f5595b4e36d68895",
+            "containerID": "docker://e30d86f192f129cd2e8e069ce4bf8a0921cc6d2ba25528691cb4bd05a66cc72a",
+            "started": true
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    },
+    {
+      "metadata": {
+        "name": "polyaxon-polyaxon-streams-d84468-nrldr",
+        "generateName": "polyaxon-polyaxon-streams-d84468-",
+        "namespace": "polyaxon",
+        "uid": "3222b482-54af-4dee-913f-50c83e4da24e",
+        "resourceVersion": "844",
+        "creationTimestamp": "2022-07-29T08:03:04Z",
+        "labels": {
+          "app.kubernetes.io/component": "polyaxon-api",
+          "app.kubernetes.io/instance": "polyaxon-1.18.2",
+          "app.kubernetes.io/managed-by": "helm",
+          "app.kubernetes.io/name": "polyaxon-polyaxon-streams",
+          "app.kubernetes.io/part-of": "polyaxon-core",
+          "app.kubernetes.io/version": "1.18.2",
+          "heritage": "Helm",
+          "pod-template-hash": "d84468",
+          "release": "polyaxon"
+        },
+        "annotations": {
+          "chart": "polyaxon-1.18.2",
+          "checksum/agent-config": "81b20e3bbd0117cf1811be4160da7c4a25fa6484ba52bf76c3887b6feef1eb03",
+          "checksum/agent-secrets": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+          "checksum/common-config": "4e90a4f210f6440c30e5f73881012839a311e31b21c0d2b85473524fdf1cdcff",
+          "checksum/proxies-config": "c778b2a985a5ffd08ed7e3d85f5dae264083f2d0525ef23921336d219f48ef3b"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "ReplicaSet",
+            "name": "polyaxon-polyaxon-streams-d84468",
+            "uid": "403164a6-2bfa-45f8-bf3f-c966ab75f370",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ],
+        "managedFields": [
+          {
+            "manager": "kube-controller-manager",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2022-07-29T08:03:04Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:metadata": {
+                "f:annotations": {
+                  ".": {},
+                  "f:chart": {},
+                  "f:checksum/agent-config": {},
+                  "f:checksum/agent-secrets": {},
+                  "f:checksum/common-config": {},
+                  "f:checksum/proxies-config": {}
+                },
+                "f:generateName": {},
+                "f:labels": {
+                  ".": {},
+                  "f:app.kubernetes.io/component": {},
+                  "f:app.kubernetes.io/instance": {},
+                  "f:app.kubernetes.io/managed-by": {},
+                  "f:app.kubernetes.io/name": {},
+                  "f:app.kubernetes.io/part-of": {},
+                  "f:app.kubernetes.io/version": {},
+                  "f:heritage": {},
+                  "f:pod-template-hash": {},
+                  "f:release": {}
+                },
+                "f:ownerReferences": {
+                  ".": {},
+                  "k:{\"uid\":\"403164a6-2bfa-45f8-bf3f-c966ab75f370\"}": {}
+                }
+              },
+              "f:spec": {
+                "f:affinity": {
+                  ".": {},
+                  "f:podAffinity": {
+                    ".": {},
+                    "f:preferredDuringSchedulingIgnoredDuringExecution": {}
+                  }
+                },
+                "f:containers": {
+                  "k:{\"name\":\"polyaxon-streams\"}": {
+                    ".": {},
+                    "f:envFrom": {},
+                    "f:image": {},
+                    "f:imagePullPolicy": {},
+                    "f:livenessProbe": {
+                      ".": {},
+                      "f:failureThreshold": {},
+                      "f:httpGet": {
+                        ".": {},
+                        "f:path": {},
+                        "f:port": {},
+                        "f:scheme": {}
+                      },
+                      "f:initialDelaySeconds": {},
+                      "f:periodSeconds": {},
+                      "f:successThreshold": {},
+                      "f:timeoutSeconds": {}
+                    },
+                    "f:name": {},
+                    "f:ports": {
+                      ".": {},
+                      "k:{\"containerPort\":8000,\"protocol\":\"TCP\"}": {
+                        ".": {},
+                        "f:containerPort": {},
+                        "f:protocol": {}
+                      }
+                    },
+                    "f:readinessProbe": {
+                      ".": {},
+                      "f:failureThreshold": {},
+                      "f:httpGet": {
+                        ".": {},
+                        "f:path": {},
+                        "f:port": {},
+                        "f:scheme": {}
+                      },
+                      "f:initialDelaySeconds": {},
+                      "f:periodSeconds": {},
+                      "f:successThreshold": {},
+                      "f:timeoutSeconds": {}
+                    },
+                    "f:resources": {
+                      ".": {},
+                      "f:requests": {
+                        ".": {},
+                        "f:cpu": {},
+                        "f:memory": {}
+                      }
+                    },
+                    "f:terminationMessagePath": {},
+                    "f:terminationMessagePolicy": {},
+                    "f:volumeMounts": {
+                      ".": {},
+                      "k:{\"mountPath\":\"/artifactsStore\"}": {
+                        ".": {},
+                        "f:mountPath": {},
+                        "f:name": {}
+                      }
+                    }
+                  }
+                },
+                "f:dnsPolicy": {},
+                "f:enableServiceLinks": {},
+                "f:restartPolicy": {},
+                "f:schedulerName": {},
+                "f:securityContext": {},
+                "f:serviceAccount": {},
+                "f:serviceAccountName": {},
+                "f:terminationGracePeriodSeconds": {},
+                "f:volumes": {
+                  ".": {},
+                  "k:{\"name\":\"default-artifacts-store\"}": {
+                    ".": {},
+                    "f:hostPath": {
+                      ".": {},
+                      "f:path": {},
+                      "f:type": {}
+                    },
+                    "f:name": {}
+                  }
+                }
+              }
+            }
+          },
+          {
+            "manager": "Go-http-client",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2022-07-29T08:04:04Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:status": {
+                "f:conditions": {
+                  "k:{\"type\":\"ContainersReady\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  },
+                  "k:{\"type\":\"Initialized\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  },
+                  "k:{\"type\":\"Ready\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  }
+                },
+                "f:containerStatuses": {},
+                "f:hostIP": {},
+                "f:phase": {},
+                "f:podIP": {},
+                "f:podIPs": {
+                  ".": {},
+                  "k:{\"ip\":\"172.17.0.4\"}": {
+                    ".": {},
+                    "f:ip": {}
+                  }
+                },
+                "f:startTime": {}
+              }
+            },
+            "subresource": "status"
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "default-artifacts-store",
+            "hostPath": {
+              "path": "/tmp/artifactsStore",
+              "type": ""
+            }
+          },
+          {
+            "name": "kube-api-access-x9xq4",
+            "projected": {
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "name": "kube-root-ca.crt",
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "path": "namespace",
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "polyaxon-streams",
+            "image": "polyaxon/polyaxon-streams:1.18.2",
+            "ports": [
+              {
+                "containerPort": 8000,
+                "protocol": "TCP"
+              }
+            ],
+            "envFrom": [
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-config"
+                }
+              },
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-agent-config"
+                }
+              },
+              {
+                "configMapRef": {
+                  "name": "polyaxon-polyaxon-proxies-config"
+                }
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "128m",
+                "memory": "300Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "default-artifacts-store",
+                "mountPath": "/artifactsStore"
+              },
+              {
+                "name": "kube-api-access-x9xq4",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/healthz/",
+                "port": 8000,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 20,
+              "timeoutSeconds": 2,
+              "periodSeconds": 30,
+              "successThreshold": 1,
+              "failureThreshold": 10
+            },
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/healthz/",
+                "port": 8000,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 20,
+              "timeoutSeconds": 2,
+              "periodSeconds": 30,
+              "successThreshold": 1,
+              "failureThreshold": 10
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent"
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "polyaxon-polyaxon-agent-sa",
+        "serviceAccount": "polyaxon-polyaxon-agent-sa",
+        "nodeName": "minikube",
+        "securityContext": {},
+        "affinity": {
+          "podAffinity": {
+            "preferredDuringSchedulingIgnoredDuringExecution": [
+              {
+                "weight": 100,
+                "podAffinityTerm": {
+                  "labelSelector": {
+                    "matchExpressions": [
+                      {
+                        "key": "type",
+                        "operator": "In",
+                        "values": ["polyaxon-core"]
+                      }
+                    ]
+                  },
+                  "topologyKey": "kubernetes.io/hostname"
+                }
+              }
+            ]
+          }
+        },
+        "schedulerName": "default-scheduler",
+        "tolerations": [
+          {
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          },
+          {
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          }
+        ],
+        "priority": 0,
+        "enableServiceLinks": true,
+        "preemptionPolicy": "PreemptLowerPriority"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:04Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:04:04Z"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:04:04Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:04Z"
+          }
+        ],
+        "hostIP": "172.26.47.178",
+        "podIP": "172.17.0.4",
+        "podIPs": [
+          {
+            "ip": "172.17.0.4"
+          }
+        ],
+        "startTime": "2022-07-29T08:03:04Z",
+        "containerStatuses": [
+          {
+            "name": "polyaxon-streams",
+            "state": {
+              "running": {
+                "startedAt": "2022-07-29T08:03:33Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "polyaxon/polyaxon-streams:1.18.2",
+            "imageID": "docker-pullable://polyaxon/polyaxon-streams@sha256:6b6b2fbbd0ea31a1d55ffb4f6c799771b6ff85f09b1ffe7212c1502b20482b90",
+            "containerID": "docker://16880859be6473318c302857dadbc4c1088a0476b8c45033fc6895597123a06c",
+            "started": true
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    },
+    {
+      "metadata": {
+        "name": "polyaxon-postgresql-0",
+        "generateName": "polyaxon-postgresql-",
+        "namespace": "polyaxon",
+        "uid": "f5b7c2c5-6e3b-4049-b0ed-a852f3af0504",
+        "resourceVersion": "849",
+        "creationTimestamp": "2022-07-29T08:03:04Z",
+        "labels": {
+          "app": "postgresql",
+          "chart": "postgresql-8.2.1",
+          "controller-revision-hash": "polyaxon-postgresql-7957b6cb6",
+          "heritage": "Helm",
+          "release": "polyaxon",
+          "role": "master",
+          "statefulset.kubernetes.io/pod-name": "polyaxon-postgresql-0"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "StatefulSet",
+            "name": "polyaxon-postgresql",
+            "uid": "d898e849-9a93-44c0-8b39-6a62a3c184e4",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ],
+        "managedFields": [
+          {
+            "manager": "kube-controller-manager",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2022-07-29T08:03:04Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:metadata": {
+                "f:generateName": {},
+                "f:labels": {
+                  ".": {},
+                  "f:app": {},
+                  "f:chart": {},
+                  "f:controller-revision-hash": {},
+                  "f:heritage": {},
+                  "f:release": {},
+                  "f:role": {},
+                  "f:statefulset.kubernetes.io/pod-name": {}
+                },
+                "f:ownerReferences": {
+                  ".": {},
+                  "k:{\"uid\":\"d898e849-9a93-44c0-8b39-6a62a3c184e4\"}": {}
+                }
+              },
+              "f:spec": {
+                "f:affinity": {
+                  ".": {},
+                  "f:podAffinity": {
+                    ".": {},
+                    "f:preferredDuringSchedulingIgnoredDuringExecution": {}
+                  }
+                },
+                "f:containers": {
+                  "k:{\"name\":\"polyaxon-postgresql\"}": {
+                    ".": {},
+                    "f:env": {
+                      ".": {},
+                      "k:{\"name\":\"BITNAMI_DEBUG\"}": {
+                        ".": {},
+                        "f:name": {},
+                        "f:value": {}
+                      },
+                      "k:{\"name\":\"PGDATA\"}": {
+                        ".": {},
+                        "f:name": {},
+                        "f:value": {}
+                      },
+                      "k:{\"name\":\"POSTGRESQL_ENABLE_LDAP\"}": {
+                        ".": {},
+                        "f:name": {},
+                        "f:value": {}
+                      },
+                      "k:{\"name\":\"POSTGRESQL_PORT_NUMBER\"}": {
+                        ".": {},
+                        "f:name": {},
+                        "f:value": {}
+                      },
+                      "k:{\"name\":\"POSTGRESQL_VOLUME_DIR\"}": {
+                        ".": {},
+                        "f:name": {},
+                        "f:value": {}
+                      },
+                      "k:{\"name\":\"POSTGRES_DB\"}": {
+                        ".": {},
+                        "f:name": {},
+                        "f:value": {}
+                      },
+                      "k:{\"name\":\"POSTGRES_PASSWORD\"}": {
+                        ".": {},
+                        "f:name": {},
+                        "f:valueFrom": {
+                          ".": {},
+                          "f:secretKeyRef": {}
+                        }
+                      },
+                      "k:{\"name\":\"POSTGRES_USER\"}": {
+                        ".": {},
+                        "f:name": {},
+                        "f:value": {}
+                      }
+                    },
+                    "f:image": {},
+                    "f:imagePullPolicy": {},
+                    "f:livenessProbe": {
+                      ".": {},
+                      "f:exec": {
+                        ".": {},
+                        "f:command": {}
+                      },
+                      "f:failureThreshold": {},
+                      "f:initialDelaySeconds": {},
+                      "f:periodSeconds": {},
+                      "f:successThreshold": {},
+                      "f:timeoutSeconds": {}
+                    },
+                    "f:name": {},
+                    "f:ports": {
+                      ".": {},
+                      "k:{\"containerPort\":5432,\"protocol\":\"TCP\"}": {
+                        ".": {},
+                        "f:containerPort": {},
+                        "f:name": {},
+                        "f:protocol": {}
+                      }
+                    },
+                    "f:readinessProbe": {
+                      ".": {},
+                      "f:exec": {
+                        ".": {},
+                        "f:command": {}
+                      },
+                      "f:failureThreshold": {},
+                      "f:initialDelaySeconds": {},
+                      "f:periodSeconds": {},
+                      "f:successThreshold": {},
+                      "f:timeoutSeconds": {}
+                    },
+                    "f:resources": {
+                      ".": {},
+                      "f:requests": {
+                        ".": {},
+                        "f:cpu": {},
+                        "f:memory": {}
+                      }
+                    },
+                    "f:securityContext": {
+                      ".": {},
+                      "f:runAsUser": {}
+                    },
+                    "f:terminationMessagePath": {},
+                    "f:terminationMessagePolicy": {},
+                    "f:volumeMounts": {
+                      ".": {},
+                      "k:{\"mountPath\":\"/dev/shm\"}": {
+                        ".": {},
+                        "f:mountPath": {},
+                        "f:name": {}
+                      }
+                    }
+                  }
+                },
+                "f:dnsPolicy": {},
+                "f:enableServiceLinks": {},
+                "f:hostname": {},
+                "f:initContainers": {
+                  ".": {},
+                  "k:{\"name\":\"init-chmod-data\"}": {
+                    ".": {},
+                    "f:command": {},
+                    "f:image": {},
+                    "f:imagePullPolicy": {},
+                    "f:name": {},
+                    "f:resources": {
+                      ".": {},
+                      "f:requests": {
+                        ".": {},
+                        "f:cpu": {},
+                        "f:memory": {}
+                      }
+                    },
+                    "f:securityContext": {
+                      ".": {},
+                      "f:runAsUser": {}
+                    },
+                    "f:terminationMessagePath": {},
+                    "f:terminationMessagePolicy": {},
+                    "f:volumeMounts": {
+                      ".": {},
+                      "k:{\"mountPath\":\"/bitnami/postgresql\"}": {
+                        ".": {},
+                        "f:mountPath": {},
+                        "f:name": {}
+                      },
+                      "k:{\"mountPath\":\"/dev/shm\"}": {
+                        ".": {},
+                        "f:mountPath": {},
+                        "f:name": {}
+                      }
+                    }
+                  }
+                },
+                "f:restartPolicy": {},
+                "f:schedulerName": {},
+                "f:securityContext": {
+                  ".": {},
+                  "f:fsGroup": {}
+                },
+                "f:subdomain": {},
+                "f:terminationGracePeriodSeconds": {},
+                "f:volumes": {
+                  ".": {},
+                  "k:{\"name\":\"data\"}": {
+                    ".": {},
+                    "f:emptyDir": {},
+                    "f:name": {}
+                  },
+                  "k:{\"name\":\"dshm\"}": {
+                    ".": {},
+                    "f:emptyDir": {
+                      ".": {},
+                      "f:medium": {},
+                      "f:sizeLimit": {}
+                    },
+                    "f:name": {}
+                  }
+                }
+              }
+            }
+          },
+          {
+            "manager": "Go-http-client",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2022-07-29T08:04:04Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:status": {
+                "f:conditions": {
+                  "k:{\"type\":\"ContainersReady\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  },
+                  "k:{\"type\":\"Initialized\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  },
+                  "k:{\"type\":\"Ready\"}": {
+                    ".": {},
+                    "f:lastProbeTime": {},
+                    "f:lastTransitionTime": {},
+                    "f:status": {},
+                    "f:type": {}
+                  }
+                },
+                "f:containerStatuses": {},
+                "f:hostIP": {},
+                "f:initContainerStatuses": {},
+                "f:phase": {},
+                "f:podIP": {},
+                "f:podIPs": {
+                  ".": {},
+                  "k:{\"ip\":\"172.17.0.7\"}": {
+                    ".": {},
+                    "f:ip": {}
+                  }
+                },
+                "f:startTime": {}
+              }
+            },
+            "subresource": "status"
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "dshm",
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "1Gi"
+            }
+          },
+          {
+            "name": "data",
+            "emptyDir": {}
+          },
+          {
+            "name": "kube-api-access-c6g22",
+            "projected": {
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "name": "kube-root-ca.crt",
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "path": "namespace",
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "defaultMode": 420
+            }
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "init-chmod-data",
+            "image": "docker.io/bitnami/minideb:stretch",
+            "command": [
+              "/bin/sh",
+              "-c",
+              "mkdir -p /bitnami/postgresql/data\nchmod 700 /bitnami/postgresql/data\nfind /bitnami/postgresql -mindepth 0 -maxdepth 1 -not -name \".snapshot\" -not -name \"lost+found\" | \\\n  xargs chown -R 1001:1001\nchmod -R 777 /dev/shm\n"
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "data",
+                "mountPath": "/bitnami/postgresql"
+              },
+              {
+                "name": "dshm",
+                "mountPath": "/dev/shm"
+              },
+              {
+                "name": "kube-api-access-c6g22",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "Always",
+            "securityContext": {
+              "runAsUser": 0
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "polyaxon-postgresql",
+            "image": "docker.io/bitnami/postgresql:11.6.0-debian-10-r5",
+            "ports": [
+              {
+                "name": "tcp-postgresql",
+                "containerPort": 5432,
+                "protocol": "TCP"
+              }
+            ],
+            "env": [
+              {
+                "name": "BITNAMI_DEBUG",
+                "value": "false"
+              },
+              {
+                "name": "POSTGRESQL_PORT_NUMBER",
+                "value": "5432"
+              },
+              {
+                "name": "POSTGRESQL_VOLUME_DIR",
+                "value": "/bitnami/postgresql"
+              },
+              {
+                "name": "PGDATA",
+                "value": "/bitnami/postgresql/data"
+              },
+              {
+                "name": "POSTGRES_USER",
+                "value": "polyaxon"
+              },
+              {
+                "name": "POSTGRES_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "polyaxon-postgresql",
+                    "key": "postgresql-password"
+                  }
+                }
+              },
+              {
+                "name": "POSTGRES_DB",
+                "value": "polyaxon"
+              },
+              {
+                "name": "POSTGRESQL_ENABLE_LDAP",
+                "value": "no"
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "dshm",
+                "mountPath": "/dev/shm"
+              },
+              {
+                "name": "kube-api-access-c6g22",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/bin/sh",
+                  "-c",
+                  "exec pg_isready -U \"polyaxon\" -d \"polyaxon\" -h 127.0.0.1 -p 5432"
+                ]
+              },
+              "initialDelaySeconds": 30,
+              "timeoutSeconds": 5,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "failureThreshold": 6
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/bin/sh",
+                  "-c",
+                  "-e",
+                  "exec pg_isready -U \"polyaxon\" -d \"polyaxon\" -h 127.0.0.1 -p 5432\n[ -f /opt/bitnami/postgresql/tmp/.initialized ] || [ -f /bitnami/postgresql/.initialized ]\n"
+                ]
+              },
+              "initialDelaySeconds": 5,
+              "timeoutSeconds": 5,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "failureThreshold": 6
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent",
+            "securityContext": {
+              "runAsUser": 1001
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "default",
+        "serviceAccount": "default",
+        "nodeName": "minikube",
+        "securityContext": {
+          "fsGroup": 1001
+        },
+        "hostname": "polyaxon-postgresql-0",
+        "subdomain": "polyaxon-postgresql-headless",
+        "affinity": {
+          "podAffinity": {
+            "preferredDuringSchedulingIgnoredDuringExecution": [
+              {
+                "weight": 100,
+                "podAffinityTerm": {
+                  "labelSelector": {
+                    "matchExpressions": [
+                      {
+                        "key": "type",
+                        "operator": "In",
+                        "values": ["polyaxon-core"]
+                      }
+                    ]
+                  },
+                  "topologyKey": "kubernetes.io/hostname"
+                }
+              }
+            ]
+          }
+        },
+        "schedulerName": "default-scheduler",
+        "tolerations": [
+          {
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          },
+          {
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          }
+        ],
+        "priority": 0,
+        "enableServiceLinks": true,
+        "preemptionPolicy": "PreemptLowerPriority"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:46Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:04:04Z"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:04:04Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-07-29T08:03:04Z"
+          }
+        ],
+        "hostIP": "172.26.47.178",
+        "podIP": "172.17.0.7",
+        "podIPs": [
+          {
+            "ip": "172.17.0.7"
+          }
+        ],
+        "startTime": "2022-07-29T08:03:04Z",
+        "initContainerStatuses": [
+          {
+            "name": "init-chmod-data",
+            "state": {
+              "terminated": {
+                "exitCode": 0,
+                "reason": "Completed",
+                "startedAt": "2022-07-29T08:03:46Z",
+                "finishedAt": "2022-07-29T08:03:46Z",
+                "containerID": "docker://b0cc134699f06488691884462f84e5487c3862bd740b611816c1c23e7019d6f5"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "bitnami/minideb:stretch",
+            "imageID": "docker-pullable://bitnami/minideb@sha256:a6f24bce85d037d47cc552635b0f0a3623472bbcf16b33711fb0fe4e6a34480f",
+            "containerID": "docker://b0cc134699f06488691884462f84e5487c3862bd740b611816c1c23e7019d6f5"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "name": "polyaxon-postgresql",
+            "state": {
+              "running": {
+                "startedAt": "2022-07-29T08:03:54Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "bitnami/postgresql:11.6.0-debian-10-r5",
+            "imageID": "docker-pullable://bitnami/postgresql@sha256:a50b4211f5ffd924ba826a88f48169c211fa7df59a053f5260996c2ea8539ca0",
+            "containerID": "docker://10d66a3e38b3b01e0e4e7caaa6a070e5ffbcc513074b256e69780d7440dc816a",
+            "started": true
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    }
+  ]
+}
