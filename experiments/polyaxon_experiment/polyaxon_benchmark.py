@@ -249,8 +249,8 @@ class PolyaxonBenchmark(Benchmark):
 if __name__ == "__main__":
     #main()
     bench = PolyaxonBenchmark(1,1,resources={
-        #  "dockerUserLogin":"witja46",
-        #  "dockerUserPassword":"J$rmakowicz1998",
+        #  "dockerUserLogin":"",
+        #  "dockerUserPassword":"",
         # "studyName":"jprd1"
         "jobsCount":22,
         "workerCount":20
