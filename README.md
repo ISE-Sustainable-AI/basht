@@ -34,7 +34,8 @@ For running the raytune example experiment add the following after the process a
 For all opther experiments, install the requirements.txt if present.
 ## Class Explanation
 
-![Class-Diagramm](./docs/classes.png)
+<!-- MARKDOWN-AUTO-DOCS:START (WORKFLOW_ARTIFACT_TABLE) -->
+<!-- MARKDOWN-AUTO-DOCS:END -->
 
 |Class|Description|
 |---|---|

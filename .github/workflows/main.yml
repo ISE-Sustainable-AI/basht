@@ -27,11 +27,11 @@ jobs:
         pip install -e .["test"]
     - name: create documentation
       run: pyreverse -o png ml_benchmark --output-directory docs
-    - name: store artifact
+    - name: class diagram
       uses: actions/upload-artifact@v3
       with:
         name: class-diagram
-        path: docs/classes.png
+        path: ${{ github.workspace }}/docs/classes.png
         if-no-files-found: warn
     - name: Test Package
       run: |
