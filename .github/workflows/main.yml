@@ -18,11 +18,15 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Setup graphviz
+      uses: ts-graphviz/setup-graphviz@v1
     - name: Install dependencies
       run: |
         pip install torch==1.11.0 torchvision==0.12.0
+        pip install pylint
         pip install -e .["test"]
     - name: Test Package
       run: |
         pytest --cov=ml_benchmark test/
+        pyreverse -o png ml_benchmark --output-directory docs
         echo $GITHUB_REF

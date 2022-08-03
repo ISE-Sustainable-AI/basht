@@ -34,11 +34,15 @@ For running the raytune example experiment add the following after the process a
 For all opther experiments, install the requirements.txt if present.
 ## Class Explanation
 
+![Class-Diagramm](./docs/classes.png)
+
 |Class|Description|
 |---|---|
 |MNISTTask|Use it to get the Data for the Model. Please do not change its configuration|
 |MLPObjective|The Job that needs to be executed. Adjustments should not be neccessary.|
 |MLP|The model that is trained over the MNIST Task.|
+
+
 
 
 # Benchmark Methodolegy
