@@ -25,8 +25,14 @@ jobs:
         pip install torch==1.11.0 torchvision==0.12.0
         pip install pylint
         pip install -e .["test"]
+    - name: create documentation
+      run: pyreverse -o png ml_benchmark --output-directory docs
+      uses: actions/upload-artifact@v3
+      with:
+        name: class-diagram
+        path: docs/classes.png
+        if-no-files-found: warn
     - name: Test Package
       run: |
         pytest --cov=ml_benchmark test/
-        pyreverse -o png ml_benchmark --output-directory docs
         echo $GITHUB_REF
