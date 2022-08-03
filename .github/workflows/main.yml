@@ -27,6 +27,7 @@ jobs:
         pip install -e .["test"]
     - name: create documentation
       run: pyreverse -o png ml_benchmark --output-directory docs
+    - name: store artifact
       uses: actions/upload-artifact@v3
       with:
         name: class-diagram
