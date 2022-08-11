@@ -37,6 +37,10 @@ spec:
             #  path: /ray-dshm
             emptyDir: 
               medium: Memory
+          - name: ray-results
+            nfs:
+              server: $nfs_server
+              path: $nfs_path
           containers:
           - name: ray-node
             #imagePullPolicy: Always
@@ -60,10 +64,12 @@ spec:
             volumeMounts:
             - mountPath: /dev/shm
               name: dshm
+            - mountPath: /home/ray/ray-results
+              name: ray-results
             resources:
               requests:
                 cpu: 1
-                memory: 2Gi
+                memory: 1Gi
               limits:
                 cpu: 1
                 # The maximum memory that this pod is allowed to use. The
@@ -73,7 +79,7 @@ spec:
                 # the object store size is not set manually, ray will
                 # allocate a very large object store in each pod that may
                 # cause problems for other pods.
-                memory: 2Gi
+                memory: 1Gi
     - name: rayWorkerType
       minWorkers: $worker_num
       maxWorkers: $worker_num
@@ -94,6 +100,10 @@ spec:
             #  path: /ray-dshm
             emptyDir: #{}
               medium: Memory
+          - name: ray-results
+            nfs:
+              server: $nfs_server
+              path: $nfs_path
           containers:
           - name: ray-node
             #imagePullPolicy: Always
@@ -119,10 +129,12 @@ spec:
             volumeMounts:
             - mountPath: /dev/shm
               name: dshm
+            - mountPath: /home/ray/ray-results
+              name: ray-results
             resources:
               requests:
                 cpu: 1
-                memory: 750Mi
+                memory: 1Gi
               limits:
                 cpu: 1
                 # The maximum memory that this pod is allowed to use. The
@@ -132,7 +144,7 @@ spec:
                 # the object store size is not set manually, ray will
                 # allocate a very large object store in each pod that may
                 # cause problems for other pods.
-                memory: 750Mi
+                memory: 1Gi
   # Commands to start Ray on the head node. You don't need to change this.
   # Note dashboard-host is set to 0.0.0.0 so that Kubernetes can port forward.
   headStartRayCommands:
