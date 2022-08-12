@@ -6,6 +6,7 @@ import libtmux
 
 import ray
 from ray import tune
+from ray.job_submission import JobSubmissionClient, JobStatus
 
 from kubernetes import client, config, watch
 from kubernetes.client import ApiException
@@ -24,11 +25,9 @@ class RaytuneBenchmark(Benchmark):
         self.workerCpu = resources.get("workerCpu", 1)
         self.workerMemory = resources.get("workerMem", 1)
         self.workerCount = resources.get("workerCount", 1)
-        self.metrics_ip = resources.get("metricsIP")
-
-        # TMUX session for ray cluster port forward
-        self.ray_pf_tmux_session = libtmux.Server().find_where({"session_name": "ray-pf"})
-        self.ray_pf_tmux_window = self.ray_pf_tmux_session.new_window(attach=False, window_name="ray-pf")
+        self.metricsIP = resources.get("metricsIP")
+        self.nfsServer = resources.get("nfsServer")
+        self.nfsPath = resources.get("nfsPath")
 
         # K8s setup
         config.load_kube_config()
@@ -42,14 +41,14 @@ class RaytuneBenchmark(Benchmark):
         while True:
             curr_report_t = time.time()
             if last_report_t is None or (curr_report_t - last_report_t > 5):
-                subprocess.run(["kubectl", "-n", self.namespace, "get", "pod"])
                 print("\n")
+                subprocess.run(["kubectl", "-n", self.namespace, "get", "pod"])
                 last_report_t = curr_report_t 
             resp = self.k8s_core_v1_api.list_namespaced_pod(self.namespace)
             pods = resp.items
             ray_controller_pods = [ pod for pod in pods if ("ray-operator" in pod.metadata.name) or ("ray-cluster-ray-head-type" in pod.metadata.name)]
             ray_worker_pods = [ pod for pod in pods if "ray-cluster-ray-worker-type" in pod.metadata.name ]
-            if len(ray_controller_pods) != 2 or len(ray_worker_pods) != self.workerCount:
+            if len(ray_controller_pods) < 2 or len(ray_worker_pods) < self.workerCount:
                 continue
             else:
                 running_ray_controller_pods = [ pod for pod in ray_controller_pods if pod.status.phase == "Running" ]
@@ -81,7 +80,9 @@ class RaytuneBenchmark(Benchmark):
             "worker_num": self.workerCount,
             "worker_cpu": self.workerCpu,
             "worker_mem": f"{self.workerMemory}Gi",
-            "metrics_ip": self.metrics_ip,
+            "metrics_ip": self.metricsIP,
+            "nfs_server": self.nfsServer,
+            "nfs_path": self.nfsPath,
             "RAY_HEAD_IP": "$RAY_HEAD_IP"
         }
 
@@ -103,56 +104,41 @@ class RaytuneBenchmark(Benchmark):
             raise e
 
         self._deploy_watch()
-        
-
-
+    
     def setup(self):
-        # raycluster port forward
-        ray_pf_tmux_pane = self.ray_pf_tmux_window.panes[0];
-        ray_pf_tmux_pane.send_keys(f"kubectl -n {self.namespace} port-forward service/ray-cluster-ray-head 10001:10001")
-        
-        # init ray
-        ray.init("ray://127.0.0.1:10001")
+        with open("portforward_log.txt", 'w') as pf_log:
+            self.portforward_proc = subprocess.Popen(
+                ["kubectl", "-n", self.namespace, "port-forward", "service/ray-cluster-ray-head", "8265:8265"],
+                stdout=pf_log
+            )
+        time.sleep(2)
+
+    def _run_watch(self):
+        time.sleep(120)
+        while True:
+            status = self.ray_job_client.get_job_status(self.job_id)
+            print(f"Status: {status}")
+            with open("./log.txt", "w") as log_file:
+                log_file.write(self.ray_job_client.get_job_logs(self.job_id))
+            if status in {JobStatus.SUCCEEDED, JobStatus.STOPPED, JobStatus.FAILED}:
+                break
+            time.sleep(2)
 
     def run(self):
         """
             Executing the hyperparameter optimization on the deployed platfrom.
             use the metrics object to collect and store all measurments on the workers.
         """
-        def raytune_func(config):
-            """The function for training and validation, that is used for hyperparameter optimization.
-            Beware Ray Synchronisation: https://docs.ray.io/en/latest/tune/user-guide.html
-
-            Args:
-                config ([type]): [description]
-            """
-            objective = config.get("objective")
-            hyperparameters = config.get("hyperparameters")
-            objective.set_hyperparameters(hyperparameters)
-            # these are the results, that can be used for the hyperparameter search
-            objective.train()
-            validation_scores = objective.validate()
-            tune.report(
-                macro_f1_score=validation_scores["macro avg"]["f1-score"])
-
-        grid = dict(
-            input_size=28*28, learning_rate=tune.grid_search([1e-4]),
-            weight_decay=1e-6,
-            hidden_layer_config=tune.grid_search([[20], [10, 10]]),
-            output_size=10)
-        task = MnistTask(config_init={"epochs": 1})
-        self.analysis = tune.run(
-            raytune_func,
-            config=dict(
-                objective=task.create_objective(),
-                hyperparameters=grid,
-            ),
-            sync_config=tune.SyncConfig(
-                syncer=None  # Disable syncing
-            ),
-            local_dir="~/ray_results",
-            resources_per_trial={"cpu": self.workerCpu}
+        self.ray_job_client = JobSubmissionClient("http://127.0.0.1:8265")
+        self.job_id = self.ray_job_client.submit_job(
+            entrypoint="python script.py",
+            runtime_env={
+                "working_dir": "./tune-env"
+            }
         )
+
+        self._run_watch()
+        return
 
     def collect_run_results(self):
         return 
@@ -182,13 +168,13 @@ class RaytuneBenchmark(Benchmark):
 
         return results
     
-    def _undeploy_watch(self) -> None:
+    def _undeploy_watch(self):
         last_report_t = None
         while True:
             curr_report_t = time.time()
             if last_report_t is None or (curr_report_t - last_report_t > 5):
-                subprocess.run(["kubectl", "-n", self.namespace, "get", "pod"])
                 print("\n")
+                subprocess.run(["kubectl", "-n", self.namespace, "get", "pod"])
                 last_report_t = curr_report_t 
             resp = self.k8s_core_v1_api.list_namespaced_pod(self.namespace)
             pods = resp.items
@@ -229,22 +215,18 @@ class RaytuneBenchmark(Benchmark):
         
         self._undeploy_watch()
 
-        # delete port-forward tmux window
-        self.ray_pf_tmux_window.kill_window()
+        # terminate port-forward proc
+        self.portforward_proc.terminate()
 
 
 
 
 if __name__ == "__main__":
     from ml_benchmark.benchmark_runner import BenchmarkRunner
-
-    resource_definition = {
-        "kubernetesNamespace": "st-hpo",
-        "workerCpu": 1,
-        "workerMemory": 1,
-        "workerCount": 1,
-        "metricsIP": "192.168.0.101"
-    }
+    import json
+    
+    with open("resource_definition.json") as res_def_file:
+        resource_definition = json.load(res_def_file)
 
     runner = BenchmarkRunner(
         benchmark_cls=RaytuneBenchmark, resources=resource_definition)
