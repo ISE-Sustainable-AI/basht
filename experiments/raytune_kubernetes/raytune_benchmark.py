@@ -2,8 +2,6 @@ from os import path
 import subprocess
 import time
 
-import libtmux
-
 import ray
 from ray import tune
 from ray.job_submission import JobSubmissionClient, JobStatus
