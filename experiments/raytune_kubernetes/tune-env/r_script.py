@@ -1,8 +1,6 @@
-from ray import tune
 import ray
+from ray import tune
 from ml_benchmark.workload.mnist.mnist_task import MnistTask
-import socket
-
 
 grid = dict(
     input_size=28*28, learning_rate=tune.grid_search([1e-4]),
@@ -10,11 +8,12 @@ grid = dict(
     hidden_layer_config=tune.grid_search([[20], [10, 10]]),
     output_size=10)
 
-#task = MnistTask(config_init={"epochs": 1})
+task = MnistTask(config_init={"epochs": 1})
+
+ray.init("ray://127.0.0.1:10001")
 
 def raytune_func(config, checkpoint_dir=None):
-    import ray
-    objective = ray.get(config.get("objective"))
+    objective = config.get("objective")
     hyperparameters = config.get("hyperparameters")
     objective.set_hyperparameters(hyperparameters)
     # these are the results, that can be used for the hyperparameter search
@@ -24,20 +23,17 @@ def raytune_func(config, checkpoint_dir=None):
         macro_f1_score=validation_scores["macro avg"]["f1-score"])
 
 if __name__ == "__main__":
-    print(socket.gethostname())
-    task = MnistTask(config_init={"epochs": 1})
-    objective_ref = ray.put(task.create_objective())
     analysis = tune.run(
         raytune_func,
         config=dict(
-            objective=objective_ref,
+            objective=task.create_objective(),
             hyperparameters=grid,
         ),
         sync_config=tune.SyncConfig(
             syncer=None  # Disable syncing
         ),
         local_dir="/home/ray/ray-results",
-        resources_per_trial={"cpu": 1}
+        resources_per_trial={"cpu": 0.5}
     )
 
     print(analysis)

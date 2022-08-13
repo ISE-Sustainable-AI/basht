@@ -5,7 +5,7 @@ metadata:
   name: ray-cluster
 spec:
   # The maximum number of workers nodes to launch in addition to the head node.
-  maxWorkers: 2
+  maxWorkers: 3
   # The autoscaler will scale up the cluster faster with higher upscaling speed.
   # E.g., if the task requires adding more nodes then autoscaler will gradually
   # scale up the cluster in chunks of upscaling_speed*currently_running_nodes.
@@ -20,6 +20,8 @@ spec:
     - name: rayHeadType
       minWorkers: 0
       maxWorkers: 0
+      rayResources:
+        CPU: 0
       podConfig:
         apiVersion: v1
         kind: Pod
@@ -52,6 +54,8 @@ spec:
               env:
                 - name: RAY_gcs_server_rpc_server_thread_num
                   value: "1"
+                - name: "METRICS_STORAGE_HOST"
+                  value: "$metrics_ip"
               ports:
                 - containerPort: 6379 # Redis port for Ray <= 1.10.0. GCS server port for Ray >= 1.11.0.
                 - containerPort: 10001 # Used by Ray Client

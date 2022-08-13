@@ -62,10 +62,10 @@ spec:
               name: dshm
             resources:
               requests:
-                cpu: 1
-                memory: 2Gi
+                cpu: 2
+                memory: 8Gi
               limits:
-                cpu: 1
+                cpu: 2
                 # The maximum memory that this pod is allowed to use. The
                 # limit will be detected by ray and split to use 10% for
                 # redis, 30% for the shared memory object store, and the
@@ -73,7 +73,7 @@ spec:
                 # the object store size is not set manually, ray will
                 # allocate a very large object store in each pod that may
                 # cause problems for other pods.
-                memory: 2Gi
+                memory: 8Gi
     - name: rayWorkerType
       minWorkers: 1
       maxWorkers: 1
@@ -119,10 +119,10 @@ spec:
               name: dshm
             resources:
               requests:
-                cpu: 1
-                memory: 750Mi
+                cpu: 2
+                memory: 2Gi
               limits:
-                cpu: 1
+                cpu: 2
                 # The maximum memory that this pod is allowed to use. The
                 # limit will be detected by ray and split to use 10% for
                 # redis, 30% for the shared memory object store, and the
@@ -130,7 +130,7 @@ spec:
                 # the object store size is not set manually, ray will
                 # allocate a very large object store in each pod that may
                 # cause problems for other pods.
-                memory: 750Mi
+                memory: 2Gi
   # Commands to start Ray on the head node. You don't need to change this.
   # Note dashboard-host is set to 0.0.0.0 so that Kubernetes can port forward.
   headStartRayCommands:

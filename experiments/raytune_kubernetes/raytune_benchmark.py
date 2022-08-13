@@ -1,4 +1,5 @@
 from os import path
+import os
 import subprocess
 import time
 
@@ -21,7 +22,7 @@ class RaytuneBenchmark(Benchmark):
     def __init__(self, resources) -> None:
         self.namespace = resources.get("kubernetesNamespace", "st-hpo")
         self.workerCpu = resources.get("workerCpu", 1)
-        self.workerMemory = resources.get("workerMem", 1)
+        self.workerMemory = resources.get("workerMemory", 1)
         self.workerCount = resources.get("workerCount", 1)
         self.metricsIP = resources.get("metricsIP")
         self.nfsServer = resources.get("nfsServer")
@@ -106,36 +107,78 @@ class RaytuneBenchmark(Benchmark):
     def setup(self):
         with open("portforward_log.txt", 'w') as pf_log:
             self.portforward_proc = subprocess.Popen(
-                ["kubectl", "-n", self.namespace, "port-forward", "service/ray-cluster-ray-head", "8265:8265"],
+                ["kubectl", "-n", self.namespace, "port-forward", "service/ray-cluster-ray-head", "10001:10001"],
                 stdout=pf_log
             )
-        time.sleep(2)
+        ray.init("ray://localhost:10001")
 
-    def _run_watch(self):
-        time.sleep(120)
-        while True:
-            status = self.ray_job_client.get_job_status(self.job_id)
-            print(f"Status: {status}")
-            with open("./log.txt", "w") as log_file:
-                log_file.write(self.ray_job_client.get_job_logs(self.job_id))
-            if status in {JobStatus.SUCCEEDED, JobStatus.STOPPED, JobStatus.FAILED}:
-                break
-            time.sleep(2)
+    #def _run_watch(self):
+    #    while True:
+    #        status = self.ray_job_client.get_job_status(self.job_id)
+    #        print(f"Status: {status}")
+    #        with open("./log.txt", "w") as log_file:
+    #            log_file.write(self.ray_job_client.get_job_logs(self.job_id))
+    #        if status in {JobStatus.SUCCEEDED, JobStatus.STOPPED, JobStatus.FAILED}:
+    #            break
+    #        time.sleep(2)
 
     def run(self):
         """
             Executing the hyperparameter optimization on the deployed platfrom.
             use the metrics object to collect and store all measurments on the workers.
         """
-        self.ray_job_client = JobSubmissionClient("http://127.0.0.1:8265")
-        self.job_id = self.ray_job_client.submit_job(
-            entrypoint="python script.py",
-            runtime_env={
-                "working_dir": "./tune-env"
-            }
+        #self.ray_job_client = JobSubmissionClient("http://127.0.0.1:8265")
+        #self.job_id = self.ray_job_client.submit_job(
+        #    entrypoint="python script.py",
+        #    runtime_env={
+        #        "working_dir": "./tune-env"
+        #    }
+        #)
+        #self._run_watch()
+
+
+        grid = dict(
+            input_size=28*28, learning_rate=tune.grid_search([1e-4, 0.1]),
+            weight_decay=1e-6,
+            hidden_layer_config=tune.grid_search([[20], [10, 10]]),
+            output_size=10)
+        
+        task = MnistTask(config_init={"epochs": 1})
+
+        def raytune_func(config, checkpoint_dir=None):
+            import ray
+            #from ml_benchmark.workload.mnist.mnist_task import MnistTask
+            
+            #task = MnistTask(config_init={"epochs": 1})
+            objective = ray.get(config.get("objective"))
+            #objective = task.create_objective()
+
+            hyperparameters = config.get("hyperparameters")
+            objective.set_hyperparameters(hyperparameters)
+            # these are the results, that can be used for the hyperparameter search
+            objective.train()
+            validation_scores = objective.validate()
+            tune.report(
+                macro_f1_score=validation_scores["macro avg"]["f1-score"])
+
+        
+        objective_ref = ray.put(task.create_objective())
+        
+        self.analysis = tune.run(
+            raytune_func,
+            config=dict(
+                objective=objective_ref,
+                hyperparameters=grid,
+            ),
+            sync_config=tune.SyncConfig(
+                syncer=None  # Disable syncing
+            ),
+            local_dir="/home/ray/ray-results",
+            resources_per_trial={"cpu": 1}
         )
 
-        self._run_watch()
+        print(self.analysis.get_best_config(metric="macro_f1_score", mode="max")["hyperparameters"])
+        
         return
 
     def collect_run_results(self):
