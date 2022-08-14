@@ -20,7 +20,7 @@ from ml_benchmark.utils.yaml_template_filler import YamlTemplateFiller
 
 class RaytuneBenchmark(Benchmark):
 
-    def __init__(self, resources) -> None:
+    def __init__(self, resources, grid) -> None:
         self.namespace = resources.get("kubernetesNamespace", "st-hpo")
         self.workerCpu = resources.get("workerCpu", 1)
         self.workerMemory = resources.get("workerMemory", 1)
@@ -28,6 +28,8 @@ class RaytuneBenchmark(Benchmark):
         self.metricsIP = resources.get("metricsIP")
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
+
+        self.grid = grid
 
         # K8s setup
         config.load_kube_config()
@@ -117,11 +119,11 @@ class RaytuneBenchmark(Benchmark):
             Executing the hyperparameter optimization on the deployed platfrom.
             use the metrics object to collect and store all measurments on the workers.
         """
-        grid = dict(
-            input_size=28*28, learning_rate=tune.grid_search([1e-4]),
-            weight_decay=1e-6,
-            hidden_layer_config=tune.grid_search([[20], [10, 10]]),
-            output_size=10)
+        #grid = dict(
+        #    input_size=28*28, learning_rate=tune.grid_search([1e-4]),
+        #    weight_decay=1e-6,
+        #    hidden_layer_config=tune.grid_search([[20], [10, 10]]),
+        #    output_size=10)
 
         task = MnistTask(config_init={"epochs": 1})
 
@@ -129,7 +131,6 @@ class RaytuneBenchmark(Benchmark):
             import ray
 
             objective = ray.get(config.get("objective_ref"))
-
             hyperparameters = config.get("hyperparameters")
             objective.set_hyperparameters(hyperparameters)
             # these are the results, that can be used for the hyperparameter search
@@ -144,7 +145,7 @@ class RaytuneBenchmark(Benchmark):
             raytune_func_test,
             config=dict(
                 objective_ref=objective_ref,
-                hyperparameters=grid,
+                hyperparameters=self.grid,
             ),
             sync_config=tune.SyncConfig(
                 syncer=None  # Disable syncing
