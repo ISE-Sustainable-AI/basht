@@ -20,7 +20,7 @@ from ml_benchmark.utils.yaml_template_filler import YamlTemplateFiller
 
 class RaytuneBenchmark(Benchmark):
 
-    def __init__(self, resources, grid) -> None:
+    def __init__(self, resources) -> None:
         self.namespace = resources.get("kubernetesNamespace", "st-hpo")
         self.workerCpu = resources.get("workerCpu", 1)
         self.workerMemory = resources.get("workerMemory", 1)
@@ -28,8 +28,6 @@ class RaytuneBenchmark(Benchmark):
         self.metricsIP = resources.get("metricsIP")
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
-
-        self.grid = grid
 
         # K8s setup
         config.load_kube_config()
@@ -279,5 +277,7 @@ if __name__ == "__main__":
         grid_definition = create_ray_grid(json.load(grid_def_file))
 
     runner = BenchmarkRunner(
-       benchmark_cls=RaytuneBenchmark, resources=resource_definition, grid=grid_definition)
+       benchmark_cls=RaytuneBenchmark, resources=resource_definition)
+    runner.grid = grid_definition
+
     runner.run()
