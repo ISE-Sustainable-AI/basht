@@ -2,6 +2,7 @@ from os import path
 import os
 import subprocess
 import time
+import argparse
 
 import ray
 from ray import tune
@@ -34,28 +35,24 @@ class RaytuneBenchmark(Benchmark):
         self.k8s_custom_objects_api = client.CustomObjectsApi()
         self.k8s_core_v1_api = client.CoreV1Api()
         self.k8s_apps_v1_api = client.AppsV1Api()
-    
+
     def _deploy_watch(self) -> None:
-        last_report_t = None
-        while True:
-            curr_report_t = time.time()
-            if last_report_t is None or (curr_report_t - last_report_t > 5):
-                print("\n")
-                subprocess.run(["kubectl", "-n", self.namespace, "get", "pod"])
-                last_report_t = curr_report_t 
+        w = watch.Watch()
+        for event in w.stream(self.k8s_core_v1_api.list_namespaced_pod, namespace=self.namespace):
+            print(
+                f"Event: {event['type']} {event['object'].metadata.name} {event['object'].status.phase}")
             resp = self.k8s_core_v1_api.list_namespaced_pod(self.namespace)
             pods = resp.items
-            ray_controller_pods = [ pod for pod in pods if ("ray-operator" in pod.metadata.name) or ("ray-cluster-ray-head-type" in pod.metadata.name)]
-            ray_worker_pods = [ pod for pod in pods if "ray-cluster-ray-worker-type" in pod.metadata.name ]
-            if len(ray_controller_pods) < 2 or len(ray_worker_pods) < self.workerCount:
+            ray_pods = [
+                pod for pod in pods if "ray-operator" in pod.metadata.name or "ray-cluster" in pod.metadata.name]
+            if len(ray_pods) != self.workerCount + 1:
                 continue
             else:
-                running_ray_controller_pods = [ pod for pod in ray_controller_pods if pod.status.phase == "Running" ]
-                running_ray_worker_pods = [ pod for pod in ray_worker_pods if pod.status.phase == "Running" ]
-                if len(running_ray_controller_pods) != 2 or len(running_ray_worker_pods) != self.workerCount:
-                    continue
-            break
-        
+                running_ray_pods = [
+                    pod for pod in ray_pods if pod.status.phase == "Running"]
+                if len(running_ray_pods) == 1 + self.workerCount:
+                    w.stop()
+
         print("Ray pods are ready")
 
     def deploy(self) -> None:
@@ -68,15 +65,16 @@ class RaytuneBenchmark(Benchmark):
         try:
             resp = create_from_yaml(
                 self.k8s_api_client,
-                path.join(path.dirname(__file__), "ray-template/ray-operator.yaml"),
+                path.join(path.dirname(__file__),
+                          "ray-template/ray-operator.yaml"),
                 namespace=self.namespace, verbose=True
             )
         except FailToCreateError as e:
             raise e
-        
+
         # deploy ray cluster
         ray_cluster_definition = {
-            "worker_num": self.workerCount,
+            "ray_worker_num": self.workerCount - 1,
             "worker_cpu": self.workerCpu,
             "worker_mem": f"{self.workerMemory}Gi",
             "metrics_ip": self.metricsIP,
@@ -86,16 +84,17 @@ class RaytuneBenchmark(Benchmark):
         }
 
         ray_cluster_yml_objects = YamlTemplateFiller.load_and_fill_yaml_template(
-            path.join(path.dirname(__file__), "ray-template/ray-cluster-template.yaml"),
+            path.join(path.dirname(__file__),
+                      "ray-template/ray-cluster-template.yaml"),
             ray_cluster_definition
         )
 
         ray_cluster_json_objects = next(ray_cluster_yml_objects)
         try:
             self.k8s_custom_objects_api.create_namespaced_custom_object(
-                group="cluster.ray.io", 
-                version="v1", 
-                namespace=self.namespace, 
+                group="cluster.ray.io",
+                version="v1",
+                namespace=self.namespace,
                 plural="rayclusters",
                 body=ray_cluster_json_objects
             )
@@ -103,55 +102,33 @@ class RaytuneBenchmark(Benchmark):
             raise e
 
         self._deploy_watch()
-    
+
     def setup(self):
         with open("portforward_log.txt", 'w') as pf_log:
             self.portforward_proc = subprocess.Popen(
-                ["kubectl", "-n", self.namespace, "port-forward", "service/ray-cluster-ray-head", "10001:10001"],
+                ["kubectl", "-n", self.namespace, "port-forward",
+                    "service/ray-cluster-ray-head", "10001:10001"],
                 stdout=pf_log
             )
         ray.init("ray://localhost:10001")
-
-    #def _run_watch(self):
-    #    while True:
-    #        status = self.ray_job_client.get_job_status(self.job_id)
-    #        print(f"Status: {status}")
-    #        with open("./log.txt", "w") as log_file:
-    #            log_file.write(self.ray_job_client.get_job_logs(self.job_id))
-    #        if status in {JobStatus.SUCCEEDED, JobStatus.STOPPED, JobStatus.FAILED}:
-    #            break
-    #        time.sleep(2)
 
     def run(self):
         """
             Executing the hyperparameter optimization on the deployed platfrom.
             use the metrics object to collect and store all measurments on the workers.
         """
-        #self.ray_job_client = JobSubmissionClient("http://127.0.0.1:8265")
-        #self.job_id = self.ray_job_client.submit_job(
-        #    entrypoint="python script.py",
-        #    runtime_env={
-        #        "working_dir": "./tune-env"
-        #    }
-        #)
-        #self._run_watch()
-
-
         grid = dict(
-            input_size=28*28, learning_rate=tune.grid_search([1e-4, 0.1]),
+            input_size=28*28, learning_rate=tune.grid_search([1e-4]),
             weight_decay=1e-6,
             hidden_layer_config=tune.grid_search([[20], [10, 10]]),
             output_size=10)
-        
+
         task = MnistTask(config_init={"epochs": 1})
 
         def raytune_func(config, checkpoint_dir=None):
             import ray
-            #from ml_benchmark.workload.mnist.mnist_task import MnistTask
-            
-            #task = MnistTask(config_init={"epochs": 1})
-            objective = ray.get(config.get("objective"))
-            #objective = task.create_objective()
+
+            objective = ray.get(config.get("objective_ref"))
 
             hyperparameters = config.get("hyperparameters")
             objective.set_hyperparameters(hyperparameters)
@@ -161,13 +138,12 @@ class RaytuneBenchmark(Benchmark):
             tune.report(
                 macro_f1_score=validation_scores["macro avg"]["f1-score"])
 
-        
         objective_ref = ray.put(task.create_objective())
-        
+
         self.analysis = tune.run(
-            raytune_func,
+            raytune_func_test,
             config=dict(
-                objective=objective_ref,
+                objective_ref=objective_ref,
                 hyperparameters=grid,
             ),
             sync_config=tune.SyncConfig(
@@ -177,12 +153,12 @@ class RaytuneBenchmark(Benchmark):
             resources_per_trial={"cpu": 1}
         )
 
-        print(self.analysis.get_best_config(metric="macro_f1_score", mode="max")["hyperparameters"])
-        
+        print(self.analysis.get_best_config(
+            metric="macro_f1_score", mode="max")["hyperparameters"])
         return
 
     def collect_run_results(self):
-        return 
+        return
         self.best_hyp_config = self.analysis.get_best_config(
             metric="macro_f1_score", mode="max")["hyperparameters"]
 
@@ -208,25 +184,21 @@ class RaytuneBenchmark(Benchmark):
         )
 
         return results
-    
+
     def _undeploy_watch(self):
-        last_report_t = None
-        while True:
-            curr_report_t = time.time()
-            if last_report_t is None or (curr_report_t - last_report_t > 5):
-                print("\n")
-                subprocess.run(["kubectl", "-n", self.namespace, "get", "pod"])
-                last_report_t = curr_report_t 
+        w = watch.Watch()
+        for event in w.stream(self.k8s_core_v1_api.list_namespaced_pod, namespace=self.namespace):
+            print(
+                f"Event: {event['type']} {event['object'].metadata.name} {event['object'].status.phase}")
             resp = self.k8s_core_v1_api.list_namespaced_pod(self.namespace)
             pods = resp.items
-            if len(pods) == 0:
-                break
-            ray_pods = [ pod for pod in pods if "ray" in pod.metadata.name ]
+            ray_pods = [
+                pod for pod in pods if "ray-operator" in pod.metadata.name or "ray-cluster" in pod.metadata.name]
             if len(ray_pods) != 0:
                 continue
             else:
-                break
-        
+                w.stop()
+
         print("Ray pods were deleted successfully")
 
     def undeploy(self):
@@ -234,41 +206,77 @@ class RaytuneBenchmark(Benchmark):
             The clean-up procedure to undeploy all components of the HPO Framework that were deployed in the
             Deploy step.
         """
+        self.portforward_proc.terminate()
+
         # undeploy ray cluster
         try:
             self.k8s_custom_objects_api.delete_namespaced_custom_object(
-                group="cluster.ray.io", 
-                version="v1", 
-                namespace=self.namespace, 
+                group="cluster.ray.io",
+                version="v1",
+                namespace=self.namespace,
                 plural="rayclusters",
                 name="ray-cluster",
                 grace_period_seconds=10
-                #body=self.ray_cluster_json_objects
             )
         except ApiException as e:
             raise e
-        
+
         # undeploy ray operator
         try:
-            self.k8s_apps_v1_api.delete_namespaced_deployment("ray-operator", self.namespace)
+            self.k8s_apps_v1_api.delete_namespaced_deployment(
+                "ray-operator", self.namespace)
         except ApiException as e:
-            raise e      
-        
+            raise e
+
         self._undeploy_watch()
 
-        # terminate port-forward proc
-        self.portforward_proc.terminate()
 
-
+def create_ray_grid(grid):
+    ray_grid = {}
+    for key, value in grid.items():
+        if type(grid[key]) is list:
+            ray_grid[key] = tune.grid_search(value)
+        else:
+            ray_grid[key] = value
+    return dict(ray_grid)
 
 
 if __name__ == "__main__":
     from ml_benchmark.benchmark_runner import BenchmarkRunner
     import json
-    
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--grid', help='Grid config, valid option: ["small", "medium", "large"]')
+    parser.add_argument(
+        '--nworkers', help='Number of workers, valid option: [1, 2, 4]', type=int)
+
+    args = parser.parse_args()
+    nworkers = args.nworkers
+    grid_option = args.grid
+    if nworkers is None:
+        print("Number of workers is not specified, default is 1")
+        nworkers = 1
+    else:
+        if nworkers not in [1, 2, 4]:
+            raise ValueError(
+                "Invalid number of workers: valid option: [1, 2, 4]")
+
+    if grid_option is None:
+        print("Grid option is not specified, default is small")
+        grid_option = "small"
+    else:
+        if grid_option not in ["small", "medium", "large"]:
+            raise ValueError(
+                "Invalid number of workers: valid option: [small, medium, large]")
+
     with open("resource_definition.json") as res_def_file:
         resource_definition = json.load(res_def_file)
+        resource_definition['workerCount'] = nworkers
+
+    with open(path.join(path.dirname(__file__), "grids", f"grid_{grid_option}.json")) as grid_def_file:
+        grid_definition = create_ray_grid(json.load(grid_def_file))
 
     runner = BenchmarkRunner(
-        benchmark_cls=RaytuneBenchmark, resources=resource_definition)
+       benchmark_cls=RaytuneBenchmark, resources=resource_definition, grid=grid_definition)
     runner.run()

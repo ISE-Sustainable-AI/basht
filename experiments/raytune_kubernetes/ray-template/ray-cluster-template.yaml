@@ -85,8 +85,8 @@ spec:
                   # cause problems for other pods.
                   memory: $worker_mem
     - name: rayWorkerType
-      minWorkers: $worker_num
-      maxWorkers: $worker_num
+      minWorkers: $ray_worker_num
+      maxWorkers: $ray_worker_num
       podConfig:
         apiVersion: v1
         kind: Pod

@@ -1,5 +1,8 @@
 docker/setup.py
 docker/ml_benchmark
+
+ray-template/ray-cluster.yaml
+
 benchmark__RaytuneBenchmark
 log.txt
 portforward_log.txt
