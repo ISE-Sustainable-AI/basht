@@ -20,8 +20,6 @@ spec:
     - name: rayHeadType
       minWorkers: 0
       maxWorkers: 0
-      rayResources:
-        CPU: 0
       podConfig:
         apiVersion: v1
         kind: Pod

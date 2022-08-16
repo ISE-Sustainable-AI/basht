@@ -6,7 +6,6 @@ import argparse
 
 import ray
 from ray import tune
-from ray.job_submission import JobSubmissionClient, JobStatus
 
 from kubernetes import client, config, watch
 from kubernetes.client import ApiException
@@ -17,6 +16,7 @@ from ml_benchmark.workload.mnist.mnist_task import MnistTask
 from ml_benchmark.config import Path
 from ml_benchmark.utils.yaml_template_filler import YamlTemplateFiller
 
+global_grid = None
 
 class RaytuneBenchmark(Benchmark):
 
@@ -29,6 +29,8 @@ class RaytuneBenchmark(Benchmark):
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
 
+        self.grid = global_grid
+
         # K8s setup
         config.load_kube_config()
         self.k8s_api_client = client.ApiClient()
@@ -38,21 +40,20 @@ class RaytuneBenchmark(Benchmark):
 
     def _deploy_watch(self) -> None:
         w = watch.Watch()
+        ray_head_is_ready = False
         for event in w.stream(self.k8s_core_v1_api.list_namespaced_pod, namespace=self.namespace):
-            print(
-                f"Event: {event['type']} {event['object'].metadata.name} {event['object'].status.phase}")
+            print(f"Event: {event['type']} {event['object'].metadata.name} {event['object'].status.phase}")
+            if "ray-head" in event['object'].metadata.name and event['object'].metadata.labels['ray-node-status'] == "up-to-date":
+                ray_head_is_ready = True
             resp = self.k8s_core_v1_api.list_namespaced_pod(self.namespace)
             pods = resp.items
-            ray_pods = [
-                pod for pod in pods if "ray-operator" in pod.metadata.name or "ray-cluster" in pod.metadata.name]
+            ray_pods = [pod for pod in pods if "ray-operator" in pod.metadata.name or "ray-cluster" in pod.metadata.name]
             if len(ray_pods) != self.workerCount + 1:
                 continue
             else:
-                running_ray_pods = [
-                    pod for pod in ray_pods if pod.status.phase == "Running"]
-                if len(running_ray_pods) == 1 + self.workerCount:
+                running_ray_pods = [pod for pod in ray_pods if pod.status.phase == "Running"]
+                if len(running_ray_pods) == 1 + self.workerCount and ray_head_is_ready:
                     w.stop()
-
         print("Ray pods are ready")
 
     def deploy(self) -> None:
@@ -65,8 +66,7 @@ class RaytuneBenchmark(Benchmark):
         try:
             resp = create_from_yaml(
                 self.k8s_api_client,
-                path.join(path.dirname(__file__),
-                          "ray-template/ray-operator.yaml"),
+                path.join(path.dirname(__file__), "ray-template/ray-operator.yaml"),
                 namespace=self.namespace, verbose=True
             )
         except FailToCreateError as e:
@@ -84,8 +84,7 @@ class RaytuneBenchmark(Benchmark):
         }
 
         ray_cluster_yml_objects = YamlTemplateFiller.load_and_fill_yaml_template(
-            path.join(path.dirname(__file__),
-                      "ray-template/ray-cluster-template.yaml"),
+            path.join(path.dirname(__file__), "ray-template/ray-cluster-template.yaml"),
             ray_cluster_definition
         )
 
@@ -106,8 +105,7 @@ class RaytuneBenchmark(Benchmark):
     def setup(self):
         with open("portforward_log.txt", 'w') as pf_log:
             self.portforward_proc = subprocess.Popen(
-                ["kubectl", "-n", self.namespace, "port-forward",
-                    "service/ray-cluster-ray-head", "10001:10001"],
+                ["kubectl", "-n", self.namespace, "port-forward", "service/ray-cluster-ray-head", "10001:10001"],
                 stdout=pf_log
             )
         ray.init("ray://localhost:10001")
@@ -117,12 +115,7 @@ class RaytuneBenchmark(Benchmark):
             Executing the hyperparameter optimization on the deployed platfrom.
             use the metrics object to collect and store all measurments on the workers.
         """
-        #grid = dict(
-        #    input_size=28*28, learning_rate=tune.grid_search([1e-4]),
-        #    weight_decay=1e-6,
-        #    hidden_layer_config=tune.grid_search([[20], [10, 10]]),
-        #    output_size=10)
-
+        grid = self.grid
         task = MnistTask(config_init={"epochs": 1})
 
         def raytune_func(config, checkpoint_dir=None):
@@ -140,16 +133,16 @@ class RaytuneBenchmark(Benchmark):
         objective_ref = ray.put(task.create_objective())
 
         self.analysis = tune.run(
-            raytune_func_test,
+            raytune_func,
             config=dict(
                 objective_ref=objective_ref,
-                hyperparameters=self.grid,
+                hyperparameters=grid,
             ),
             sync_config=tune.SyncConfig(
                 syncer=None  # Disable syncing
             ),
             local_dir="/home/ray/ray-results",
-            resources_per_trial={"cpu": 1}
+            resources_per_trial={"cpu": self.workerCpu}
         )
 
         print(self.analysis.get_best_config(
@@ -157,12 +150,10 @@ class RaytuneBenchmark(Benchmark):
         return
 
     def collect_run_results(self):
-        return
         self.best_hyp_config = self.analysis.get_best_config(
             metric="macro_f1_score", mode="max")["hyperparameters"]
 
     def test(self):
-        return
         # evaluating and retrieving the best model to generate test results.
         task = MnistTask(config_init={"epochs": 1})
         objective = task.create_objective()
@@ -176,7 +167,6 @@ class RaytuneBenchmark(Benchmark):
             (Latencies, CPU Resources, etc.). This step runs outside of the HPO Framework.
             Ensure to optain all metrics loggs and combine into the metrics object.
         """
-        return
         results = dict(
             test_scores=self.test_scores,
             training_loss=self.training_loss,
@@ -184,27 +174,33 @@ class RaytuneBenchmark(Benchmark):
 
         return results
 
-    def _undeploy_watch(self):
+    def _undeploy_watch_ray_cluster(self):
+        w = watch.Watch()
+        for event in w.stream(self.k8s_custom_objects_api.list_namespaced_custom_object, group="cluster.ray.io", version="v1", namespace=self.namespace, plural="rayclusters"):
+            print(f"Event: {event['type']} {event['object']['kind']} {event['object']['status']['phase']}")
+            if event['type'] == "DELETED":
+                w.stop()
+        print("Ray Cluster was deleted successfully")
+
+    def _undeploy_watch_ray_operator(self):
         w = watch.Watch()
         for event in w.stream(self.k8s_core_v1_api.list_namespaced_pod, namespace=self.namespace):
-            print(
-                f"Event: {event['type']} {event['object'].metadata.name} {event['object'].status.phase}")
+            print(f"Event: {event['type']} {event['object'].metadata.name} {event['object'].status.phase}")
             resp = self.k8s_core_v1_api.list_namespaced_pod(self.namespace)
             pods = resp.items
-            ray_pods = [
-                pod for pod in pods if "ray-operator" in pod.metadata.name or "ray-cluster" in pod.metadata.name]
-            if len(ray_pods) != 0:
+            ray_operator_pods = [pod for pod in pods if "ray-operator" in pod.metadata.name]
+            if len(ray_operator_pods) != 0:
                 continue
             else:
                 w.stop()
-
-        print("Ray pods were deleted successfully")
+        print("Ray Operator pod was deleted successfully")
 
     def undeploy(self):
         """
             The clean-up procedure to undeploy all components of the HPO Framework that were deployed in the
             Deploy step.
         """
+        ray.shutdown()
         self.portforward_proc.terminate()
 
         # undeploy ray cluster
@@ -214,11 +210,12 @@ class RaytuneBenchmark(Benchmark):
                 version="v1",
                 namespace=self.namespace,
                 plural="rayclusters",
-                name="ray-cluster",
-                grace_period_seconds=10
+                name="ray-cluster"
             )
         except ApiException as e:
             raise e
+
+        self._undeploy_watch_ray_cluster()
 
         # undeploy ray operator
         try:
@@ -227,8 +224,7 @@ class RaytuneBenchmark(Benchmark):
         except ApiException as e:
             raise e
 
-        self._undeploy_watch()
-
+        self._undeploy_watch_ray_operator()
 
 def create_ray_grid(grid):
     ray_grid = {}
@@ -258,16 +254,14 @@ if __name__ == "__main__":
         nworkers = 1
     else:
         if nworkers not in [1, 2, 4]:
-            raise ValueError(
-                "Invalid number of workers: valid option: [1, 2, 4]")
+            raise ValueError("Invalid number of workers: valid option: [1, 2, 4]")
 
     if grid_option is None:
         print("Grid option is not specified, default is small")
         grid_option = "small"
     else:
         if grid_option not in ["small", "medium", "large"]:
-            raise ValueError(
-                "Invalid number of workers: valid option: [small, medium, large]")
+            raise ValueError("Invalid number of workers: valid option: [small, medium, large]")
 
     with open("resource_definition.json") as res_def_file:
         resource_definition = json.load(res_def_file)
@@ -275,9 +269,9 @@ if __name__ == "__main__":
 
     with open(path.join(path.dirname(__file__), "grids", f"grid_{grid_option}.json")) as grid_def_file:
         grid_definition = create_ray_grid(json.load(grid_def_file))
+        global_grid = grid_definition
 
     runner = BenchmarkRunner(
        benchmark_cls=RaytuneBenchmark, resources=resource_definition)
-    runner.grid = grid_definition
-
+    
     runner.run()
