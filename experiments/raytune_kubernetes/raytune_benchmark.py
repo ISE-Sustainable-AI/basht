@@ -1,7 +1,5 @@
 from os import path
-import os
 import subprocess
-import time
 import argparse
 
 import ray
@@ -13,10 +11,10 @@ from kubernetes.utils import create_from_yaml, FailToCreateError
 
 from ml_benchmark.benchmark_runner import Benchmark
 from ml_benchmark.workload.mnist.mnist_task import MnistTask
-from ml_benchmark.config import Path
 from ml_benchmark.utils.yaml_template_filler import YamlTemplateFiller
 
 global_grid = None
+
 
 class RaytuneBenchmark(Benchmark):
 
@@ -64,7 +62,7 @@ class RaytuneBenchmark(Benchmark):
         """
         # deploy ray operator
         try:
-            resp = create_from_yaml(
+            create_from_yaml(
                 self.k8s_api_client,
                 path.join(path.dirname(__file__), "ray-template/ray-operator.yaml"),
                 namespace=self.namespace, verbose=True
@@ -176,7 +174,11 @@ class RaytuneBenchmark(Benchmark):
 
     def _undeploy_watch_ray_cluster(self):
         w = watch.Watch()
-        for event in w.stream(self.k8s_custom_objects_api.list_namespaced_custom_object, group="cluster.ray.io", version="v1", namespace=self.namespace, plural="rayclusters"):
+        for event in w.stream(
+                self.k8s_custom_objects_api.list_namespaced_custom_object, 
+                group="cluster.ray.io", version="v1", 
+                namespace=self.namespace, 
+                plural="rayclusters"):
             print(f"Event: {event['type']} {event['object']['kind']} {event['object']['status']['phase']}")
             if event['type'] == "DELETED":
                 w.stop()
