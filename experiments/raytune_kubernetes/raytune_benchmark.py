@@ -103,7 +103,8 @@ class RaytuneBenchmark(Benchmark):
     def setup(self):
         with open("portforward_log.txt", 'w') as pf_log:
             self.portforward_proc = subprocess.Popen(
-                ["kubectl", "-n", self.namespace, "port-forward", "service/ray-cluster-ray-head", "10001:10001"],
+                ["kubectl", "-n", self.namespace, "port-forward",
+                    "service/ray-cluster-ray-head", "10001:10001"],
                 stdout=pf_log
             )
         ray.init("ray://localhost:10001")
@@ -174,11 +175,9 @@ class RaytuneBenchmark(Benchmark):
 
     def _undeploy_watch_ray_cluster(self):
         w = watch.Watch()
-        for event in w.stream(
-                self.k8s_custom_objects_api.list_namespaced_custom_object, 
-                group="cluster.ray.io", version="v1", 
-                namespace=self.namespace, 
-                plural="rayclusters"):
+        for event in w.stream(self.k8s_custom_objects_api.list_namespaced_custom_object,
+                              group="cluster.ray.io", version="v1",
+                              namespace=self.namespace, plural="rayclusters"):
             print(f"Event: {event['type']} {event['object']['kind']} {event['object']['status']['phase']}")
             if event['type'] == "DELETED":
                 w.stop()
@@ -187,10 +186,12 @@ class RaytuneBenchmark(Benchmark):
     def _undeploy_watch_ray_operator(self):
         w = watch.Watch()
         for event in w.stream(self.k8s_core_v1_api.list_namespaced_pod, namespace=self.namespace):
-            print(f"Event: {event['type']} {event['object'].metadata.name} {event['object'].status.phase}")
+            print(
+                f"Event: {event['type']} {event['object'].metadata.name} {event['object'].status.phase}")
             resp = self.k8s_core_v1_api.list_namespaced_pod(self.namespace)
             pods = resp.items
-            ray_operator_pods = [pod for pod in pods if "ray-operator" in pod.metadata.name]
+            ray_operator_pods = [
+                pod for pod in pods if "ray-operator" in pod.metadata.name]
             if len(ray_operator_pods) != 0:
                 continue
             else:
@@ -228,6 +229,7 @@ class RaytuneBenchmark(Benchmark):
 
         self._undeploy_watch_ray_operator()
 
+
 def create_ray_grid(grid):
     ray_grid = {}
     for key, value in grid.items():
@@ -256,14 +258,16 @@ if __name__ == "__main__":
         nworkers = 1
     else:
         if nworkers not in [1, 2, 4]:
-            raise ValueError("Invalid number of workers: valid option: [1, 2, 4]")
+            raise ValueError(
+                "Invalid number of workers: valid option: [1, 2, 4]")
 
     if grid_option is None:
         print("Grid option is not specified, default is small")
         grid_option = "small"
     else:
         if grid_option not in ["small", "medium", "large"]:
-            raise ValueError("Invalid number of workers: valid option: [small, medium, large]")
+            raise ValueError(
+                "Invalid number of workers: valid option: [small, medium, large]")
 
     with open("resource_definition.json") as res_def_file:
         resource_definition = json.load(res_def_file)
@@ -274,6 +278,6 @@ if __name__ == "__main__":
         global_grid = grid_definition
 
     runner = BenchmarkRunner(
-       benchmark_cls=RaytuneBenchmark, resources=resource_definition)
-    
+        benchmark_cls=RaytuneBenchmark, resources=resource_definition)
+
     runner.run()
