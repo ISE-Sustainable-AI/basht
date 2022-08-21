@@ -1,0 +1,6 @@
+docker/setup.py
+docker/ml_benchmark
+
+resource_definition.json
+
+benchmark__NNIBenchmark
