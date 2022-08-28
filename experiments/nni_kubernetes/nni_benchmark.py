@@ -1,7 +1,7 @@
 from os import path
-import subprocess
 import argparse
 import time
+from multiprocessing import Process, Queue
 
 from nni.experiment import (
     Experiment,
@@ -42,52 +42,30 @@ class NNIBenchmark(Benchmark):
         self.k8s_core_v1_api = client.CoreV1Api()
         self.k8s_apps_v1_api = client.AppsV1Api()
 
-    def _deploy_watch(self) -> None:
+    def _deploy_watch_fc_pods(self, pod_name, n_pods) -> None:
         w = watch.Watch()
         for event in w.stream(self.k8s_core_v1_api.list_namespaced_pod, namespace=self.namespace):
             print(
                 f"Event: {event['type']} {event['object'].metadata.name} {event['object'].status.phase}")
             resp = self.k8s_core_v1_api.list_namespaced_pod(self.namespace)
             pods = resp.items
-            fc_pods = [pod for pod in pods if "frameworkcontroller" in pod.metadata.name]
-            if len(fc_pods) != 1:
+            fc_pods = [pod for pod in pods if pod_name in pod.metadata.name]
+            if len(fc_pods) != n_pods:
                 continue
             else:
                 running_fc_pods = [pod for pod in fc_pods if pod.status.phase == "Running"]
-                if len(running_fc_pods) == 1:
+                if len(running_fc_pods) == n_pods:
                     w.stop()
-        print("Frameworkcontroller pod is ready")
-
-    def deploy(self) -> None:
-        """
-            With the completion of this step the desired architecture of the HPO Framework should be running
-            on a platform, e.g,. in the case of Kubernetes it referes to the steps nassary to deploy all pods
-            and services in kubernetes.
-        """
-        # create frameworkcontroller config
-        try:
-            create_from_yaml(
-                self.k8s_api_client,
-                path.join(path.dirname(__file__),
-                          "nni-template/fc-config.yaml"),
-                namespace=self.namespace, verbose=True
-            )
-        except FailToCreateError as e:
-            raise e
-
-        # deploy frameworkcontroller operator
-        try:
-            create_from_yaml(
-                self.k8s_api_client,
-                path.join(path.dirname(__file__), "nni-template/fc-sts.yaml"),
-                namespace=self.namespace, verbose=True
-            )
-        except FailToCreateError as e:
-            raise e
-
-        self._deploy_watch()
-
-    def setup(self):
+    
+    def _deploy_watch_fc_operator(self) -> None:
+        self._deploy_watch_fc_pods("frameworkcontroller", n_pods=1)
+        print("Frameworkcontroller operator pod is ready")
+        
+    def _deploy_watch_fc_workers(self) -> None:
+        self._deploy_watch_fc_pods("nniexp", n_pods=self.workerCount)
+        print("Frameworkcontroller worker pods are ready")
+    
+    def _deploy_experiment_proc(self, queue) -> None:
         self.experiment.config.nni_manager_ip = self.metricsIP
         self.experiment.config.trial_code_directory = path.join(path.dirname(__file__), 'tune-env')
         self.experiment.config.trial_command = f'export METRICS_STORAGE_HOST="{self.metricsIP}" && python3 tunescript.py'
@@ -117,27 +95,80 @@ class NNIBenchmark(Benchmark):
         self.experiment.config.training_service.task_roles[0].memory_size = f"{self.workerMemory} gb"
         self.experiment.config.training_service.task_roles[0].framework_attempt_completion_policy = FrameworkAttemptCompletionPolicy(
             min_failed_task_count=1, min_succeed_task_count=1)
+        
+        self.experiment.run(port=8080, debug=True)
+        
+        queue.put({
+            "trial_jobs": self.experiment.list_trial_jobs(),
+            "job_metrics": self.experiment.get_job_metrics()  
+        })
+
+        self.experiment.stop()
+        return
+
+
+    def deploy(self) -> None:
+        """
+            With the completion of this step the desired architecture of the HPO Framework should be running
+            on a platform, e.g,. in the case of Kubernetes it referes to the steps nassary to deploy all pods
+            and services in kubernetes.
+        """
+        # create frameworkcontroller config
+        try:
+            create_from_yaml(
+                self.k8s_api_client,
+                path.join(path.dirname(__file__),
+                          "nni-template/fc-config.yaml"),
+                namespace=self.namespace, verbose=True
+            )
+        except FailToCreateError as e:
+            raise e
+
+        # deploy frameworkcontroller operator
+        try:
+            create_from_yaml(
+                self.k8s_api_client,
+                path.join(path.dirname(__file__), "nni-template/fc-sts.yaml"),
+                namespace=self.namespace, verbose=True
+            )
+        except FailToCreateError as e:
+            raise e
+
+        self._deploy_watch_fc_operator()
+
+        self.proc_queue = Queue()
+        self.experiment_proc = Process(target=self._deploy_experiment_proc, args=(self.proc_queue,))
+        self.experiment_proc.start()
+
+        self._deploy_watch_fc_workers()
+
+    def setup(self):
+        return
+
 
     def run(self):
         """
             Executing the hyperparameter optimization on the deployed platfrom.
             use the metrics object to collect and store all measurments on the workers.
         """
-        self.experiment.run(port=8080, debug=True)
-        
-        print(self.experiment.list_trial_jobs())
-        print(self.experiment.get_job_metrics())
-
-        self.experiment.stop()
+        self.experiment_proc.join()
+        experiment_stats = self.proc_queue.get()
+        self.trial_jobs = experiment_stats['trial_jobs']
+        self.job_metrics = experiment_stats['job_metrics']
         return
 
-    def collect_run_results(self):
+    def _get_best_hyp_config(self):     
+        last_metrics = { job_id: metric_data[-1].data for job_id, metric_data in self.job_metrics.items() }
+        best_metric_id = max(last_metrics, key=last_metrics.get)
+        best_hyp_config_job = [ job for job in self.trial_jobs if job.trialJobId == best_metric_id ][0]
+        best_hyp_config = best_hyp_config_job.hyperParameters[0].parameters
+        return best_hyp_config
+
+    def collect_run_results(self): 
+        self.best_hyp_config = self._get_best_hyp_config()
         return 
-        self.best_hyp_config = self.analysis.get_best_config(
-            metric="macro_f1_score", mode="max")["hyperparameters"]
 
     def test(self):
-        return 
         # evaluating and retrieving the best model to generate test results.
         task = MnistTask(config_init={"epochs": 1})
         objective = task.create_objective()
@@ -146,7 +177,6 @@ class NNIBenchmark(Benchmark):
         self.test_scores = objective.test()
 
     def collect_benchmark_metrics(self):
-        return
         """
             Describes the collection of all gathered metrics, which are not used by the HPO framework
             (Latencies, CPU Resources, etc.). This step runs outside of the HPO Framework.
@@ -158,27 +188,34 @@ class NNIBenchmark(Benchmark):
         )
 
         return results
-
-    def _undeploy_watch_fc_operator(self):
+    
+    def _undeploy_watch_fc_pods(self, pod_name):
         w = watch.Watch()
         for event in w.stream(self.k8s_core_v1_api.list_namespaced_pod, namespace=self.namespace):
             print(
                 f"Event: {event['type']} {event['object'].metadata.name} {event['object'].status.phase}")
             resp = self.k8s_core_v1_api.list_namespaced_pod(self.namespace)
             pods = resp.items
-            fc_operator_pods = [pod for pod in pods if "frameworkcontroller" in pod.metadata.name]
+            fc_operator_pods = [pod for pod in pods if pod_name in pod.metadata.name]
             if len(fc_operator_pods) != 0:
                 continue
             else:
                 w.stop()
-        print("Frameworkcontroller Operator pod was deleted successfully")
+
+    def _undeploy_watch_fc_operator(self):
+        self._undeploy_watch_fc_pods("frameworkcontroller")
+        print("Frameworkcontroller operator pod was deleted successfully")
+    
+    def _undeploy_watch_fc_workers(self):
+        self._undeploy_watch_fc_pods("nniexp")
+        print("Frameworkcontroller worker pods were deleted successfully")
 
     def undeploy(self):
         """
             The clean-up procedure to undeploy all components of the HPO Framework that were deployed in the
             Deploy step.
         """
-        time.sleep(5)
+        self._undeploy_watch_fc_workers()
         
         # undeploy fc operator
         try:
