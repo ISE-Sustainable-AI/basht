@@ -177,6 +177,7 @@ class BenchmarkRunner():
         """
         Set all relevant seeds to exclude probabilistic interferences.
         """
+        # TODO: need to be set per worker
         torch.manual_seed(1337)
         np.random.seed(1337)
         random.seed(1337)

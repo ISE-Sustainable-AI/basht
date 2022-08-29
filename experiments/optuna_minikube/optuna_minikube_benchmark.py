@@ -131,14 +131,19 @@ class OptunaMinikubeBenchmark(Benchmark):
         """
         Checks if Trials (Kubernetes Jobs) are completed. If not the process waits on it.
         """
+        # TODO; doesnt work properly
         w = watch.Watch()
         c = client.BatchV1Api()
         for e in w.stream(c.list_namespaced_job, namespace=self.namespace, timeout_seconds=10):
             if "object" in e and e["object"].status.completion_time is not None:
                 w.stop()
                 return
-        sleep(5)
+            sleep(1)
         print("Trials completed! Collecting Results")
+
+        # ret = c.list_namespaced_job(namespace=self.namespace, watch=True)
+        # for i in ret.items:
+        #     print(i.status.succeeded)
 
     def test(self):
 
@@ -173,7 +178,7 @@ class OptunaMinikubeBenchmark(Benchmark):
             client.CoreV1Api().read_namespace_status(self.namespace).to_dict()
             sleep(2)
         except client.exceptions.ApiException:
-            return
+            print("Namespace gone.")
 
     def _watch_db(self):
         w = watch.Watch()
@@ -187,7 +192,6 @@ class OptunaMinikubeBenchmark(Benchmark):
                         and deployment_spec.status.available_replicas > 0:
                     w.stop()
                     return True
-
         return False
 
 

@@ -7,7 +7,7 @@ from utils import generate_search_space
 
 
 def optuna_trial(trial):
-    task = MnistTask(config_init={"epochs": 5})
+    task = MnistTask(config_init={"epochs": 10})
     objective = task.create_objective()
     # optuna doesnt care, these lines of code just get hyperparameters from the search space in grid search
     lr = trial.suggest_float("learning_rate", 1e-3, 0.1, log=True)
@@ -28,9 +28,8 @@ if __name__ == "__main__":
         study = optuna.create_study(
             study_name=study_name, storage=database_conn, direction="maximize", load_if_exists=True,
             sampler=optuna.samplers.GridSampler(search_space))
-        study.optimize(optuna_trial, n_trials=6)
+        study.optimize(optuna_trial)
         # TODO: add small wait to avoid missing metrics
-        sleep(5)
         sys.exit(0)
     except Exception:
         sys.exit(1)
