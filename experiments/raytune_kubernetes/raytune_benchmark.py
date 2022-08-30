@@ -115,7 +115,7 @@ class RaytuneBenchmark(Benchmark):
             use the metrics object to collect and store all measurments on the workers.
         """
         grid = self.grid
-        task = MnistTask(config_init={"epochs": 1})
+        task = MnistTask(config_init={"epochs": 100})
 
         def raytune_func(config, checkpoint_dir=None):
             import ray
@@ -249,15 +249,19 @@ if __name__ == "__main__":
         '--grid', help='Grid config, valid option: ["small", "medium", "large"]')
     parser.add_argument(
         '--nworkers', help='Number of workers, valid option: [1, 2, 4]', type=int)
+    parser.add_argument(
+        '--cpus', help='Number of cpus, valid option: [1, 2, 3, 4]', type=int)
 
     args = parser.parse_args()
-    nworkers = args.nworkers
+    n_workers = args.nworkers
     grid_option = args.grid
-    if nworkers is None:
+    n_cpus = args.cpus
+
+    if n_workers is None:
         print("Number of workers is not specified, default is 1")
-        nworkers = 1
+        n_workers = 1
     else:
-        if nworkers not in [1, 2, 4]:
+        if n_workers not in [1, 2, 4]:
             raise ValueError(
                 "Invalid number of workers: valid option: [1, 2, 4]")
 
@@ -268,10 +272,25 @@ if __name__ == "__main__":
         if grid_option not in ["small", "medium", "large"]:
             raise ValueError(
                 "Invalid number of workers: valid option: [small, medium, large]")
+    n_trials_dict = {
+        "small": 8,
+        "medium": 16,
+        "large": 32
+    }
+    n_trials = n_trials_dict[grid_option]
+
+    if n_cpus is None:
+        print("Number of worker CPU is not specified, default is 2")
+        n_cpus = 2
+    else:
+        if n_cpus not in [1, 2, 3, 4]:
+            raise ValueError(
+                "Invalid number of worker CPU: valid option: [1, 2, 3, 4]")
 
     with open("resource_definition.json") as res_def_file:
         resource_definition = json.load(res_def_file)
-        resource_definition['workerCount'] = nworkers
+        resource_definition['workerCount'] = n_workers
+        resource_definition['workerCpu'] = n_cpus
 
     with open(path.join(path.dirname(__file__), "grids", f"grid_{grid_option}.json")) as grid_def_file:
         grid_definition = create_ray_grid(json.load(grid_def_file))
