@@ -166,6 +166,7 @@ class NNIBenchmark(Benchmark):
 
     def collect_run_results(self): 
         self.best_hyp_config = self._get_best_hyp_config()
+        print(f"Best hyperparameters config: {self.best_hyp_config}")
         return 
 
     def test(self):
@@ -251,15 +252,19 @@ if __name__ == "__main__":
         '--grid', help='Grid config, valid option: ["small", "medium", "large"]')
     parser.add_argument(
         '--nworkers', help='Number of workers, valid option: [1, 2, 4]', type=int)
+    parser.add_argument(
+        '--cpus', help='Number of cpus, valid option: [1, 2, 3, 4]', type=int)
 
     args = parser.parse_args()
-    nworkers = args.nworkers
+    n_workers = args.nworkers
     grid_option = args.grid
-    if nworkers is None:
+    n_cpus = args.cpus
+
+    if n_workers is None:
         print("Number of workers is not specified, default is 1")
-        nworkers = 1
+        n_workers = 1
     else:
-        if nworkers not in [1, 2, 4]:
+        if n_workers not in [1, 2, 4]:
             raise ValueError(
                 "Invalid number of workers: valid option: [1, 2, 4]")
 
@@ -277,9 +282,18 @@ if __name__ == "__main__":
     }
     n_trials = n_trials_dict[grid_option]
 
+    if n_cpus is None:
+        print("Number of worker CPU is not specified, default is 2")
+        n_cpus = 2
+    else:
+        if n_cpus not in [1, 2, 3, 4]:
+            raise ValueError(
+                "Invalid number of worker CPU: valid option: [1, 2, 3, 4]")
+
     with open("resource_definition.json") as res_def_file:
         resource_definition = json.load(res_def_file)
-        resource_definition['workerCount'] = nworkers
+        resource_definition['workerCount'] = n_workers
+        resource_definition['workerCpu'] = n_cpus
 
     with open(path.join(path.dirname(__file__), "grids", f"grid_{grid_option}.json")) as grid_def_file:
         grid_definition = create_nni_grid(json.load(grid_def_file))

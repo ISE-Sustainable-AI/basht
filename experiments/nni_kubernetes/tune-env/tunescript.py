@@ -2,7 +2,7 @@ import nni
 from ml_benchmark.workload.mnist.mnist_task import MnistTask
 
 hyperparammeters = nni.get_next_parameter()
-task = MnistTask(config_init={"epochs": 1})
+task = MnistTask(config_init={"epochs": 100})
 objective = task.create_objective()
 objective.set_hyperparameters(hyperparammeters)
 
