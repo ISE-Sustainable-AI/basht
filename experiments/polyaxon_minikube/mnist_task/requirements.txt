@@ -1,0 +1,3 @@
+Pillow>=9.1.1
+numpy
+polyaxon

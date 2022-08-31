@@ -142,7 +142,7 @@ class BenchmarkRunner():
         run_process = [
             self.benchmark.deploy, self.benchmark.setup, self.benchmark.run,
             self.benchmark.collect_run_results,
-            self.benchmark.test, self.benchmark.collect_benchmark_metrics]
+            self.benchmark.test, self.benchmark.collect_benchmark_metrics,self.benchmark.undeploy]
         benchmark_results = None
 
         try:

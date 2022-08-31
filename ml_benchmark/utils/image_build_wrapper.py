@@ -35,7 +35,7 @@ class MinikubeImageBuilder(ImageBuilder):
         if call.returncode != 0:
             print(call.stderr.decode("utf-8").strip("\n"))
             raise Exception("Failed to deploy image")
-        print("IMAGE IMAGE ", call.stdout, call.stderr)
+#        print("IMAGE IMAGE ", call.stdout, call.stderr)
 
         return call.stdout.decode("utf-8").strip("\n")
 
