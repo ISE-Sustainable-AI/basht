@@ -61,8 +61,9 @@ class LatencyTracker(Tracker):
                 stmt = insert(latency).values(latency_obj.to_dict())
                 conn.execute(stmt)
             print(f"Latency Recorded! Latency: {latency_obj.to_dict()}")
-        except Exception:
-            print(f"Failed to record latency: {latency_obj.to_dict()}")
+        except Exception as e:
+            print(f"Failed to record latency: {latency_obj.to_dict()}",e)
+            
 
     def _get_connection_string(self):
         # XXX: list order is implicitly a priority
