@@ -23,5 +23,10 @@ spec:
             value: "postgresql://postgresadmin:admin123@postgres:5432/postgresdb"
           - name: "METRICS_STORAGE_HOST"
             value: "$metrics_ip"
+          # injects the kuberntes node name into eacah pod 
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName  
       restartPolicy: OnFailure
 

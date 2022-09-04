@@ -9,19 +9,18 @@ from time import sleep
 import docker
 import numpy as np
 import torch
+import logging
 
-from ml_benchmark.latency_tracker import Latency, LatencyTracker
+from ml_benchmark.latency_tracker import LatencyTracker
 from ml_benchmark.metrics_storage import MetricsStorage
-
+from ml_benchmark.resource_tracker import ResourceTracker
+from ml_benchmark.metrics import Latency
 
 class Benchmark(ABC):
     """
     This class serves as an Interface for a benchmark. All neccessary methods have to be implemented in the
     subclass that is using the interface. Make sure to use the predefined static variables. Your benchmark
     will most likely not run properly if the variables value remains to be "None".
-
-    Args:
-        ABC (_type_): Abstract Base Class
     """
 
     # TODO: objective and grid are not allowed to be in the benchmark
@@ -118,8 +117,10 @@ class BenchmarkRunner():
         self.rundate = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         benchmark_path = os.path.abspath(os.path.dirname(inspect.getabsfile(benchmark_cls)))
         self.bench_name = f"{benchmark_cls.__name__}"
+        self.bench_goal = resources.get("goal", "debug")
         self.benchmark_folder = os.path.join(benchmark_path, f"benchmark__{self.bench_name}")
         self.create_benchmark_folder(self.benchmark_folder)
+        self.resources = resources
 
         # add input and output size to the benchmark.
         self.benchmark = benchmark_cls(resources)
@@ -130,6 +131,11 @@ class BenchmarkRunner():
         # prepare tracker
         self.metrics_storage = MetricsStorage()
         self.latency_tracker = LatencyTracker(MetricsStorage.connection_string)
+        if "prometheus_url" in resources:
+            self.resource_tracker = ResourceTracker(resources["prometheus_url"])
+        else:
+            logging.warning("No Prometheus URL provided. Resource Tracker will not be used.")
+            self.resource_tracker = None
 
     def run(self):
         """
@@ -139,28 +145,46 @@ class BenchmarkRunner():
         Raises:
             ValueError: _description_
         """
-        run_process = [
-            self.benchmark.deploy, self.benchmark.setup, self.benchmark.run,
-            self.benchmark.collect_run_results,
-            self.benchmark.test, self.benchmark.collect_benchmark_metrics]
         benchmark_results = None
 
         try:
             self.metrics_storage.start_db()
+
+            # Deploy the SUT
+            with Latency(self.benchmark.deploy) as latency:
+                self.benchmark.deploy()
+            self.latency_tracker.track(latency)
+
+            # RUN the benchmark
+            run_process = [
+                self.benchmark.setup, self.benchmark.run,
+                self.benchmark.collect_run_results,
+                self.benchmark.test, self.benchmark.collect_benchmark_metrics]
+
+            if self.resource_tracker is not None:
+                self.resource_tracker.start()
+
             for benchmark_fun in run_process:
                 with Latency(benchmark_fun) as latency:
                     benchmark_fun()
                 self.latency_tracker.track(latency)
+
+            # Get the results of the benchmark
             benchmark_results = self.metrics_storage.get_benchmark_results()
 
             # just to be save we wait a bit before killing shit.
-            sleep(5)
 
-            self.metrics_storage.stop_db()
         except (docker.errors.APIError, AttributeError, ValueError, RuntimeError) as e:
             print(e)
             raise ValueError("No Results obtained, Benchmark failed.")
         finally:
+            sleep(5)
+            if self.resource_tracker is not None:
+                self.resource_tracker.stop()
+                self.resource_tracker = None
+
+            self.metrics_storage.stop_db()
+            # Undeploy the SUT
             try:
                 self.benchmark.undeploy()
             except Exception:
@@ -171,6 +195,8 @@ class BenchmarkRunner():
             except Exception:
                 pass
 
+        # TODO: move to finally block to ensure that results are always caputres if possible?
+        # persist the results
         self.save_benchmark_results(benchmark_results)
 
     def _set_all_seeds(self):
@@ -191,7 +217,7 @@ class BenchmarkRunner():
             benchmark_results (_type_): _description_
         """
         benchmark_config_dict = dict(
-            resources=self.benchmark.resources,
+            resources=self.resources,
         )
         benchmark_result_dict = dict(
             benchmark_metrics=benchmark_results,
@@ -200,7 +226,7 @@ class BenchmarkRunner():
         with open(
             os.path.join(
                 self.benchmark_folder,
-                f"benchmark_results__{self.rundate}__id.json"), "w"
+                f"benchmark_results__{self.rundate}__{self.bench_goal}.json"), "w"
                 ) as f:
             json.dump(benchmark_result_dict, f)
         print("Results saved!")

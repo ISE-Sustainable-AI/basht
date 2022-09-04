@@ -10,6 +10,7 @@ from ml_benchmark.config import Path
 from ml_benchmark.utils.image_build_wrapper import builder_from_string
 from ml_benchmark.workload.mnist.mnist_task import MnistTask
 from ml_benchmark.utils.yaml_template_filler import YamlTemplateFiller
+from ml_benchmark.utils.yml_parser import YMLParser
 
 
 class OptunaMinikubeBenchmark(Benchmark):
@@ -35,12 +36,21 @@ class OptunaMinikubeBenchmark(Benchmark):
         self.workerCount = resources.get("workerCount", 4)
         self.delete_after_run = resources.get("deleteAfterRun", True)
         self.metrics_ip = resources.get("metricsIP")
+        self.hyperparameter = resources.get("hyperparameter")
 
     def deploy(self) -> None:
         """
         Deploy DB
         """
+
         # TODO: deal with exsiting resources...
+
+        #generate hyperparameter file from resouces def.
+
+        if self.hyperparameter:
+            f = path.join(path.dirname(__file__),"hyperparameter_space.yml")
+            YamlTemplateFiller.as_yaml(f, self.hyperparameter)
+
         try:
             resp = client.CoreV1Api().create_namespace(
                 client.V1Namespace(metadata=client.V1ObjectMeta(name=self.namespace)))
@@ -132,7 +142,7 @@ class OptunaMinikubeBenchmark(Benchmark):
         """
         w = watch.Watch()
         c = client.BatchV1Api()
-        for e in w.stream(c.list_namespaced_job, namespace=self.namespace, timeout_seconds=10):
+        for e in w.stream(c.list_namespaced_job, namespace=self.namespace, timeout_seconds=100):
             if "object" in e and e["object"].status.completion_time is not None:
                 w.stop()
                 return
@@ -198,18 +208,11 @@ if __name__ == "__main__":
     # The basic config for the workload. For testing purposes set epochs to one.
     # For benchmarking take the default value of 100
     # your ressources the optimization should run on
-    resources = {
-        "workerCpu": 2,
-        "workerMemory": 2,
-        "workerCount": 4,
+    resources = YMLParser.parse("experiments/optuna_minikube/resource_definition.yml")
+    to_automate = {
         "metricsIP": urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
-        "kubernetesMasterIP": subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n"),
-        "dockerImageTag": "tawalaya/optuna-trial:latest",
-        "dockerImageBuilder": "minikube",
-        "kubernetesNamespace": "optuna-study",
-        "kubernetesContext": "minikube",
-        "deleteAfterRun": True,
-    }
+        "kubernetesMasterIP": subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n")}
+    resources.update(to_automate)
 
     # TODO: hyperparams.
 

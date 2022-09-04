@@ -7,6 +7,8 @@ spec:
   parallelism: $worker_num
   template:
     spec:
+      nodeSelector:
+        scaphandre : "true"
       containers:
       - name: optuna-trial
         image: $worker_image
@@ -22,5 +24,14 @@ spec:
             value: "postgresql://postgresadmin:admin123@postgres:5432/postgresdb"
           - name: "METRICS_STORAGE_HOST"
             value: "$metrics_ip"
+          - name: "N_TRIALS"
+            value: "$trials"
+          - name: "EPOCHS"
+            value: "$epochs"
+          # injects the kuberntes node name into eacah pod 
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName  
       restartPolicy: OnFailure
 

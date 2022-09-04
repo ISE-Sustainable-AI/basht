@@ -1,6 +1,7 @@
 import random
 from os import path
 from time import sleep
+from math import ceil
 
 import optuna
 from kubernetes import client, config, watch
@@ -36,12 +37,29 @@ class OptunaKubernetesBenchmark(Benchmark):
         self.workerCount = resources.get("workerCount", 4)
         self.delete_after_run = resources.get("deleteAfterRun", True)
         self.metrics_ip = resources.get("metricsIP")
+        self.trials = resources.get("trials", 10) #self._calculate_trial_number(resources.get("trials", 6))
+        self.epochs = resources.get("epochs", 5)
+        self.hyperparameter = resources.get("hyperparameter")
+
+    def _calculate_trial_number(self, n_trials):
+        new_n_trials = None
+        if n_trials < self.workerCount:
+            new_n_trials = self.workerCount
+        else:
+            new_n_trials = ceil(n_trials/self.workerCount)
+        return new_n_trials
 
     def deploy(self) -> None:
         """
         Deploy DB
         """
         # TODO: deal with exsiting resources...
+
+        if self.hyperparameter:
+            #TODO: XXX we got to fix this dependency thing. eitehr merge minikube/kubernetes or use the same baseclass or something...
+            f = path.join(path.dirname(__file__),"..","optuna_minikube","hyperparameter_space.yml")
+            YamlTemplateFiller.as_yaml(f, self.hyperparameter)
+
         try:
             resp = client.CoreV1Api().create_namespace(
                 client.V1Namespace(metadata=client.V1ObjectMeta(name=self.namespace)))
@@ -95,6 +113,8 @@ class OptunaKubernetesBenchmark(Benchmark):
             "worker_image": self.trial_tag,
             "study_name": self.study_name,
             "metrics_ip": self.metrics_ip,
+            "trials": self.trials,
+            "epochs": self.epochs,
         }
         job_yml_objects = YamlTemplateFiller.load_and_fill_yaml_template(
             path.join(path.dirname(__file__), "ops/manifests/trial/job.yml"), job_definition)
@@ -105,11 +125,19 @@ class OptunaKubernetesBenchmark(Benchmark):
             if self._is_create_conflict(e):
                 # lets remove the old one and try again
                 client.BatchV1Api().delete_namespaced_job(name="optuna-trial", namespace=self.namespace)
+                #wait for that to complete
+                sleep(5)
+                # try again
                 create_from_yaml(
                     client.ApiClient(), yaml_objects=job_yml_objects, namespace=self.namespace, verbose=True)
             else:
                 raise e
-        self._watch_trials()
+        try:
+            for t in range(1,14):
+                self._watch_trials(timeout=120*t)
+        except Exception as e:
+            #TODO deal with mitigatable errors
+            raise e
 
     def _getDBURL(self):
         postgres_sepc = client.CoreV1Api().read_namespaced_service(namespace=self.namespace, name="postgres")
@@ -127,23 +155,36 @@ class OptunaKubernetesBenchmark(Benchmark):
         study = optuna.load_study(study_name=self.study_name, storage=self._getDBURL())
         self.best_trial = study.best_trial
 
-    def _watch_trials(self):
+    def _watch_trials(self,timeout=120):
         """
         Checks if Trials (Kubernetes Jobs) are completed. If not the process waits on it.
         """
         w = watch.Watch()
         c = client.BatchV1Api()
-        for e in w.stream(c.list_namespaced_job, namespace=self.namespace, timeout_seconds=10):
+
+        for e in w.stream(c.list_namespaced_job, namespace=self.namespace, timeout_seconds=timeout):
             if "object" in e and e["object"].status.completion_time is not None:
                 w.stop()
-                return
-        print("Trials completed! Collecting Results")
+                print("Trials completed! Collecting Results")
+                return True
+        print("Watch_Trials timed out")
+        try:
+            job = client.BatchV1Api().read_namespaced_job(name="optuna-trial", namespace=self.namespace)
+            if job.status.failed != None and job.status.failed > 0:
+                raise Exception("Trials failed")
+        except ApiException as e:
+            if e.status == 404:
+                raise Exception("Job not created...")
+            raise e
+        return False
+
+
 
     def test(self):
 
         def optuna_trial(trial):
-            objective = MnistTask(config_init={"epochs": 1}).create_objective()
-            lr = trial.suggest_float("learning_rate", 1e-3, 0.1, log=True)
+            objective = MnistTask(config_init={"epochs": self.epochs}).create_objective()
+            lr = trial.suggest_float("learning_rate", 1e-4, 0.1, log=True)
             decay = trial.suggest_float("weight_decay", 1e-6, 1e-4, log=True)
             objective.set_hyperparameters({"learning_rate": lr, "weight_decay": decay})
             # these are the results, that can be used for the hyperparameter search
@@ -165,10 +206,11 @@ class OptunaKubernetesBenchmark(Benchmark):
         if self.delete_after_run:
             client.CoreV1Api().delete_namespace(self.namespace)
             self._watch_namespace()
-            self.image_builder.cleanup(self.trial_tag)
+            # self.image_builder.cleanup(self.trial_tag)
 
     def _watch_namespace(self):
         try:
+            #TODO: XXX fix me!
             client.CoreV1Api().read_namespace_status(self.namespace).to_dict()
             sleep(2)
         except client.exceptions.ApiException:
@@ -193,26 +235,23 @@ class OptunaKubernetesBenchmark(Benchmark):
 if __name__ == "__main__":
     from ml_benchmark.benchmark_runner import BenchmarkRunner
     from urllib.request import urlopen
-    # The basic config for the workload. For testing purposes set epochs to one.
-    # For benchmarking take the default value of 100
-    # your ressources the optimization should run on
-    resource_definition = {
-        "workerCpu": 2,
-        "workerMemory": 2,
-        "workerCount": 4,
+    from ml_benchmark.utils.yml_parser import YMLParser
+    resources = YMLParser.parse(path.join(path.dirname(__file__),"resource_definition.yml"))
+
+    # TODO: XXX remove this hardcoded values
+    to_automate = {
         "metricsIP": urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
-        "studyName": "optuna-study",
         "dockerImageTag": "tawalaya/optuna-trial:latest",
         "dockerImageBuilder": "docker",
         "kubernetesNamespace": "optuna-study",
         "kubernetesContext": "admin@smile",
         "kubernetesMasterIP": "130.149.158.143",
-        "deleteAfterRun": False,
+        "prometheus_url": "http://130.149.158.143:30041",
+        "deleteAfterRun":False,
     }
+    resources.update(to_automate)
 
-    # TODO: hyperparams.
-
-    # import an use the runner
     runner = BenchmarkRunner(
-        benchmark_cls=OptunaKubernetesBenchmark, resource_definition=resource_definition)
+        benchmark_cls=OptunaKubernetesBenchmark, resources=resources)
     runner.run()
+

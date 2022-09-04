@@ -99,7 +99,9 @@ if __name__ == "__main__":
     # For benchmarking take the default value of 100
 
     # your ressources the optimization should run on
-    resources = {"workerCpu": 12}
+    resources = {"workerCpu": 8,
+                 "prometheus_url": "http://localhost:9090" # Assuming u used docker-compose up
+                 }
 
     # Add your hyperparameter setting procedure here
     # your hyperparameter grid you want to search over

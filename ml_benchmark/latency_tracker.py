@@ -1,12 +1,9 @@
 import os
 from abc import ABC, abstractmethod
-
 import psycopg2
 from sqlalchemy import MetaData, Table, create_engine, insert
 
-
 from ml_benchmark.config import MetricsStorageConfig
-from ml_benchmark.metrics import Latency
 
 
 class Tracker(ABC):
@@ -40,7 +37,7 @@ class LatencyTracker(Tracker):
 
     def _create_engine(self, connection_string):
         try:
-            engine = create_engine(connection_string, echo=True)
+            engine = create_engine(connection_string, echo=False)
         except psycopg2.Error:
             raise ConnectionError("Could not create an Engine for the Postgres DB.")
         return engine
@@ -84,25 +81,6 @@ class LatencyTracker(Tracker):
         return f"postgresql://{user}:{password}@{host}:{port}/{db}"
 
 
-def latency_decorator(func):
-    """A Decorator to record the latency of the decorated function. Once it is recorded the LatencyTracker
-    writes the result into the postgres databse.
-
-    Decorators overwrite a decorated function once the code is passed to the compier
-
-    Args:
-        func (_type_): _description_
-    """
-    def latency_func(*args, **kwargs):
-        func.__self__ = args[0]
-        with Latency(func) as latency:
-            result = func(*args, **kwargs)
-        latency_tracker = LatencyTracker()
-        latency_tracker.track(latency)
-        func.__self__ = None
-        return result
-    return latency_func
-
 
 if __name__ == "__main__":
 
@@ -114,7 +92,7 @@ if __name__ == "__main__":
 
     storage = MetricsStorage()
     result = []
-
+    from ml_benchmark.decorators import latency_decorator
     class Test:
         metrics_storage_address = MetricsStorage.connection_string
 

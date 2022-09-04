@@ -1,4 +1,4 @@
-from yaml import load, Loader
+import ruamel.yaml
 
 
 class YMLParser:
@@ -6,7 +6,7 @@ class YMLParser:
     @staticmethod
     def parse(hyperparameter_file_path):
         with open(hyperparameter_file_path, "r") as f:
-            hyper_dict = load(f, Loader=Loader)
+            hyper_dict = ruamel.yaml.safe_load(f)
         return hyper_dict
 
 

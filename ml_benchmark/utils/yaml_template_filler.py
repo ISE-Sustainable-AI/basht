@@ -22,3 +22,15 @@ class YamlTemplateFiller:
         with open(yaml_path, "r") as f:
             job_template = Template(f.read())
         return yaml.safe_load_all(job_template.substitute(yaml_values))
+
+    @staticmethod
+    def as_yaml(yaml_path: str,obj : object) -> None:
+        """Safely writes an object to a YAML-File.
+        Args:
+            yaml_path (str): filename to write yaml to
+            obj (any): object to save as yaml
+        """
+        with open(yaml_path, "w") as f:
+            f.write("# generated file - do not edit\n")
+            yaml.dump(obj, f)
+        

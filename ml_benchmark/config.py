@@ -27,7 +27,7 @@ class MnistConfig:
 class MLPHyperparameter:
     learning_rate: float = 1e-3
     weight_decay: float = 1e-6
-    hidden_layer_config: list = field(default_factory=lambda: [50, 20])
+    hidden_layer_config: list = field(default_factory=lambda: [15])
 
     def to_dict(self):
         return asdict(self)

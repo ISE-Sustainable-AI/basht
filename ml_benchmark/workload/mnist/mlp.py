@@ -42,7 +42,7 @@ class MLP(nn.Module):
 
     def forward(self, x):
         for layer in self.layers[:-1]:
-            x = self.relu(layer(x))
+            x = layer(x)
         x = self.layers[-1](x)
         return x
 

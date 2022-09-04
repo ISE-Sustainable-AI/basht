@@ -19,7 +19,8 @@ def main():
         python_requires=">=3.6",
         include_package_data=True,
         extras_require={"test": package.test_install_requires},
-        long_description="/README.md"
+        long_description=package.long_description,
+        long_description_content_type="text/markdown"
         )
 
 

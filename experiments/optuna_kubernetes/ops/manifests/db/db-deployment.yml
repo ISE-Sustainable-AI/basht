@@ -9,38 +9,6 @@ data:
   POSTGRES_DB: postgresdb
   POSTGRES_USER: postgresadmin
   POSTGRES_PASSWORD: admin123
-# ---
-# kind: PersistentVolume
-# apiVersion: v1
-# metadata:
-#   name: postgres-pv-volume
-#   labels:
-#     type: local
-#     app: postgres
-# spec:
-#   # storageClassName: manual
-#   capacity:
-#     storage: 1Gi
-#   accessModes:
-#     - ReadWriteMany
-#   hostPath:
-#     path: "/mnt/data"
-#   reclaimPolicy: Delete
-# ---
-# kind: PersistentVolumeClaim
-# apiVersion: v1
-# metadata:
-#   name: postgres-pv-claim
-#   labels:
-#     app: postgres
-# spec:
-#   storageClassName: manual
-#   accessModes:
-#     - ReadWriteMany
-#   resources:
-#     requests:
-#       storage: 1Gi
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -56,6 +24,8 @@ spec:
       labels:
         app: postgres
     spec:
+      nodeSelector:
+        scaphandre : "true"
       containers:
         - name: postgres
           image: postgres:10.4
@@ -65,17 +35,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: postgres-config
-          # volumeMounts:
-          #   - mountPath: /var/lib/postgresql/data
-          #     name: postgredb
           resources:
             limits:
               cpu: 1.0
               memory: 1G
-      # volumes:
-      #   - name: postgredb
-      #     persistentVolumeClaim:
-      #       claimName: postgres-pv-claim
 ---
 apiVersion: v1
 kind: Service
