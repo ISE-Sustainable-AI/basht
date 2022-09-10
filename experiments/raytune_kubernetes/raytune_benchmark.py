@@ -4,6 +4,7 @@ import argparse
 
 import ray
 from ray import tune
+from ray.tune import Stopper
 
 from kubernetes import client, config, watch
 from kubernetes.client import ApiException
@@ -11,9 +12,13 @@ from kubernetes.utils import create_from_yaml, FailToCreateError
 
 from ml_benchmark.benchmark_runner import Benchmark
 from ml_benchmark.workload.mnist.mnist_task import MnistTask
-from ml_benchmark.utils.yaml_template_filler import YamlTemplateFiller
+from ml_benchmark.utils.yaml import YamlTemplateFiller
 
 global_grid = None
+
+class TrialStopper(Stopper):
+    def __call__(self, trial_id, result):
+        return result['time_total_s'] > 60*15
 
 
 class RaytuneBenchmark(Benchmark):
@@ -141,7 +146,8 @@ class RaytuneBenchmark(Benchmark):
                 syncer=None  # Disable syncing
             ),
             local_dir="/home/ray/ray-results",
-            resources_per_trial={"cpu": self.workerCpu}
+            resources_per_trial={"cpu": self.workerCpu},
+            stop=TrialStopper()
         )
 
         print(self.analysis.get_best_config(
