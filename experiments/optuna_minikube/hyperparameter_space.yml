@@ -1,0 +1,9 @@
+# generated file - do not edit
+learning_rate:
+  end: 0.01
+  start: 0.0001
+  step_size: 0.001
+weight_decay:
+  end: 0.0001
+  start: 1.0e-06
+  step_size: 1.0e-05
