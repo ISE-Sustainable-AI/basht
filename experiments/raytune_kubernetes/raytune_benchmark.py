@@ -19,7 +19,9 @@ global_grid = None
 class TrialStopper(Stopper):
     def __call__(self, trial_id, result):
         return result['time_total_s'] > 60*15
-
+    
+    def stop_all(self):
+        return False
 
 class RaytuneBenchmark(Benchmark):
 
@@ -120,12 +122,13 @@ class RaytuneBenchmark(Benchmark):
             use the metrics object to collect and store all measurments on the workers.
         """
         grid = self.grid
-        task = MnistTask(config_init={"epochs": 100})
 
         def raytune_func(config, checkpoint_dir=None):
-            import ray
+            from ml_benchmark.workload.mnist.mnist_task import MnistTask
 
-            objective = ray.get(config.get("objective_ref"))
+            task = MnistTask(config_init={"epochs": 100})
+            objective = task.create_objective()
+
             hyperparameters = config.get("hyperparameters")
             objective.set_hyperparameters(hyperparameters)
             # these are the results, that can be used for the hyperparameter search
@@ -134,12 +137,9 @@ class RaytuneBenchmark(Benchmark):
             tune.report(
                 macro_f1_score=validation_scores["macro avg"]["f1-score"])
 
-        objective_ref = ray.put(task.create_objective())
-
         self.analysis = tune.run(
             raytune_func,
             config=dict(
-                objective_ref=objective_ref,
                 hyperparameters=grid,
             ),
             sync_config=tune.SyncConfig(
