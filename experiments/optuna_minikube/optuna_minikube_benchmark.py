@@ -205,10 +205,13 @@ if __name__ == "__main__":
     from ml_benchmark.benchmark_runner import BenchmarkRunner
     import subprocess
     from urllib.request import urlopen
+    import os
+
     # The basic config for the workload. For testing purposes set epochs to one.
     # For benchmarking take the default value of 100
     # your ressources the optimization should run on
-    resources = YMLHandler.load_yaml("experiments/optuna_minikube/resource_definition.yml")
+    dir_path = os.path.abspath(os.path.dirname(__file__))
+    resources = YMLHandler.load_yaml(os.path.join(dir_path, "resource_definition.yml"))
     to_automate = {
         "metricsIP": urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
         "kubernetesMasterIP": subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n")}
