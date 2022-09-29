@@ -7,27 +7,25 @@ from ml_benchmark.workload.objective import Objective
 from sklearn.metrics import classification_report
 
 
-# TODO: use a task for initialization?
 class MLPObjective(Objective):
 
     def __init__(self, epochs, train_loader, val_loader, test_loader, input_size, output_size) -> None:
         super().__init__()
         self.train_loader = train_loader
-        self.val_laoder = val_loader
+        self.val_loader = val_loader
         self.test_loader = test_loader
         self.hyperparameters = MLPHyperparameter().to_dict()
         self.epochs = epochs
         self.device = None
         self.input_size = input_size
         self.output_size = output_size
+        self.model_cls = MLP
 
     def set_hyperparameters(self, hyperparameters: dict):
         hyperparameters["input_size"] = self.input_size
         hyperparameters["output_size"] = self.output_size
-        print(self.hyperparameters)
         self.hyperparameters.update(hyperparameters)
-        print(self.hyperparameters)
-    
+
     def get_hyperparameters(self) -> dict:
         return self.hyperparameters
 
@@ -40,7 +38,7 @@ class MLPObjective(Objective):
     @latency_decorator
     def train(self):
         # model setup
-        self.model = MLP(**self.hyperparameters)
+        self.model = self.model_cls(**self.hyperparameters)
         self.model = self.model.to(self.device)
         # train
         epoch_losses = []
@@ -60,7 +58,7 @@ class MLPObjective(Objective):
         self.model = self.model.to(self.device)
         val_targets = []
         val_preds = []
-        for x, y in self.val_laoder:
+        for x, y in self.val_loader:
             x = x.to(self.device)
             y = y.to(self.device)
             predictions = self.model.test_step(x)
@@ -69,7 +67,9 @@ class MLPObjective(Objective):
             val_preds += [predictions.detach()]
         val_targets = torch.cat(val_targets).cpu().numpy()
         val_preds = torch.cat(val_preds).cpu().numpy()
-        return classification_report(val_targets, val_preds, output_dict=True, zero_division=1)
+        classification_metrics = classification_report(
+            val_targets, val_preds, output_dict=True, zero_division=1)
+        return classification_metrics
 
     def test(self):
         self.model.eval()

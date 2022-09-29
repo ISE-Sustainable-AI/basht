@@ -11,6 +11,8 @@ class Objective(ABC):
     Interface for a training, validation and test procedure of a model.
     """
 
+    model_cls = None
+
     def __init__(self) -> None:
         self._unique_id = random.randint(0, 1000000)
         self._created_at = datetime.now()
