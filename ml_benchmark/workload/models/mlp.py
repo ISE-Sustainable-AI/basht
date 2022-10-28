@@ -1,9 +1,12 @@
 import torch.nn as nn
 import torch
 from torch.optim import Adam
+from ml_benchmark.workload.models.model_interface import Model
+from ml_benchmark.config import MLPHyperparameter
 
 
-class MLP(nn.Module):
+class MLP(nn.Module, Model):
+
     def __init__(self, input_size, hidden_layer_config, output_size, learning_rate, weight_decay):
         """
         A simple Feed Forward Network with a Sigmoid Activation Function after the final layer.
@@ -49,7 +52,8 @@ class MLP(nn.Module):
     def loss_function(self, x, target):
         return self.criterion(x, target)
 
-    def predict(self, logits):
+    def predict(self, x):
+        logits = self(x)
         probabilities = self.softmax(logits)
         predictions = probabilities.to(dtype=torch.int16).argmax(dim=1)
         return predictions
@@ -62,6 +66,5 @@ class MLP(nn.Module):
         return loss.item()
 
     def test_step(self, x):
-        logits = self(x)
-        predictions = self.predict(logits)
+        predictions = self.predict(x)
         return predictions

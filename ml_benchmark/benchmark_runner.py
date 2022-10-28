@@ -15,6 +15,8 @@ from ml_benchmark.latency_tracker import LatencyTracker
 from ml_benchmark.metrics_storage import MetricsStorage
 from ml_benchmark.resource_tracker import ResourceTracker
 from ml_benchmark.metrics import Latency
+from ml_benchmark.utils.workload_validator import WorkloadValidator
+
 
 class Benchmark(ABC):
     """
@@ -121,6 +123,7 @@ class BenchmarkRunner():
         self.benchmark_folder = os.path.join(benchmark_path, f"benchmark__{self.bench_name}")
         self.create_benchmark_folder(self.benchmark_folder)
         self.resources = resources
+        self.workload_definition = WorkloadValidator.validate(resources.pop("workload"))
 
         # add input and output size to the benchmark.
         self.benchmark = benchmark_cls(resources)

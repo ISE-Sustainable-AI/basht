@@ -24,3 +24,8 @@ hyperparameter:
 #    start: [10]
 #    end: [100, 100, 100]
 #    step_size: [10, 1]
+
+workload:
+  model_type: mlp
+  dl_framework: torch
+  dataset: mnist

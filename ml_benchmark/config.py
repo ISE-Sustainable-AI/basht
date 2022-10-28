@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dataclasses import dataclass, asdict, field
+from enum import Enum
 
 
 class Path:
