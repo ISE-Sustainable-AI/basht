@@ -1,7 +1,7 @@
 import os
 
 from ml_benchmark.config import MnistConfig, Path
-from ml_benchmark.workload.mnist.mlp_objective import MLPObjective
+from ml_benchmark.workload.tasks.torch_task_interface import TorchTask
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from torchvision import transforms
@@ -9,7 +9,7 @@ from torchvision.datasets import MNIST
 
 
 # TODO: config_init and hyperparameter handling have to be improved
-class MnistTask:
+class MnistTask(TorchTask):
 
     def __init__(self, config_init: dict = None) -> None:
 
@@ -17,7 +17,6 @@ class MnistTask:
         self.input_size = 28*28
         self.output_size = 10
         self.dataset = self._get_data()
-        self.objective_cls = MLPObjective
         if not config_init:
             config_init = {}
         self.mnist_config = MnistConfig(**config_init)
