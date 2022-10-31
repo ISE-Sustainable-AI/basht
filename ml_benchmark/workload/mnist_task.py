@@ -23,7 +23,7 @@ class MnistTorchTask(TorchTask):
         self.val_loader = None
         self.test_loader = None
 
-    def create_dataloader(self):
+    def setup_batching(self):
         self.train_loader = DataLoader(self.train_data, batch_size=self.task_config.train_batch_size, shuffle=True)
         self.val_loader = DataLoader(self.val_data, batch_size=self.task_config.val_batch_size, shuffle=True)
         self.test_loader = DataLoader(self.test_data, batch_size=self.task_config.test_batch_size, shuffle=True)
@@ -36,7 +36,9 @@ class MnistTorchTask(TorchTask):
         self.val_set = TensorDataset(X_val, y_val)
         self.test_set = TensorDataset(self._data_set.test_data, self._data_set.test_labels)
 
-    def get_data(self):
+    def load_data(self):
+        self._data_path = os.path.join(Path.data_path, "MNIST")
+        FolderCreator.create_folder(self._data_path)
         transform = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         self._data_set = MNIST(root=self._data_path, download=True, transform=transform)
@@ -44,20 +46,13 @@ class MnistTorchTask(TorchTask):
     def preprocess(self):
         self._data_set.data = self._data_set.data.view(-1, self.input_size).float()
 
-    def create_data_path(self):
-        self._data_path = os.path.join(Path.data_path, "MNIST")
-        FolderCreator.create_folder(self._data_path)
-
-    def get_input_output_size(self):
+    def _set_input_output_format(self):
         self.input_size = self._data_set.data.shape[1] * self._data_set.data.shape[2]
         self.output_size = self._data_set.targets.unique().shape[0]
 
-    def get_loader(self):
-        return self.train_loader, self.val_loader, self.test_loader
-
 
 if __name__ == "__main__":
-    task = MnistTask(config_init={"epochs": 1})
+    task = MnistTorchTask(config_init={"epochs": 1})
     task.create_data_path()
     task.get_data()
     task.get_input_output_size()

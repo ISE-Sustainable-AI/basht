@@ -1,6 +1,7 @@
 from numpy import random
 from datetime import datetime
 import tqdm
+import torch
 
 
 class TorchObjective:

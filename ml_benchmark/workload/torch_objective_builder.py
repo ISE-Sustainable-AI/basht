@@ -1,3 +1,4 @@
+from regex import splititer
 from ml_benchmark.workload.torch_objective import TorchObjective
 from ml_benchmark.workload.builder_interface import Builder
 
@@ -11,25 +12,23 @@ class TorchObjectiveBuilder(Builder):
 
     def reset(self) -> None:
         self.objective = TorchObjective()
+        self.task = Task()
 
-    def prepare_task(self, task):
-        task = task()
-        task.create_data_path()
-        task.get_data()
-        task.get_input_output_size()
-        task.preprocess()
-        task.split_data()
-        task.create_dataloader()
-        return task
-
-    def prepare_hyperparameter(self, model_type):
+    def add_task(self):
         pass
 
-    def build_objective(self, model_type, task, hyperparameter):
-        self.objective.add_task(task)
-        self.objective.add_model_type(model_type)
-        self.objective.add_hyperparameter(hyperparameter)
+    def add_hyperparameters(self):
+        pass
 
+    def add_model_cls(self):
+        pass
+
+    def build_task(self, task):
+        self.task.loader = loader
+        self.task.preprocessor = preprocessor
+        self.task.splitter = splititer
+        self.task.data_batcher = batcher
+        return task
 
     # def create_objective(self):
     #     train_loader, val_loader, test_loader = self.create_data_loader(self.mnist_config)
