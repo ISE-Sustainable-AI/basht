@@ -1,22 +1,37 @@
-from basht.workload.task_components.loader import Loader
+from basht.workload.task_components import Loader, Preprocessor, Splitter, Batcher
+from basht.decorators import latency_decorator
 
 
 class TorchTask:
 
     def __init__(self):
-        self.seed = 1337
-        self.component_list = list()
+        self.input_size = None
+        self.output_size = None
+        self.loader = None
+        self.preprocessor_list = []
+        self.splitter_list = []
+        self.batcher = None
+        # TODO: add task default config somewhere
 
-    def add_component(self, component):
-        self.component_list.append(component)
+    def add_loader(self, loader: Loader):
+        self.loader = loader
 
-    def _set_input_output_format(self):
-        pass
+    def add_preprocessor(self, preprocessor: Preprocessor):
+        self.preprocessor_list.append(preprocessor)
 
-    def prepare_task(self):
-        loader = self.component_list.pop(0)
-        if isinstance(loader, Loader):
-            component_output = loader.work()
-        for component in self.component_list:
-            component_output = component.work(component_output)
-        self.loader_tuple = component_output
+    def add_splitter(self, splitter: Splitter):
+        self.splitter_list.append(splitter)
+
+    def add_batcher(self, batcher: Batcher):
+        self.batcher = batcher
+
+    @latency_decorator
+    def prepare(self):
+        obj_dataset = self.loader.work()
+        for preprocessor in self.preprocessor_list:
+            obj_dataset = preprocessor.work(obj_dataset)
+            self.input_size = obj_dataset.input_size
+            self.output_size = obj_dataset.output_size
+        for splitter in self.splitter_list:
+            obj_dataset = splitter.work(obj_dataset)
+        self.train_loader, self.val_loader, self.test_loader = self.batcher.work(obj_dataset)

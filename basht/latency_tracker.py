@@ -81,7 +81,6 @@ class LatencyTracker(Tracker):
         return f"postgresql://{user}:{password}@{host}:{port}/{db}"
 
 
-
 if __name__ == "__main__":
 
     import json
@@ -93,6 +92,7 @@ if __name__ == "__main__":
     storage = MetricsStorage()
     result = []
     from basht.decorators import latency_decorator
+
     class Test:
         metrics_storage_address = MetricsStorage.connection_string
 

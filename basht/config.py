@@ -13,22 +13,12 @@ class Path:
 
 
 @dataclass
-class MnistConfig:
+class TaskConfig:
     val_split_ratio: float = 0.2
     train_batch_size: int = 512
     val_batch_size: int = 128
     test_batch_size: int = 128
     epochs: int = 100
-
-    def to_dict(self):
-        return asdict(self)
-
-
-@dataclass
-class MLPHyperparameter:
-    learning_rate: float = 1e-3
-    weight_decay: float = 1e-6
-    hidden_layer_config: list = field(default_factory=lambda: [15])
 
     def to_dict(self):
         return asdict(self)

@@ -2,6 +2,11 @@ from numpy import random
 from datetime import datetime
 import tqdm
 import torch
+from sklearn.metrics import classification_report
+
+from basht.workload.task import TorchTask
+from basht.workload.models.model_interface import ObjModel
+from basht.decorators import latency_decorator, validation_latency_decorator
 
 
 class TorchObjective:
@@ -15,8 +20,14 @@ class TorchObjective:
         self._created_at = datetime.now()
         self.model_cls = None
         self.hyperparameters = None
+        self.task = None
+        self.device = None
 
-    def train(self):
+    @latency_decorator
+    def train(self) -> dict:
+        # prepare data
+        self.task.prepare()
+
         # model setup
         self.model = self.model_cls(**self.hyperparameters)
         self.model = self.model.to(self.device)
@@ -24,7 +35,7 @@ class TorchObjective:
         epoch_losses = []
         for epoch in tqdm.tqdm(range(1, self.epochs+1)):
             batch_losses = []
-            for x, y in self.train_loader:
+            for x, y in self.task.train_loader:
                 x = x.to(self.device)
                 y = y.to(self.device)
                 loss = self.model.train_step(x, y)
@@ -32,12 +43,13 @@ class TorchObjective:
             epoch_losses.append(sum(batch_losses)/len(batch_losses))
         return {"train_loss": epoch_losses}
 
-    def validate(self):
+    @validation_latency_decorator
+    def validate(self) -> dict:
         self.model.eval()
         self.model = self.model.to(self.device)
         val_targets = []
         val_preds = []
-        for x, y in self.val_laoder:
+        for x, y in self.task.val_laoder:
             x = x.to(self.device)
             y = y.to(self.device)
             predictions = self.model.test_step(x)
@@ -48,12 +60,12 @@ class TorchObjective:
         val_preds = torch.cat(val_preds).cpu().numpy()
         return classification_report(val_targets, val_preds, output_dict=True, zero_division=1)
 
-    def test(self):
+    def test(self) -> dict:
         self.model.eval()
         self.model = self.model.to(self.device)
         test_targets = []
         test_predictions = []
-        for x, y in self.test_loader:
+        for x, y in self.task.test_loader:
             x = x.to(self.device)
             y = y.to(self.device)
             predictions = self.model.test_step(x)
@@ -63,3 +75,15 @@ class TorchObjective:
         test_targets = torch.cat(test_targets).cpu().numpy()
         test_predictions = torch.cat(test_predictions).cpu().numpy()
         return classification_report(test_targets, test_predictions, output_dict=True, zero_division=1)
+
+    def _add_task(self, task: TorchTask):
+        self.task = task
+
+    def _add_model_cls(self, model_cls: ObjModel):
+        self.model_cls = model_cls
+
+    def set_device(self, device: str):
+        self.device = device
+
+    def set_hyperparameters(self, hyperparameters: dict):
+        self.hyperparameters = hyperparameters

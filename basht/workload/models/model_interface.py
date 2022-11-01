@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class Model(ABC):
+class ObjModel(ABC):
 
     @abstractmethod
     def train_step(self, x, y):

@@ -11,26 +11,28 @@ class Splitter(ABC):
     _seed = 1337
 
     @abstractmethod
-    def __init__(self, vali_split: float = None, test_split: float = None) -> None:
+    def __init__(self, val_split: float = None, test_split: float = None) -> None:
         pass
 
     @abstractmethod
-    def work(self, preprocessed_dataset: Dataset):
+    def work(self, preprocessed_dataset: Dataset) -> ObjDataset:
         pass
 
 
 class StandardTorchSplitter(Splitter):
 
-    def __init__(self, vali_split: float = None, test_split: float = None) -> None:
-        self.vali_split = vali_split
+    def __init__(self, val_split: float = None, test_split: float = None) -> None:
+        self.val_split = val_split
         self.test_split = test_split
 
-    def work(self, preprocessed_dataset: ObjDataset):
+    def work(self, preprocessed_dataset: ObjDataset) -> ObjDataset:
         # TODO: need to add check for train and test attribute of dataset
         X_train, X_val, y_train, y_val = train_test_split(
-            preprocessed_dataset.train_data, preprocessed_dataset.train_labels, test_size=self.vali_split,
+            preprocessed_dataset.dataset.train_data, preprocessed_dataset.dataset.train_labels,
+            test_size=self.val_split,
             random_state=self._seed)
         preprocessed_dataset.train_set = TensorDataset(X_train, y_train)
-        preprocessed_dataset.vali_set = TensorDataset(X_val, y_val)
-        preprocessed_dataset.test_set = TensorDataset(self._data_set.test_data, self._data_set.test_labels)
+        preprocessed_dataset.val_set = TensorDataset(X_val, y_val)
+        preprocessed_dataset.test_set = TensorDataset(
+            preprocessed_dataset.dataset.test_data, preprocessed_dataset.dataset.test_labels)
         return preprocessed_dataset

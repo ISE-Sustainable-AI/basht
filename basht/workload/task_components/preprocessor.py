@@ -10,7 +10,7 @@ class Preprocessor(ABC):
         pass
 
     @abstractmethod
-    def work(self, dataset):
+    def work(self, dataset: ObjDataset) -> ObjDataset:
         pass
 
 
@@ -19,9 +19,9 @@ class TorchImageFlattner(Preprocessor):
     def __init__(self) -> None:
         pass
 
-    def work(self, dataset: ObjDataset):
+    def work(self, dataset: ObjDataset) -> ObjDataset:
         # TODO: addjust for more generality
-        dataset.input_size = dataset.data.shape[1] * self._data_set.data.shape[2]
-        dataset.output_size = dataset.targets.unique().shape[0]
-        dataset.dataset.data = self.dataset.data.view(-1, dataset.input_size).float()
+        dataset.input_size = dataset.dataset.data.shape[1] * dataset.dataset.data.shape[2]
+        dataset.output_size = dataset.dataset.targets.unique().shape[0]
+        dataset.dataset.data = dataset.dataset.data.view(-1, dataset.input_size).float()
         return dataset
