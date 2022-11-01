@@ -1,4 +1,4 @@
-from ml_benchmark.metrics_storage import MetricsStorage
+from basht.metrics_storage import MetricsStorage
 import docker
 import json
 import os

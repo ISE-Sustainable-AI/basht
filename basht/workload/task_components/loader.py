@@ -8,6 +8,18 @@ from torch.utils.data import Dataset
 from typing import Tuple, List
 
 
+class ObjDataset:
+
+    def __init__(self, dataset: Dataset, input_size: int = None, output_size: int = None) -> None:
+        self.input_size = input_size
+        self.output_size = output_size
+        self.dataset = dataset
+        self.train_set = None
+        self.vali_set = None
+        self.test_set = None
+        # TODO: add logic for targets, train set, test set, etc.
+
+
 class Loader:
 
     folder_creator = FolderCreator
@@ -32,6 +44,4 @@ class MnistLoader(Loader):
         transform = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         dataset = MNIST(root=self._data_path, download=True, transform=transform)
-        input_size = dataset.data.shape[1] * self._data_set.data.shape[2]
-        output_size = dataset.targets.unique().shape[0]
-        return [dataset, (input_size, output_size)] # TODO: Sizes need to be passed to hyperparameters
+        return ObjDataset(dataset)

@@ -1,7 +1,7 @@
 
 import logging
-from ml_benchmark.resource_tracker import ResourceTracker
-from ml_benchmark.metrics_storage import LoggingStoreStrategy
+from basht.resource_tracker import ResourceTracker
+from basht.metrics_storage import LoggingStoreStrategy
 
 
 def test_resouce_tracker(prometeus_url):

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import psycopg2
 from sqlalchemy import MetaData, Table, create_engine, insert
 
-from ml_benchmark.config import MetricsStorageConfig
+from basht.config import MetricsStorageConfig
 
 
 class Tracker(ABC):
@@ -88,11 +88,11 @@ if __name__ == "__main__":
 
     import docker
 
-    from ml_benchmark.metrics_storage import MetricsStorage
+    from basht.metrics_storage import MetricsStorage
 
     storage = MetricsStorage()
     result = []
-    from ml_benchmark.decorators import latency_decorator
+    from basht.decorators import latency_decorator
     class Test:
         metrics_storage_address = MetricsStorage.connection_string
 

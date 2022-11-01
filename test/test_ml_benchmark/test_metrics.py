@@ -1,10 +1,10 @@
 import imp
 import logging
-from ml_benchmark.metrics_storage import MetricsStorage
-from ml_benchmark.resource_tracker import ResourceTracker
-from ml_benchmark.results_tracker import ResultTracker
+from basht.metrics_storage import MetricsStorage
+from basht.resource_tracker import ResourceTracker
+from basht.results_tracker import ResultTracker
 
-from ml_benchmark.workload.mnist.mnist_task import MnistTask
+from basht.workload.mnist.mnist_task import MnistTask
 from time import sleep
 
 

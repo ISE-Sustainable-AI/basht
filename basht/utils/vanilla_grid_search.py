@@ -115,8 +115,8 @@ class TuneJob:
 
 
 if __name__ == "__main__":
-    from ml_benchmark.workload.mnist.mlp_objective import MLPObjective
-    from ml_benchmark.workload.mnist.mnist_task import MnistTask
+    from basht.workload.mnist.mlp_objective import MLPObjective
+    from basht.workload.mnist.mnist_task import MnistTask
     epochs = 5
     configuration = {
             "val_split_ratio": 0.2, "train_batch_size": 512, "val_batch_size": 128, "test_batch_size": 128}

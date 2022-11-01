@@ -1,5 +1,5 @@
 import numpy as np
-from ml_benchmark.utils.yaml import YMLHandler
+from basht.utils.yaml import YMLHandler
 import itertools
 
 def generate_search_space(yaml_file_path):

@@ -1,12 +1,12 @@
 import os
 
-from ml_benchmark.config import MnistConfig, Path
-from ml_benchmark.workload.tasks.torch_task_interface import TorchTask
+from basht.config import MnistConfig, Path
+from basht.workload.tasks.torch_task_interface import TorchTask
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from torchvision import transforms
 from torchvision.datasets import MNIST
-from ml_benchmark.utils.folder_creator import FolderCreator
+from basht.utils.folder_creator import FolderCreator
 
 
 class MnistTorchTask(TorchTask):

@@ -2,12 +2,12 @@ from setuptools import find_packages, setup
 
 
 def main():
-    import ml_benchmark as package
+    import basht as package
 
     setup(
-        name='ml_benchmark',
+        name='basht',
         version=package.__version__,
-        description='ml_benchmark - A ML-Job for Benchmarking.',
+        description='basht - A ML-Job for Benchmarking.',
         license='MIT',
         author='Michael Gebauer, Sebastian Werner',
         author_email='gebauerm23@gmail.com',

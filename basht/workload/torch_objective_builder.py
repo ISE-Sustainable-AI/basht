@@ -1,6 +1,6 @@
 from regex import splititer
-from ml_benchmark.workload.torch_objective import TorchObjective
-from ml_benchmark.workload.builder_interface import Builder
+from basht.workload.torch_objective import TorchObjective
+from basht.workload.builder_interface import Builder
 
 
 class TorchObjectiveBuilder(Builder):

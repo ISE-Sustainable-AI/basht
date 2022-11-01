@@ -1,4 +1,4 @@
-from ml_benchmark.config import WorkloadEnums
+from basht.config import WorkloadEnums
 
 
 class WorkloadValidator:

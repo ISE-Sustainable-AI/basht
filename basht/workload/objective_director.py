@@ -1,9 +1,9 @@
-from ml_benchmark.workload.models.mlp import MLP
-from ml_benchmark.workload.tasks.mnist_task import MnistTask
-from ml_benchmark.workload.torch_objective import Objective
-from ml_benchmark.config import WorkloadDataEnum, WorkloadFrameworkEnum, WorkloadModelEnum
-from ml_benchmark.workload.torch_objective_builder import TorchObjectiveBuilder
-from ml_benchmark.config import MLPHyperparameter
+from basht.workload.models.mlp import MLP
+from basht.workload.tasks.mnist_task import MnistTask
+from basht.workload.torch_objective import Objective
+from basht.config import WorkloadDataEnum, WorkloadFrameworkEnum, WorkloadModelEnum
+from basht.workload.torch_objective_builder import TorchObjectiveBuilder
+from basht.config import MLPHyperparameter
 
 
 class ObjectiveDirector:

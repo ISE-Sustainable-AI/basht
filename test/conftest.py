@@ -2,8 +2,8 @@ import pytest
 import requests
 import os
 
-from ml_benchmark.decorators import latency_decorator, validation_latency_decorator
-from ml_benchmark.workload.objectives.objective import Objective
+from basht.decorators import latency_decorator, validation_latency_decorator
+from basht.workload.objectives.objective import Objective
 
 
 @pytest.fixture

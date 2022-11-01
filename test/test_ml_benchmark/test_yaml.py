@@ -1,5 +1,5 @@
 from os import path
-from ml_benchmark.utils.yaml import YMLHandler
+from basht.utils.yaml import YMLHandler
 
 
 def test_yaml():

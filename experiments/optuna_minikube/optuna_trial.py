@@ -2,7 +2,7 @@ import os
 import sys
 from time import sleep
 import optuna
-from ml_benchmark.workload.mnist.mnist_task import MnistTask
+from basht.workload.mnist.mnist_task import MnistTask
 from utils import generate_search_space
 from optuna.study import MaxTrialsCallback
 from optuna.trial import TrialState

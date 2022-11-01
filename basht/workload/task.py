@@ -1,3 +1,6 @@
+from basht.workload.task_components.loader import Loader
+
+
 class TorchTask:
 
     def __init__(self):
@@ -11,6 +14,9 @@ class TorchTask:
         pass
 
     def prepare_task(self):
-        component_output = self.component_list.pop(0)()
+        loader = self.component_list.pop(0)
+        if isinstance(loader, Loader):
+            component_output = loader.work()
         for component in self.component_list:
             component_output = component.work(component_output)
+        self.loader_tuple = component_output

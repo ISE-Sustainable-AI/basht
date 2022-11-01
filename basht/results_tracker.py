@@ -1,7 +1,7 @@
 import logging
-from ml_benchmark.latency_tracker import Tracker #TODO: move to utils
-from ml_benchmark.metrics import Result
-from ml_benchmark.metrics_storage import MetricsStorageStrategy
+from basht.latency_tracker import Tracker #TODO: move to utils
+from basht.metrics import Result
+from basht.metrics_storage import MetricsStorageStrategy
 
 class ResultTracker(Tracker):
     def __init__(self,store=MetricsStorageStrategy):
@@ -10,7 +10,7 @@ class ResultTracker(Tracker):
 
     def track(self, objective_function, result):
         r = Result(objective=objective_function)
-    
+
         r.value = result["macro avg"]["f1-score"]
         r.measure = "f1-score"
 

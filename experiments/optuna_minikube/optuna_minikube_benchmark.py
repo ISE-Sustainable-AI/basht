@@ -5,12 +5,12 @@ import optuna
 from kubernetes import client, config, watch
 from kubernetes.client import ApiException
 from kubernetes.utils import create_from_yaml, FailToCreateError
-from ml_benchmark.benchmark_runner import Benchmark
-from ml_benchmark.config import Path
-from ml_benchmark.utils.image_build_wrapper import builder_from_string
-from ml_benchmark.workload.mnist.mnist_task import MnistTask
-from ml_benchmark.utils.yaml import YamlTemplateFiller
-from ml_benchmark.utils.yaml import YMLHandler
+from basht.benchmark_runner import Benchmark
+from basht.config import Path
+from basht.utils.image_build_wrapper import builder_from_string
+from basht.workload.mnist.mnist_task import MnistTask
+from basht.utils.yaml import YamlTemplateFiller
+from basht.utils.yaml import YMLHandler
 
 
 class OptunaMinikubeBenchmark(Benchmark):
@@ -206,7 +206,7 @@ class OptunaMinikubeBenchmark(Benchmark):
 
 if __name__ == "__main__":
 
-    from ml_benchmark.benchmark_runner import BenchmarkRunner
+    from basht.benchmark_runner import BenchmarkRunner
     import subprocess
     from urllib.request import urlopen
     import os

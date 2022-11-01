@@ -1,8 +1,8 @@
 import torch.nn as nn
 import torch
 from torch.optim import Adam
-from ml_benchmark.workload.models.model_interface import Model
-from ml_benchmark.config import MLPHyperparameter
+from basht.workload.models.model_interface import Model
+from basht.config import MLPHyperparameter
 
 
 class MLP(nn.Module, Model):
