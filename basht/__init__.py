@@ -9,7 +9,7 @@ install_requires = [
         "prometheus-api-client==0.5.1",
         "ruamel.yaml==0.17.21"],
 test_install_requires = ["pytest==7.1.2", "pytest-cov==3.0.0"]
-URL = "https://github.com/gebauerm/ml_benchmark"
+URL = "https://github.com/ISE-Sustainable-AI/basht"
 
 long_description = ""
 
