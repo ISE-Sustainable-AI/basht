@@ -15,7 +15,7 @@ class Batcher(ABC):
         pass
 
 
-class TorchBatcher(Batcher):
+class TorchStandardBatcher(Batcher):
 
     def __init__(self, train_batch_size: int, val_batch_size: int, test_batch_size: int) -> None:
         self.train_batch_size = train_batch_size

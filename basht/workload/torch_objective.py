@@ -3,10 +3,32 @@ from datetime import datetime
 import tqdm
 import torch
 from sklearn.metrics import classification_report
+from typing import function
 
 from basht.workload.task import TorchTask
 from basht.workload.models.model_interface import ObjModel
 from basht.decorators import latency_decorator, validation_latency_decorator
+
+
+class Obective:
+
+    def __init__(self) -> None:
+        # TODO: director majic etc.
+        pass
+
+    def set_device(self, device: str):
+        self.device = device
+
+    def set_hyperparameters(self, hyperparameters: dict):
+        self.hyperparameters = hyperparameters
+
+    def set_pruning_callback(self, callback_method: function):
+        pass
+
+    def train(self):
+        self.train_pre_steps()
+        self._train()
+        self.train_post_steps()
 
 
 class TorchObjective:
@@ -81,9 +103,3 @@ class TorchObjective:
 
     def _add_model_cls(self, model_cls: ObjModel):
         self.model_cls = model_cls
-
-    def set_device(self, device: str):
-        self.device = device
-
-    def set_hyperparameters(self, hyperparameters: dict):
-        self.hyperparameters = hyperparameters
