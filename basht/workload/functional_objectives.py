@@ -1,37 +1,27 @@
+from basht.workload.objective import ObjectiveInterface
+from basht.workload.task import TorchTask
+from basht.workload.models.model_interface import ObjModel
+from basht.decorators import latency_decorator, validation_latency_decorator
 from numpy import random
 from datetime import datetime
 import tqdm
 import torch
 from sklearn.metrics import classification_report
-from typing import function
-
-from basht.workload.task import TorchTask
-from basht.workload.models.model_interface import ObjModel
-from basht.decorators import latency_decorator, validation_latency_decorator
+from abc import ABC, abstractmethod
 
 
-class Obective:
+class FunctionalObjective(ABC):
 
-    def __init__(self) -> None:
-        # TODO: director majic etc.
+    @abstractmethod
+    def _add_task(self, task):
         pass
 
-    def set_device(self, device: str):
-        self.device = device
-
-    def set_hyperparameters(self, hyperparameters: dict):
-        self.hyperparameters = hyperparameters
-
-    def set_pruning_callback(self, callback_method: function):
+    @abstractmethod
+    def _add_model_cls(self, model_cls: ObjModel):
         pass
 
-    def train(self):
-        self.train_pre_steps()
-        self._train()
-        self.train_post_steps()
 
-
-class TorchObjective:
+class TorchObjective(FunctionalObjective, ObjectiveInterface):
 
     """
     Interface for a training, validation and test procedure of a model.
@@ -41,9 +31,7 @@ class TorchObjective:
         self._unique_id = random.randint(0, 1000000)
         self._created_at = datetime.now()
         self.model_cls = None
-        self.hyperparameters = None
         self.task = None
-        self.device = None
 
     @latency_decorator
     def train(self) -> dict:

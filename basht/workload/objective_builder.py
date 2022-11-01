@@ -1,13 +1,42 @@
-from basht.workload.torch_objective import TorchObjective
-from basht.workload.builder_interface import Builder
+from abc import ABC, abstractmethod
+
+
 from basht.workload.task import TorchTask
 from basht.workload.models.model_interface import ObjModel
+from basht.workload.functional_objectives import TorchObjective
 from basht.workload.task_components import Splitter, Loader, Batcher, Preprocessor
 
 
-class TorchObjectiveBuilder(Builder):
+class Builder(ABC):
+
+    task = None
+    model = None
+    objective = None
 
     # use: https://refactoring.guru/design-patterns/builder/python/example
+
+    @abstractmethod
+    def __init__(self) -> None:
+        pass
+
+    @abstractmethod
+    def reset(self):
+        pass
+
+    @abstractmethod
+    def build_task(self):
+        pass
+
+    @abstractmethod
+    def build_model(self):
+        pass
+
+    @abstractmethod
+    def add_manual(self, manual):
+        pass
+
+
+class TorchObjectiveBuilder(Builder):
 
     def __init__(self) -> None:
         self.reset()
@@ -34,6 +63,3 @@ class TorchObjectiveBuilder(Builder):
 
     def add_task_to_objective(self):
         self.objective._add_task(self.task)
-
-    def get_objective(self):
-        # TODO: wraps everything up in a objective object, which the user uses as an interface
