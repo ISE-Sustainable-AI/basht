@@ -16,7 +16,7 @@ class ObjDataset:
         self.train_set = None
         self.val_set = None
         self.test_set = None
-        # TODO: add logic for targets, train set, test set, etc.
+        # TODO: add logic for targets, train set, test set, etc., needs more generality
 
         @property
         def input_size(self) -> int:

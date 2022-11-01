@@ -12,6 +12,10 @@ from abc import ABC, abstractmethod
 
 class FunctionalObjective(ABC):
 
+    model_cls = None
+    task = None
+    epochs = None
+
     @abstractmethod
     def _add_task(self, task):
         pass
@@ -30,8 +34,6 @@ class TorchObjective(FunctionalObjective, ObjectiveInterface):
     def __init__(self) -> None:
         self._unique_id = random.randint(0, 1000000)
         self._created_at = datetime.now()
-        self.model_cls = None
-        self.task = None
 
     @latency_decorator
     def train(self) -> dict:
@@ -91,3 +93,12 @@ class TorchObjective(FunctionalObjective, ObjectiveInterface):
 
     def _add_model_cls(self, model_cls: ObjModel):
         self.model_cls = model_cls
+
+    def _add_epochs(self, epochs: int):
+        self.epochs = epochs
+
+
+class TFObjectiveBuilder(FunctionalObjective, ObjectiveInterface):
+
+    def __init__(self) -> None:
+        pass

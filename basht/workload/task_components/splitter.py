@@ -18,6 +18,10 @@ class Splitter(ABC):
     def work(self, preprocessed_dataset: Dataset) -> ObjDataset:
         pass
 
+    @abstractmethod
+    def __str__(self):
+        pass
+
 
 class StandardTorchSplitter(Splitter):
 

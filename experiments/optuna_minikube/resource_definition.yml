@@ -16,7 +16,7 @@ workload: # this is given to every trial and thus defines the performed work
     loader: mnist
     preprocessors:
       - ImageFlattner
-    splitter:
+    splitters:
       - StandardSplitter
     batcher:
       - StandardBatcher
