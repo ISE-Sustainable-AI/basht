@@ -15,13 +15,13 @@ class FunctionalObjective(ABC):
     model_cls = None
     task = None
     epochs = None
+    hyperparameter = None
+    device = None
+    _unique_id = None
+    _created_at = None
 
     @abstractmethod
-    def _add_task(self, task):
-        pass
-
-    @abstractmethod
-    def _add_model_cls(self, model_cls: ObjModel):
+    def __init__(self, model_cls: ObjModel, epochs: int, device: str, hyperparameter: dict) -> None:
         pass
 
 
@@ -31,7 +31,7 @@ class TorchObjective(FunctionalObjective, ObjectiveInterface):
     Interface for a training, validation and test procedure of a model.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, model_cls: ObjModel, epochs: int, device: str, hyperparameter: dict) -> None:
         self._unique_id = random.randint(0, 1000000)
         self._created_at = datetime.now()
 
@@ -87,18 +87,3 @@ class TorchObjective(FunctionalObjective, ObjectiveInterface):
         test_targets = torch.cat(test_targets).cpu().numpy()
         test_predictions = torch.cat(test_predictions).cpu().numpy()
         return classification_report(test_targets, test_predictions, output_dict=True, zero_division=1)
-
-    def _add_task(self, task: TorchTask):
-        self.task = task
-
-    def _add_model_cls(self, model_cls: ObjModel):
-        self.model_cls = model_cls
-
-    def _add_epochs(self, epochs: int):
-        self.epochs = epochs
-
-
-class TFObjectiveBuilder(FunctionalObjective, ObjectiveInterface):
-
-    def __init__(self) -> None:
-        pass

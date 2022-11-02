@@ -21,7 +21,8 @@ class OptunaTrial:
             "learning_rate", self.search_space["learning_rate"].min(), self.search_space["learning_rate"].max(), log=True)
         decay = trial.suggest_float(
             "weight_decay", self.search_space["weight_decay"].min(), self.search_space["weight_decay"].max(), log=True)
-        ## TODO: optuna does not take lists for gridsearch and sampling - you need to add building of lists internally
+        # TODO: optuna does not take lists for gridsearch and sampling -
+        # you need to add building of lists internally
         # hidden_layer_config = trial.suggest_categorical(
         #     "hidden_layer_config", self.search_space["hidden_layer_config"])
         objective.set_hyperparameters(

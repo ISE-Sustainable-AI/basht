@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from matplotlib import test
 from torch.utils.data import DataLoader
 from basht.workload.task_components.loader import ObjDataset
 
 
 class Batcher(ABC):
+
+    name = None
 
     @abstractmethod
     def __init__(self, train_batch_size: int, val_batch_size: int, test_batch_size: int) -> None:
@@ -16,6 +17,8 @@ class Batcher(ABC):
 
 
 class TorchStandardBatcher(Batcher):
+
+    name = "StandardBatcher"
 
     def __init__(self, train_batch_size: int, val_batch_size: int, test_batch_size: int) -> None:
         self.train_batch_size = train_batch_size

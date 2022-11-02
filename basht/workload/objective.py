@@ -1,5 +1,3 @@
-
-from typing import function
 from abc import ABC, abstractmethod
 
 from basht.workload.objective_director import ObjectiveDirector
@@ -7,9 +5,7 @@ from basht.workload.objective_director import ObjectiveDirector
 
 class ObjectiveInterface(ABC):
 
-    hyperparameters = None
-    device = None
-    pruning_callback = None
+    workload_definition = None
 
     @abstractmethod
     def train(self):
@@ -26,18 +22,12 @@ class ObjectiveInterface(ABC):
 
 class Objective(ObjectiveInterface):
 
-    def __init__(self, workload_definition: dict) -> None:
-        self._director = ObjectiveDirector(workload_definition)
-        self._functional_objective = self.director.build_objective()
-
-    def set_device(self, device: str):
-        self._functional_objective.device = device
-
-    def set_hyperparameters(self, hyperparameters: dict):
-        self._functional_objective.hyperparameters = hyperparameters
-
-    def set_pruning_callback(self, callback_method: function):
-        pass
+    def __init__(
+            self, dl_framework: str = None, model_cls: str = None, epochs: int = 5,
+            device: str = "cpu", task: dict = None, hyperparameters: dict = None) -> None:
+        self.workload_definition = locals()
+        self._director = ObjectiveDirector(dl_framework)
+        self._functional_objective = self.director.build_objective(self.workload_definition)
 
     def train(self):
         return self._functional_objective.train()

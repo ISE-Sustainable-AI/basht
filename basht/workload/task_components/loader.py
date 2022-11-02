@@ -46,6 +46,7 @@ class ObjDataset:
 class Loader:
 
     folder_creator = FolderCreator
+    name = None
 
     @abstractmethod
     def __init__(self) -> None:
@@ -57,6 +58,8 @@ class Loader:
 
 
 class MnistLoader(Loader):
+
+    name = "MnistLoader"
 
     def __init__(self) -> None:
         self.data_path = os.path.join(Path.data_path, "MNIST")

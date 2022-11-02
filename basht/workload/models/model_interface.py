@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 
 class ObjModel(ABC):
 
+    name = None
+
     @abstractmethod
     def train_step(self, x, y):
         pass
@@ -13,4 +15,8 @@ class ObjModel(ABC):
 
     @abstractmethod
     def predict(self, x):
+        pass
+
+    @abstractmethod
+    def __str__(self) -> str:
         pass

@@ -5,6 +5,8 @@ from basht.workload.task_components.loader import ObjDataset
 
 class Preprocessor(ABC):
 
+    name = None
+
     @abstractmethod
     def __init__(self) -> None:
         pass
@@ -15,6 +17,8 @@ class Preprocessor(ABC):
 
 
 class TorchImageFlattner(Preprocessor):
+
+    name = "ImageFlattner"
 
     def __init__(self) -> None:
         pass

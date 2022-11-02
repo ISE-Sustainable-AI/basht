@@ -1,27 +1,20 @@
-from basht.workload.objective_builder import TorchObjectiveBuilder, TFObjectiveBuilder
+from basht.workload.objective_builder import ObjectiveBuilder
 from basht.workload.functional_objectives import FunctionalObjective
 
 
 class ObjectiveDirector:
 
-    builder_directory = {
-        "torch": TorchObjectiveBuilder,
-        "tensorflow": TFObjectiveBuilder
-    }
-
-    def __init__(self, workload_definition: dict) -> None:
-        self.builder = self.builder_directory.get(workload_definition.get("dl_framework"))()
+    def __init__(self, dl_framework: str = None) -> None:
+        self.builder = ObjectiveBuilder()
 
     def build_objective(self, workload_definition: dict) -> FunctionalObjective:
-        self.builder.reset()
-        self.builder.create_building_manual(workload_definition)
-        self.builder.add_task_loader()
-        self.builder.add_task_preprocessors()
-        self.builder.add_splitters()
-        self.builder.add_batcher()
-        print("Finished Task Building")
-        self.builder.add_model_cls()
-        self.builder.add_epochs()
+        task_definition = workload_definition.get("task")
+        if task_definition:
+            self.builder.add_task_loader(task_definition.get("loader"))
+            self.builder.add_task_preprocessors(task_definition.get("preprocessors"))
+            self.builder.add_splitters(task_definition.get("splitters"))
+            self.builder.add_batcher(task_definition.get("batcher"))
+            print("Finished Task Building")
         self.builder.add_task_to_objective()
         print("Finished Objective Building")
         return self.builder.get_objective()

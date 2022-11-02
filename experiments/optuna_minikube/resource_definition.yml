@@ -19,7 +19,10 @@ workload: # this is given to every trial and thus defines the performed work
     splitters:
       - StandardSplitter
     batcher:
-      - StandardBatcher
+      type: StandardBatcher
+      train_batch_size: 50
+      val_batch_size: 50
+      test_batch_size: 50
   model_cls: mlp
   epochs: 5
   device: cpu

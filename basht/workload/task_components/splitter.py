@@ -9,6 +9,7 @@ from basht.workload.task_components.loader import ObjDataset
 class Splitter(ABC):
 
     _seed = 1337
+    name = None
 
     @abstractmethod
     def __init__(self, val_split: float = None, test_split: float = None) -> None:
@@ -18,12 +19,10 @@ class Splitter(ABC):
     def work(self, preprocessed_dataset: Dataset) -> ObjDataset:
         pass
 
-    @abstractmethod
-    def __str__(self):
-        pass
 
+class TorchStandardSplitter(Splitter):
 
-class StandardTorchSplitter(Splitter):
+    name = "StandardSplitter"
 
     def __init__(self, val_split: float = None, test_split: float = None) -> None:
         self.val_split = val_split
