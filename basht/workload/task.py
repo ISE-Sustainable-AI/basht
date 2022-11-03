@@ -9,7 +9,7 @@ class TorchTask:
         self.output_size = None
         self.loader = None
         self.preprocessor_list = []
-        self.splitter_list = []
+        self.splitter_list = None
         self.batcher = None
         # TODO: add task default config somewhere
 
@@ -20,7 +20,7 @@ class TorchTask:
         self.preprocessor_list.append(preprocessor)
 
     def add_splitter(self, splitter: Splitter):
-        self.splitter_list.append(splitter)
+        self.splitter = splitter
 
     def add_batcher(self, batcher: Batcher):
         self.batcher = batcher

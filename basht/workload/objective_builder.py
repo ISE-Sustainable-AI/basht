@@ -57,19 +57,22 @@ class ObjectiveBuilder(Builder):
         self.objective = self.mapper.objective()
         self.task = self.mapper.task()
 
-    def add_task_loader(self, loader: Loader):
-        self.task.add_loader(loader)
+    def add_task_loader(self, loader: str):
+        self.task.add_loader(self.mapper.components.get(loader))
 
-    def add_task_preprocessors(self):
-        for preprocessor in self.mapper.components.get():
+    def add_task_preprocessors(self, preprocessors: list):
+        for preprocessor in self.mapper.components.get(preprocessors):
             self.task.add_preprocessor(preprocessor)
 
-    def add_task_splitters(self):
-        for splitter in self.mapper.components.get(""):
-            self.task.add_splitter(splitter)
+    def add_task_splitters(self, splitter: dict):
+        splitter_cls = self.mapper.components.get(splitter.get("type"))
+        splitter_config = splitter.get("config")
+        self.task.add_splitter(splitter_cls(splitter_config))
 
-    def add_task_batcher(self):
-        self.task.add_batcher(self.mapper.components.get(""))
+    def add_task_batcher(self, batcher: dict):
+        batcher_cls = self.mapper.components.get(batcher.get("type"))
+        batcher_config = batcher.get("config")
+        self.task.add_batcher(batcher_cls(batcher_config))
 
     def add_task_to_objective(self):
         self.objective._add_task(self.task)

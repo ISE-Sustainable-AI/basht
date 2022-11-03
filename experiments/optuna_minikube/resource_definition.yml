@@ -17,24 +17,28 @@ workload: # this is given to every trial and thus defines the performed work
     preprocessors:
       - ImageFlattner
     splitters:
-      - StandardSplitter
+      type: StandardSplitter
+      config:
+        val_split: 0.2
+        test_split: 0.2
     batcher:
       type: StandardBatcher
-      train_batch_size: 50
-      val_batch_size: 50
-      test_batch_size: 50
+      config:
+        train_batch_size: 50
+        val_batch_size: 50
+        test_batch_size: 50
   model_cls: mlp
   epochs: 5
   device: cpu
-  hyperparameter:
-    learning_rate:
-      start: 1e-4
-      end: 1e-2
-      step_size: 1e-5
-    weight_decay:
-      start: 1e-6
-      end: 1e-4
-      step_size: 1e-5
+hyperparameter_grid:
+  learning_rate:
+    start: 1e-4
+    end: 1e-2
+    step_size: 1e-5
+  weight_decay:
+    start: 1e-6
+    end: 1e-4
+    step_size: 1e-5
 
 
 # TODO: distinguish between Platform and Application definition as well

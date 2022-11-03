@@ -4,7 +4,7 @@ from basht.workload.functional_objectives import FunctionalObjective
 
 class ObjectiveDirector:
 
-    def __init__(self, dl_framework: str = None) -> None:
+    def __init__(self) -> None:
         self.builder = ObjectiveBuilder()
 
     def build_objective(self, workload_definition: dict) -> FunctionalObjective:

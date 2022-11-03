@@ -24,10 +24,14 @@ class Objective(ObjectiveInterface):
 
     def __init__(
             self, dl_framework: str = None, model_cls: str = None, epochs: int = 5,
-            device: str = "cpu", task: dict = None, hyperparameters: dict = None) -> None:
+            device: str = "cpu", task: dict = None, hyperparameter: dict = None) -> None:
         self.workload_definition = locals()
-        self._director = ObjectiveDirector(dl_framework)
+        self._director = ObjectiveDirector()
         self._functional_objective = self.director.build_objective(self.workload_definition)
+
+    @classmethod
+    def from_graph(cls, workload_config_graph):
+        pass
 
     def train(self):
         return self._functional_objective.train()
