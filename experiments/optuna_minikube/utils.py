@@ -2,6 +2,7 @@ import numpy as np
 from basht.utils.yaml import YMLHandler
 import itertools
 
+
 def generate_search_space(yaml_file_path):
     search_space = YMLHandler.load_yaml(yaml_file_path)
     modified_search_space = {}

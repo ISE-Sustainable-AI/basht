@@ -9,7 +9,7 @@ class TorchTask:
         self.output_size = None
         self.loader = None
         self.preprocessor_list = []
-        self.splitter_list = None
+        self.splitter = None
         self.batcher = None
         # TODO: add task default config somewhere
 
@@ -32,6 +32,5 @@ class TorchTask:
             obj_dataset = preprocessor.work(obj_dataset)
             self.input_size = obj_dataset.input_size
             self.output_size = obj_dataset.output_size
-        for splitter in self.splitter_list:
-            obj_dataset = splitter.work(obj_dataset)
+        obj_dataset = self.splitter.work(obj_dataset)
         self.train_loader, self.val_loader, self.test_loader = self.batcher.work(obj_dataset)

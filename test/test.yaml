@@ -2,6 +2,26 @@ kubernetesContext: "minikube"
 metricsIP:  auto
 kubernetesMasterIP: minikube
 deleteAfterRun: true
+workload: # this is given to every trial and thus defines the performed work
+  dl_framework: torch
+  task:
+    loader: fmnist
+    preprocessors:
+      - ImageFlattner
+    splitter:
+      type: StandardSplitter
+      config:
+        val_split: 0.2
+        test_split: 0.2
+    batcher:
+      type: StandardBatcher
+      config:
+        train_batch_size: 50
+        val_batch_size: 50
+        test_batch_size: 50
+  model_cls: mlp
+  epochs: 5
+  device: cpu
 hyperparameter:
   learning_rate:
     start: 1e-4
