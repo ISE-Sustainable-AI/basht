@@ -12,22 +12,29 @@ class OptunaTrial:
 
     def __init__(self, search_space, dl_framework, model_cls, epochs, device, task) -> None:
         self.search_space = search_space
-        objective = Objective(
-            dl_framework=dl_framework, model_cls=model_cls, epochs=epochs, device=device,
-            task=task)
+        self.dl_framework = dl_framework
+        self.model_cls = model_cls
+        self.epochs = epochs
+        self.device = device
+        self.task = task
 
     def __call__(self, trial):
-        epochs = int(os.environ.get("EPOCHS", 5))
-        lr = trial.suggest_float(
-            "learning_rate", self.search_space["learning_rate"].min(), self.search_space["learning_rate"].max(), log=True)
-        decay = trial.suggest_float(
-            "weight_decay", self.search_space["weight_decay"].min(), self.search_space["weight_decay"].max(), log=True)
         # TODO: optuna does not take lists for gridsearch and sampling -
         # you need to add building of lists internally
         # hidden_layer_config = trial.suggest_categorical(
         #     "hidden_layer_config", self.search_space["hidden_layer_config"])
-        objective.train()
-        validation_scores = objective.validate()
+        lr = trial.suggest_float(
+            "learning_rate", self.search_space["learning_rate"].min(), self.search_space["learning_rate"].max(), log=True)
+        decay = trial.suggest_float(
+            "weight_decay", self.search_space["weight_decay"].min(), self.search_space["weight_decay"].max(), log=True)
+        hyperparameter = {
+            "learning_rate": lr, "weight_decay": decay
+        }
+        self.objective = Objective(
+            dl_framework=self.dl_framework, model_cls=self.model_cls, epochs=self.epochs, device=self.device,
+            task=self.task, hyperparameter=self.hyperparameter)
+        self.objective.train()
+        validation_scores = self.objective.validate()
         return validation_scores["macro avg"]["f1-score"]
 
 
@@ -38,8 +45,10 @@ def main():
         n_trials = int(os.environ.get("N_TRIALS", 2))
         search_space = generate_search_space(
             os.path.join(os.path.dirname(__file__), "hyperparameter_space.yml"))
-        
-        optuna_trial = OptunaTrial(search_space)
+
+        optuna_trial = OptunaTrial(
+            search_space, dl_framework=dl_framework, model_cls=model_cls, epochs=epochs, device=device,
+            task=task)
         study = optuna.create_study(
             study_name=study_name, storage=database_conn, direction="maximize", load_if_exists=True,
             sampler=optuna.samplers.GridSampler(search_space))
