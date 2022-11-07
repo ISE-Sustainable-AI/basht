@@ -10,7 +10,7 @@ if __name__ == "__main__":
     metricsIP = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()
 
     # read in base configuration
-    resources = YMLParser.parse(path.join(path.dirname(__file__),"resource_definition.yml"))
+    resources = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
     # TODO: XXX remove this hardcoded values
     to_automate = {
         "metricsIP": metricsIP,

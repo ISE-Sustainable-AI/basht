@@ -48,7 +48,7 @@ class OptunaMinikubeBenchmark(Benchmark):
 
         # TODO: deal with exsiting resources...
         if self.hyperparameter:
-            f = path.join(path.dirname(__file__),"hyperparameter_space.yml")
+            f = path.join(path.dirname(__file__), "hyperparameter_space.yml")
             YMLHandler.as_yaml(f, self.hyperparameter)
 
         try:
