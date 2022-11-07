@@ -5,7 +5,7 @@ deleteAfterRun: true
 workload: # this is given to every trial and thus defines the performed work
   dl_framework: torch
   task:
-    loader: fmnist
+    loader: mnist
     preprocessors:
       - ImageFlattner
     splitter:
@@ -29,5 +29,5 @@ hyperparameter:
     step_size: 1e-5
   hidden_layer_config:
     start: [10]
-    end: [100, 100, 100]
+    end: [10, 10]
     step_size: [10, 1]

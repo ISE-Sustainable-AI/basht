@@ -4,7 +4,7 @@ from os.path import exists
 __version__ = "develop"
 install_requires = [
         "scikit-learn==0.24.2",
-        "tqdm==4.62.3", "SQLAlchemy==1.4.31", "docker==4.4.2",
+        "tqdm==4.64.1", "SQLAlchemy==1.4.31", "docker==4.4.2",
         "psycopg2-binary",
         "prometheus-api-client==0.5.1",
         "ruamel.yaml==0.17.21"],
