@@ -3,6 +3,7 @@ import sys
 from time import sleep
 import optuna
 from basht.workload.objective import Objective
+from basht.utils.yaml import YMLHandler
 from utils import generate_search_space
 from optuna.study import MaxTrialsCallback
 from optuna.trial import TrialState
@@ -40,15 +41,19 @@ class OptunaTrial:
 
 def main():
     try:
+        resource_path = os.path.join(os.path.dirname(__file__), "resource_definition.yml")
+        resource_def = YMLHandler.load_yaml(resource_path)
         study_name = os.environ.get("STUDY_NAME", "Test-Study")
         database_conn = os.environ.get("DB_CONN")
         n_trials = int(os.environ.get("N_TRIALS", 2))
-        search_space = generate_search_space(
-            os.path.join(os.path.dirname(__file__), "hyperparameter_space.yml"))
-
+        hyperparameter = resource_def.get("hyperparameter")
+        search_space = generate_search_space(hyperparameter)
+        workload_def = resource_def.get("workload")
         optuna_trial = OptunaTrial(
-            search_space, dl_framework=dl_framework, model_cls=model_cls, epochs=epochs, device=device,
-            task=task)
+            search_space, dl_framework=workload_def.get("dl_framework"),
+            model_cls=workload_def.get("model_cls"),
+            epochs=workload_def.get("epochs"), device=workload_def.get("device"),
+            task=workload_def.get("task"))
         study = optuna.create_study(
             study_name=study_name, storage=database_conn, direction="maximize", load_if_exists=True,
             sampler=optuna.samplers.GridSampler(search_space))

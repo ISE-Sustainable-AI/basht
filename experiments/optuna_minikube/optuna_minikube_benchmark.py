@@ -8,7 +8,7 @@ from kubernetes.utils import create_from_yaml, FailToCreateError
 from basht.benchmark_runner import Benchmark
 from basht.config import Path
 from basht.utils.image_build_wrapper import builder_from_string
-from basht.workload.mnist.mnist_task import MnistTask
+from basht.workload.objective import Objective
 from basht.utils.yaml import YamlTemplateFiller
 from basht.utils.yaml import YMLHandler
 
@@ -39,6 +39,7 @@ class OptunaMinikubeBenchmark(Benchmark):
         self.trials = resources.get("trials", 10)
         self.epochs = resources.get("epochs", 5)
         self.hyperparameter = resources.get("hyperparameter")
+        self.workload = resources.get("workload")
 
     def deploy(self) -> None:
         """
@@ -153,10 +154,12 @@ class OptunaMinikubeBenchmark(Benchmark):
     def test(self):
 
         def optuna_trial(trial):
-            objective = MnistTask(config_init={"epochs": 1}).create_objective()
             lr = trial.suggest_float("learning_rate", 1e-3, 0.1, log=True)
             decay = trial.suggest_float("weight_decay", 1e-6, 1e-4, log=True)
-            objective.set_hyperparameters({"learning_rate": lr, "weight_decay": decay})
+            objective = Objective(
+                dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
+                epochs=self.workload.get("epochs"), device=self.workload.get("device"),
+                task=self.workload.get("task"), hyperparameter={"learning_rate": lr, "weight_decay": decay})
             # these are the results, that can be used for the hyperparameter search
             objective.train()
             validation_scores = objective.validate()
