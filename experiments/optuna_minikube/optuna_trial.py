@@ -22,17 +22,19 @@ class OptunaTrial:
     def __call__(self, trial):
         # TODO: optuna does not take lists for gridsearch and sampling -
         # you need to add building of lists internally
-        # hidden_layer_config = trial.suggest_categorical("hidden_layer_config", self.search_space["hidden_layer_config"])
+        hidden_layer_idx = trial.suggest_categorical(
+            "hidden_layer_config", list(self.search_space["hidden_layer_config"].keys()))
         lr = trial.suggest_float(
             "learning_rate", self.search_space["learning_rate"].min(), self.search_space["learning_rate"].max(), log=True)
         decay = trial.suggest_float(
             "weight_decay", self.search_space["weight_decay"].min(), self.search_space["weight_decay"].max(), log=True)
         hyperparameter = {
-            "learning_rate": lr, "weight_decay": decay
+            "learning_rate": lr, "weight_decay": decay,
+            "hidden_layer_config": self.search_space.get("hidden_layer_config")[hidden_layer_idx]
         }
         self.objective = Objective(
             dl_framework=self.dl_framework, model_cls=self.model_cls, epochs=self.epochs, device=self.device,
-            task=self.task, hyperparameter=self.hyperparameter)
+            task=self.task, hyperparameter=hyperparameter)
         self.objective.train()
         validation_scores = self.objective.validate()
         return validation_scores["macro avg"]["f1-score"]
