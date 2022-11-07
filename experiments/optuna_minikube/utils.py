@@ -24,10 +24,9 @@ def generate_hidden_layer_config_space(hidden_layer_dict):
     return combinations
 
 
-def generate_search_space(yaml_file_path):
-    search_space = YMLHandler.load_yaml(yaml_file_path).pop("hyperparameter")
+def generate_search_space(hyperparameter):
     modified_search_space = {}
-    for key, value in search_space.items():
+    for key, value in hyperparameter.items():
         if key == "hidden_layer_config":
             combinations = generate_hidden_layer_config_space(value)
             modified_search_space[key] = combinations

@@ -82,7 +82,7 @@ class TorchObjective(FunctionalObjective):
         self.model = self.model.to(self.device)
         val_targets = []
         val_preds = []
-        for x, y in self.task.val_laoder:
+        for x, y in self.task.val_loader:
             x = x.to(self.device)
             y = y.to(self.device)
             predictions = self.model.test_step(x)

@@ -40,6 +40,7 @@ class OptunaKubernetesBenchmark(Benchmark):
         self.trials = resources.get("trials", 10) #self._calculate_trial_number(resources.get("trials", 6))
         self.epochs = resources.get("epochs", 5)
         self.hyperparameter = resources.get("hyperparameter")
+        self.workload = resources.get("workload")
 
     def _calculate_trial_number(self, n_trials):
         new_n_trials = None
@@ -179,7 +180,6 @@ class OptunaKubernetesBenchmark(Benchmark):
         return False
 
     def test(self):
-
         def optuna_trial(trial):
             lr = trial.suggest_float("learning_rate", 1e-3, 0.1, log=True)
             decay = trial.suggest_float("weight_decay", 1e-6, 1e-4, log=True)
@@ -189,7 +189,7 @@ class OptunaKubernetesBenchmark(Benchmark):
                 task=self.workload.get("task"), hyperparameter={"learning_rate": lr, "weight_decay": decay})
             # these are the results, that can be used for the hyperparameter search
             objective.train()
-            validation_scores = objective.validate()
+            validation_scores = objective.test()
             return validation_scores["macro avg"]["f1-score"]
 
         self.scores = optuna_trial(self.best_trial)
@@ -246,10 +246,9 @@ if __name__ == "__main__":
         "kubernetesContext": "admin@smile",
         "kubernetesMasterIP": "130.149.158.143",
         "prometheus_url": "http://130.149.158.143:30041",
-        "deleteAfterRun": False,
+        "deleteAfterRun": True,
     }
     resources.update(to_automate)
-
     runner = BenchmarkRunner(
         benchmark_cls=OptunaKubernetesBenchmark, resources=resources)
     runner.run()

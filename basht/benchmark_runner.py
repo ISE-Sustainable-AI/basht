@@ -122,7 +122,7 @@ class BenchmarkRunner():
         self.benchmark_folder = os.path.join(benchmark_path, f"benchmark__{self.bench_name}")
         self.create_benchmark_folder(self.benchmark_folder)
         self.resources = resources
-        self.workload_definition = resources.pop("workload")
+        self.workload_definition = resources.get("workload")
 
         # add input and output size to the benchmark.
         self.benchmark = benchmark_cls(resources)
