@@ -11,19 +11,6 @@ class Path:
     data_path = os.path.join(root_path, "data")
     experiments_path = os.path.join(root_path, "experiments")
 
-
-@dataclass
-class TaskConfig:
-    val_split_ratio: float = 0.2
-    train_batch_size: int = 512
-    val_batch_size: int = 128
-    test_batch_size: int = 128
-    epochs: int = 100
-
-    def to_dict(self):
-        return asdict(self)
-
-
 class MetricsStorageConfig:
     port = 5432
     user = "root"
