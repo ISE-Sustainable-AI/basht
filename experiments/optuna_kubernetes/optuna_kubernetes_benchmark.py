@@ -243,7 +243,7 @@ if __name__ == "__main__":
         "dockerImageTag": "tawalaya/optuna-trial:latest",
         "dockerImageBuilder": "docker",
         "kubernetesNamespace": "optuna-study",
-        "kubernetesContext": "admin@smile",
+        "kubernetesContext": "kube-user@ise-kube",
         "kubernetesMasterIP": "130.149.158.143",
         "prometheus_url": "http://130.149.158.143:30041",
         "deleteAfterRun": True,

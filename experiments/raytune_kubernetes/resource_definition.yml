@@ -1,0 +1,41 @@
+kubernetesNamespace: st-hpo
+workerCpu: 2
+workerMemory: 4
+workerCount: 1
+metricsIP: 130.149.158.237
+nfsServer: 130.149.158.237
+nfsPath: /exports/raytune
+deleteAfterRun: True
+workload: # this is given to every trial and thus defines the performed work
+  dl_framework: torch
+  task:
+    loader: mnist
+    preprocessors:
+      - ImageFlattner
+    splitter:
+      type: StandardSplitter
+      config:
+        val_split: 0.2
+        test_split: 0.2
+    batcher:
+      type: StandardBatcher
+      config:
+        train_batch_size: 50
+        val_batch_size: 50
+        test_batch_size: 50
+  model_cls: mlp
+  epochs: 5
+  device: cpu
+hyperparameter:
+  learning_rate:
+    start: 1e-4
+    end: 1e-2
+    step_size: 1e-3
+  weight_decay:
+    start: 1e-6
+    end: 1e-4
+    step_size: 1e-5
+  hidden_layer_config:
+    start: [10]
+    end: [100, 100, 100]
+    step_size: [10, 1]

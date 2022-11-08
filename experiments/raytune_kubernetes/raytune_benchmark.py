@@ -10,18 +10,18 @@ from kubernetes import client, config, watch
 from kubernetes.client import ApiException
 from kubernetes.utils import create_from_yaml, FailToCreateError
 
-from ml_benchmark.benchmark_runner import Benchmark
-from ml_benchmark.workload.mnist.mnist_task import MnistTask
-from ml_benchmark.utils.yaml import YamlTemplateFiller
+from basht.benchmark_runner import Benchmark
+from basht.workload.objective import Objective
+from basht.utils.yaml import YamlTemplateFiller
 
-global_grid = None
 
 class TrialStopper(Stopper):
     def __call__(self, trial_id, result):
         return result['time_total_s'] > 60*15
-    
+
     def stop_all(self):
         return False
+
 
 class RaytuneBenchmark(Benchmark):
 
@@ -34,7 +34,7 @@ class RaytuneBenchmark(Benchmark):
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
 
-        self.grid = global_grid
+        self.grid = resources.get("hyperparameter")
 
         # K8s setup
         config.load_kube_config()
@@ -124,13 +124,12 @@ class RaytuneBenchmark(Benchmark):
         grid = self.grid
 
         def raytune_func(config, checkpoint_dir=None):
-            from ml_benchmark.workload.mnist.mnist_task import MnistTask
+            hyperparameter = config.get("hyperparameters")
 
-            task = MnistTask(config_init={"epochs": 100})
-            objective = task.create_objective()
-
-            hyperparameters = config.get("hyperparameters")
-            objective.set_hyperparameters(hyperparameters)
+            objective = Objective(
+                dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
+                epochs=self.workload.get("epochs"), device=self.workload.get("device"),
+                task=self.workload.get("task"), hyperparameter=hyperparameter)
             # these are the results, that can be used for the hyperparameter search
             objective.train()
             validation_scores = objective.validate()
@@ -160,9 +159,12 @@ class RaytuneBenchmark(Benchmark):
 
     def test(self):
         # evaluating and retrieving the best model to generate test results.
-        task = MnistTask(config_init={"epochs": 1})
-        objective = task.create_objective()
-        objective.set_hyperparameters(self.best_hyp_config)
+        hyperparameter = self.best_hyp_config
+
+        objective = Objective(
+            dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
+            epochs=self.workload.get("epochs"), device=self.workload.get("device"),
+            task=self.workload.get("task"), hyperparameter=hyperparameter)
         self.training_loss = objective.train()
         self.test_scores = objective.test()
 
@@ -181,9 +183,9 @@ class RaytuneBenchmark(Benchmark):
 
     def _undeploy_watch_ray_cluster(self):
         w = watch.Watch()
-        for event in w.stream(self.k8s_custom_objects_api.list_namespaced_custom_object,
-                              group="cluster.ray.io", version="v1",
-                              namespace=self.namespace, plural="rayclusters"):
+        for event in w.stream(
+            self.k8s_custom_objects_api.list_namespaced_custom_object,
+                group="cluster.ray.io", version="v1", namespace=self.namespace, plural="rayclusters"):
             print(f"Event: {event['type']} {event['object']['kind']} {event['object']['status']['phase']}")
             if event['type'] == "DELETED":
                 w.stop()
@@ -247,60 +249,13 @@ def create_ray_grid(grid):
 
 
 if __name__ == "__main__":
-    from ml_benchmark.benchmark_runner import BenchmarkRunner
-    import json
+    from basht.benchmark_runner import BenchmarkRunner
+    from basht.utils.yaml import YMLHandler
+    import os
+    from basht.config import Path
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--grid', help='Grid config, valid option: ["small", "medium", "large"]')
-    parser.add_argument(
-        '--nworkers', help='Number of workers, valid option: [1, 2, 4]', type=int)
-    parser.add_argument(
-        '--cpus', help='Number of cpus, valid option: [1, 2, 3, 4]', type=int)
-
-    args = parser.parse_args()
-    n_workers = args.nworkers
-    grid_option = args.grid
-    n_cpus = args.cpus
-
-    if n_workers is None:
-        print("Number of workers is not specified, default is 1")
-        n_workers = 1
-    else:
-        if n_workers not in [1, 2, 4]:
-            raise ValueError(
-                "Invalid number of workers: valid option: [1, 2, 4]")
-
-    if grid_option is None:
-        print("Grid option is not specified, default is small")
-        grid_option = "small"
-    else:
-        if grid_option not in ["small", "medium", "large"]:
-            raise ValueError(
-                "Invalid number of workers: valid option: [small, medium, large]")
-    n_trials_dict = {
-        "small": 8,
-        "medium": 16,
-        "large": 32
-    }
-    n_trials = n_trials_dict[grid_option]
-
-    if n_cpus is None:
-        print("Number of worker CPU is not specified, default is 2")
-        n_cpus = 2
-    else:
-        if n_cpus not in [1, 2, 3, 4]:
-            raise ValueError(
-                "Invalid number of worker CPU: valid option: [1, 2, 3, 4]")
-
-    with open("resource_definition.json") as res_def_file:
-        resource_definition = json.load(res_def_file)
-        resource_definition['workerCount'] = n_workers
-        resource_definition['workerCpu'] = n_cpus
-
-    with open(path.join(path.dirname(__file__), "grids", f"grid_{grid_option}.json")) as grid_def_file:
-        grid_definition = create_ray_grid(json.load(grid_def_file))
-        global_grid = grid_definition
+    yml_path = os.path.join(Path.root, "experiments/raytune_kubernetes/resource_definition.yml")
+    resource_definition = YMLHandler.load_yaml("resource_definition.yml")
 
     runner = BenchmarkRunner(
         benchmark_cls=RaytuneBenchmark, resources=resource_definition)
