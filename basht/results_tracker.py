@@ -14,7 +14,7 @@ class ResultTracker(Tracker):
         r.value = result["macro avg"]["f1-score"]
         r.measure = "f1-score"
 
-        r.hyperparameters = objective_function.__self__.get_hyperparameters()
+        r.hyperparameters = objective_function.__self__.hyperparameter
         r.classification_metrics = result
 
         try:

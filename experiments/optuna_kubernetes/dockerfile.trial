@@ -7,7 +7,7 @@ RUN pip install optuna==2.10.1
 COPY experiments/optuna_minikube experiments/optuna_minikube
 COPY data data
 COPY setup.py setup.py
-COPY ml_benchmark ml_benchmark
+COPY basht basht
 
 RUN pip install -e .
 

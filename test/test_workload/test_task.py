@@ -14,7 +14,7 @@ def test_prepare_task():
     task.add_batcher(TorchStandardBatcher(train_batch_size=10, val_batch_size=10, test_batch_size=10))
 
     # work
-    task.prepare_task()
+    task.prepare()
 
     # check
     assert task.train_loader

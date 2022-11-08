@@ -16,7 +16,3 @@ class ObjModel(ABC):
     @abstractmethod
     def predict(self, x):
         pass
-
-    @abstractmethod
-    def __str__(self) -> str:
-        pass

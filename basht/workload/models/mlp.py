@@ -6,7 +6,7 @@ from basht.workload.models.model_interface import ObjModel
 
 class MLP(nn.Module, ObjModel):
 
-    name = "MLP"
+    name = "mlp"
 
     def __init__(
         self, input_size: int, output_size: int, hidden_layer_config: list = None,

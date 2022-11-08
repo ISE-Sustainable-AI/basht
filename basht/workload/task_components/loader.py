@@ -3,7 +3,7 @@ import os
 from basht.utils.folder_creator import FolderCreator
 from basht.config import Path
 from torchvision import transforms
-from torchvision.datasets import MNIST
+from torchvision.datasets import MNIST, FashionMNIST
 from torch.utils.data import Dataset
 
 
@@ -59,7 +59,7 @@ class Loader:
 
 class MnistLoader(Loader):
 
-    name = "MnistLoader"
+    name = "mnist"
 
     def __init__(self) -> None:
         self.data_path = os.path.join(Path.data_path, "MNIST")
@@ -70,4 +70,20 @@ class MnistLoader(Loader):
         transform = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         dataset = MNIST(root=self.data_path, download=True, transform=transform)
+        return ObjDataset(dataset)
+
+
+class FMnistLoader(Loader):
+
+    name = "fmnist"
+
+    def __init__(self) -> None:
+        self.data_path = os.path.join(Path.data_path, "FMNIST")
+        self.folder_creator.create_folder(self.data_path)
+
+    def work(self) -> ObjDataset:
+        FolderCreator.create_folder(self.data_path)
+        transform = transforms.Compose(
+            [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        dataset = FashionMNIST(root=self.data_path, download=True, transform=transform)
         return ObjDataset(dataset)

@@ -3,8 +3,8 @@ import requests
 import os
 
 from basht.decorators import latency_decorator, validation_latency_decorator
-#from basht.workload.objectives.objective import Objective
-
+from basht.config import Path
+from basht.utils.yaml import YMLHandler
 
 # @pytest.fixture
 # def objective():
@@ -41,3 +41,10 @@ def prometeus_url():
     except Exception:
         pytest.skip("Could not connect to Prometheus.")
     return url
+
+
+@pytest.fixture
+def resource_definition():
+    test_file_path = os.path.join(Path.root_path, "test/test.yaml")
+    def_dict = YMLHandler.load_yaml(test_file_path)
+    return def_dict

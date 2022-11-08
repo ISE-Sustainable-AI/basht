@@ -16,7 +16,7 @@ workload: # this is given to every trial and thus defines the performed work
     loader: mnist
     preprocessors:
       - ImageFlattner
-    splitters:
+    splitter:
       type: StandardSplitter
       config:
         val_split: 0.2
@@ -30,15 +30,19 @@ workload: # this is given to every trial and thus defines the performed work
   model_cls: mlp
   epochs: 5
   device: cpu
-hyperparameter_grid:
+hyperparameter:
   learning_rate:
     start: 1e-4
     end: 1e-2
-    step_size: 1e-5
+    step_size: 1e-3
   weight_decay:
     start: 1e-6
     end: 1e-4
     step_size: 1e-5
+  hidden_layer_config:
+    start: [10]
+    end: [100, 100, 100]
+    step_size: [10, 1]
 
 
 # TODO: distinguish between Platform and Application definition as well

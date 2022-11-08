@@ -4,13 +4,13 @@ from time import sleep
 from experiments.optuna_kubernetes.optuna_kubernetes_benchmark import OptunaKubernetesBenchmark
 from basht.benchmark_runner import BenchmarkRunner
 from urllib.request import urlopen
-from basht.utils.yml_parser import YMLParser
+from basht.utils.yaml import YMLHandler
 
 if __name__ == "__main__":
     metricsIP = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()
 
     # read in base configuration
-    resources = YMLParser.parse(path.join(path.dirname(__file__),"resource_definition.yml"))
+    resources = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
     # TODO: XXX remove this hardcoded values
     to_automate = {
         "metricsIP": metricsIP,

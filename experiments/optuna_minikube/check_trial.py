@@ -5,7 +5,7 @@ from experiments.optuna_minikube.optuna_trial import main
 from basht.metrics_storage import MetricsStorage
 
 
-def check_trail():
+def test_check_trail():
     metrics_storage = MetricsStorage()
     try:
         metrics_storage.start_db()

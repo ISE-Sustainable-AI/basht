@@ -1,1 +1,1 @@
-from basht.workload.models import *
+from basht.workload.models.mlp import MLP
