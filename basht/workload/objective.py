@@ -21,6 +21,7 @@ class FunctionalObjective(ABC):
     device = None
     _unique_id = None
     _created_at = None
+    model = None
 
     @abstractmethod
     def __init__(self, model_cls: ObjModel, epochs: int, device: str, hyperparameter: dict) -> None:
@@ -40,6 +41,10 @@ class FunctionalObjective(ABC):
 
     @abstractmethod
     def test(self):
+        pass
+
+    @abstractmethod
+    def epoch_train(self):
         pass
 
 
@@ -65,18 +70,10 @@ class TorchObjective(FunctionalObjective):
 
     @latency_decorator
     def train(self) -> dict:
-        # model setup
-        self.model = self.model_cls(**self.hyperparameter)
-        self.model = self.model.to(self.device)
         # train
         epoch_losses = []
         for epoch in tqdm.tqdm(range(1, self.epochs+1)):
-            batch_losses = []
-            for x, y in self.task.train_loader:
-                x = x.to(self.device)
-                y = y.to(self.device)
-                loss = self.model.train_step(x, y)
-                batch_losses.append(loss)
+            batch_losses = self.epoch_train()
             epoch_losses.append(sum(batch_losses)/len(batch_losses))
         return {"train_loss": epoch_losses}
 
@@ -98,26 +95,19 @@ class TorchObjective(FunctionalObjective):
         val_preds = torch.cat(val_preds).cpu().numpy()
         return classification_report(val_targets, val_preds, output_dict=True, zero_division=1)
 
-    def train_and_validate(self, action_function: callable = None, *args, **kwargs) -> dict:
-        # model setup
-        self.model = self.model_cls(**self.hyperparameter)
-        self.model = self.model.to(self.device)
-        # train
-        epoch_losses = []
-        for epoch in tqdm.tqdm(range(1, self.epochs+1)):
-            batch_losses = []
-            for x, y in self.task.train_loader:
-                x = x.to(self.device)
-                y = y.to(self.device)
-                loss = self.model.train_step(x, y)
-                batch_losses.append(loss)
-            epoch_losses.append(sum(batch_losses)/len(batch_losses))
-            validation_results = self.validate()
-            if action_function:
-                action_function(validation_results, *args, **kwargs)
-
-        validation_results.update({"train_loss": epoch_losses})
-        return validation_results
+    def epoch_train(self):
+        # TODO: use integration modules
+        if not self.model:
+            # model setup
+            self.model = self.model_cls(**self.hyperparameter)
+            self.model = self.model.to(self.device)
+        batch_losses = []
+        for x, y in self.task.train_loader:
+            x = x.to(self.device)
+            y = y.to(self.device)
+            loss = self.model.train_step(x, y)
+            batch_losses.append(loss)
+        return batch_losses
 
     def test(self) -> dict:
         self.model.eval()
@@ -227,8 +217,8 @@ class Objective:
     def load(self):
         return self._functional_objective.load()
 
-    def train_and_validate(self, action_function, *args, **kwargs):
-        return self._functional_objective.train_and_validate(action_function, *args, **kwargs)
+    def epoch_train(self):
+        return self._functional_objective.epoch_train()
 
     def train(self):
         return self._functional_objective.train()

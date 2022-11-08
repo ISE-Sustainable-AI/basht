@@ -37,14 +37,13 @@ class OptunaTrial:
             dl_framework=self.dl_framework, model_cls=self.model_cls, epochs=self.epochs, device=self.device,
             task=self.task, hyperparameter=hyperparameter)
         self.objective.load()
-        validation_scores = self.objective.train_and_validate(OptunaTrial.pruning_function, trial=trial)
-        return validation_scores["macro avg"]["f1-score"]
-
-    @staticmethod
-    def pruning_function(validation_results, trial):
-        trial.report(validation_results["macro avg"]["f1-score"])
+        for epoch in range(1, self.epochs+1):
+            self.objective.epoch_train()
+            validation_scores = self.objective.validate()
+            trial.report(validation_scores["macro avg"]["f1-score"], epoch)
         if trial.should_prune():
             raise optuna.TrialPruned()
+        return validation_scores["macro avg"]["f1-score"]
 
 
 def main():
