@@ -1,11 +1,11 @@
 
-workerCpu: 2
-workerMemory: 2
-workerCount: 4
-trials: 5
+workerCpu: 6
+workerMemory: 4
+workerCount: 1
+trials: 20
 metricsIP:  auto ##urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
 kubernetesMasterIP: minikube ##subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n")
-dockerImageTag: tawalaya/optuna-trial:latest
+dockerImageTag: optuna-trial2:latest
 dockerImageBuilder: minikube
 kubernetesNamespace: optuna-study
 kubernetesContext: "minikube"
@@ -28,7 +28,7 @@ workload: # this is given to every trial and thus defines the performed work
         val_batch_size: 50
         test_batch_size: 50
   model_cls: mlp
-  epochs: 5
+  epochs: 50
   device: cpu
 hyperparameter:
   learning_rate:

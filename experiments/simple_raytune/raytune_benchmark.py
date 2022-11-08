@@ -36,6 +36,7 @@ class RaytuneBenchmark(Benchmark):
             hyperparameters = config.get("hyperparameters")
             objective.set_hyperparameters(hyperparameters)
             # these are the results, that can be used for the hyperparameter search
+            objective.load()
             objective.train()
             validation_scores = objective.validate()
             tune.report(macro_f1_score=validation_scores["macro avg"]["f1-score"])

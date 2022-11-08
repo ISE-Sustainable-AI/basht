@@ -11,6 +11,7 @@ from basht.utils.image_build_wrapper import builder_from_string
 from basht.workload.objective import Objective
 from basht.utils.yaml import YamlTemplateFiller
 from basht.utils.yaml import YMLHandler
+from experiments.optuna_minikube.utils import generate_search_space
 
 
 class OptunaMinikubeBenchmark(Benchmark):
@@ -37,19 +38,13 @@ class OptunaMinikubeBenchmark(Benchmark):
         self.delete_after_run = resources.get("deleteAfterRun", True)
         self.metrics_ip = resources.get("metricsIP")
         self.trials = resources.get("trials", 10)
-        self.epochs = resources.get("epochs", 5)
-        self.hyperparameter = resources.get("hyperparameter")
+        self.grid = generate_search_space(resources.get("hyperparameter"))
         self.workload = resources.get("workload")
 
     def deploy(self) -> None:
         """
         Deploy DB
         """
-
-        # TODO: deal with exsiting resources...
-        if self.hyperparameter:
-            f = path.join(path.dirname(__file__), "hyperparameter_space.yml")
-            YMLHandler.as_yaml(f, self.hyperparameter)
 
         try:
             resp = client.CoreV1Api().create_namespace(
@@ -104,8 +99,6 @@ class OptunaMinikubeBenchmark(Benchmark):
             "worker_image": self.trial_tag,
             "study_name": self.study_name,
             "metrics_ip": self.metrics_ip,
-            "trials": self.trials,
-            "epochs": self.epochs
         }
         job_yml_objects = YamlTemplateFiller.load_and_fill_yaml_template(
             path.join(path.dirname(__file__), "ops/manifests/trial/job.yml"), job_definition)
@@ -155,22 +148,23 @@ class OptunaMinikubeBenchmark(Benchmark):
 
         def optuna_trial(trial):
             hidden_layer_idx = trial.suggest_categorical(
-                "hidden_layer_config", list(self.search_space["hidden_layer_config"].keys()))
+                "hidden_layer_config", list(self.grid["hidden_layer_config"].keys()))
             lr = trial.suggest_float(
-                "learning_rate", self.search_space["learning_rate"].min(),
-                self.search_space["learning_rate"].max(), log=True)
+                "learning_rate", self.grid["learning_rate"].min(),
+                self.grid["learning_rate"].max(), log=True)
             decay = trial.suggest_float(
-                "weight_decay", self.search_space["weight_decay"].min(),
-                self.search_space["weight_decay"].max(), log=True)
+                "weight_decay", self.grid["weight_decay"].min(),
+                self.grid["weight_decay"].max(), log=True)
             hyperparameter = {
                 "learning_rate": lr, "weight_decay": decay,
-                "hidden_layer_config": self.search_space.get("hidden_layer_config")[hidden_layer_idx]
+                "hidden_layer_config": self.grid.get("hidden_layer_config")[hidden_layer_idx]
             }
             objective = Objective(
                 dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
                 epochs=self.workload.get("epochs"), device=self.workload.get("device"),
                 task=self.workload.get("task"), hyperparameter=hyperparameter)
             # these are the results, that can be used for the hyperparameter search
+            objective.load()
             objective.train()
             validation_scores = objective.validate()
             return validation_scores["macro avg"]["f1-score"]

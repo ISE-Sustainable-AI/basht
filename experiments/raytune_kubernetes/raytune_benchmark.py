@@ -131,6 +131,7 @@ class RaytuneBenchmark(Benchmark):
                 epochs=self.workload.get("epochs"), device=self.workload.get("device"),
                 task=self.workload.get("task"), hyperparameter=hyperparameter)
             # these are the results, that can be used for the hyperparameter search
+            objective.load()
             objective.train()
             validation_scores = objective.validate()
             tune.report(

@@ -1,5 +1,4 @@
 from basht.workload.task_components import Loader, Preprocessor, Splitter, Batcher
-from basht.decorators import latency_decorator
 
 
 class TorchTask:
@@ -25,7 +24,6 @@ class TorchTask:
     def add_batcher(self, batcher: Batcher):
         self.batcher = batcher
 
-    @latency_decorator
     def prepare(self):
         obj_dataset = self.loader.work()
         for preprocessor in self.preprocessor_list:

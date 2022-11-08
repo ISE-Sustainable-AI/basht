@@ -12,6 +12,7 @@ from basht.config import Path
 from basht.utils.image_build_wrapper import builder_from_string
 from basht.workload.objective import Objective
 from basht.utils.yaml import YamlTemplateFiller, YMLHandler
+from experiments.optuna_minikube.utils import generate_search_space
 
 
 class OptunaKubernetesBenchmark(Benchmark):
@@ -38,8 +39,7 @@ class OptunaKubernetesBenchmark(Benchmark):
         self.delete_after_run = resources.get("deleteAfterRun", True)
         self.metrics_ip = resources.get("metricsIP")
         self.trials = resources.get("trials", 10) #self._calculate_trial_number(resources.get("trials", 6))
-        self.epochs = resources.get("epochs", 5)
-        self.hyperparameter = resources.get("hyperparameter")
+        self.grid = generate_search_space(resources.get("hyperparameter"))
         self.workload = resources.get("workload")
 
     def _calculate_trial_number(self, n_trials):
@@ -114,8 +114,6 @@ class OptunaKubernetesBenchmark(Benchmark):
             "worker_image": self.trial_tag,
             "study_name": self.study_name,
             "metrics_ip": self.metrics_ip,
-            "trials": self.trials,
-            "epochs": self.epochs,
         }
         job_yml_objects = YamlTemplateFiller.load_and_fill_yaml_template(
             path.join(path.dirname(__file__), "ops/manifests/trial/job.yml"), job_definition)
@@ -181,15 +179,26 @@ class OptunaKubernetesBenchmark(Benchmark):
 
     def test(self):
         def optuna_trial(trial):
-            lr = trial.suggest_float("learning_rate", 1e-3, 0.1, log=True)
-            decay = trial.suggest_float("weight_decay", 1e-6, 1e-4, log=True)
+            hidden_layer_idx = trial.suggest_categorical(
+                "hidden_layer_config", list(self.grid["hidden_layer_config"].keys()))
+            lr = trial.suggest_float(
+                "learning_rate", self.grid["learning_rate"].min(),
+                self.grid["learning_rate"].max(), log=True)
+            decay = trial.suggest_float(
+                "weight_decay", self.grid["weight_decay"].min(),
+                self.grid["weight_decay"].max(), log=True)
+            hyperparameter = {
+                "learning_rate": lr, "weight_decay": decay,
+                "hidden_layer_config": self.grid.get("hidden_layer_config")[hidden_layer_idx]
+            }
             objective = Objective(
                 dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
                 epochs=self.workload.get("epochs"), device=self.workload.get("device"),
-                task=self.workload.get("task"), hyperparameter={"learning_rate": lr, "weight_decay": decay})
+                task=self.workload.get("task"), hyperparameter=hyperparameter)
             # these are the results, that can be used for the hyperparameter search
+            objective.load()
             objective.train()
-            validation_scores = objective.test()
+            validation_scores = objective.validate()
             return validation_scores["macro avg"]["f1-score"]
 
         self.scores = optuna_trial(self.best_trial)
