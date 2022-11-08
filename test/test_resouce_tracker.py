@@ -14,6 +14,7 @@ def test_resouce_tracker(prometeus_url):
     print(rt.store.log)
     assert rt.store.log != []
 
+
 def test_resouce_tracker_with_namespace(prometeus_url):
     import time
     logging.basicConfig(level=logging.DEBUG)

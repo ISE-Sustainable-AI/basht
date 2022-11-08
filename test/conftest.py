@@ -5,35 +5,40 @@ import os
 from basht.decorators import latency_decorator, validation_latency_decorator
 from basht.config import Path
 from basht.utils.yaml import YMLHandler
+from basht.workload.objective import Objective
+import torch
 
-# @pytest.fixture
-# def objective():
-#     class TestObjective(Objective):
 
-#         def __init__(self) -> None:
-#             pass
-#         @latency_decorator
-#         def train(self):
-#             pass
+@pytest.fixture
+def objective():
+    class TestObjective:
 
-#         def get_hyperparameters(self) -> dict:
-#             return {"test":True}
+        def __init__(self) -> None:
+            pass
 
-#         def set_hyperparameters(self, hyperparameters: dict):
-#             pass
+        @latency_decorator
+        def train(self):
+            pass
 
-#         @validation_latency_decorator
-#         def validate(self):
-#             return {"macro avg":{"f1-score":0.5}}
+        def get_hyperparameters(self) -> dict:
+            return {"test": True}
 
-#         @latency_decorator
-#         def test(self):
-#             return {"score": 0.5}
-#     return TestObjective
+        def set_hyperparameters(self, hyperparameters: dict):
+            pass
+
+        @validation_latency_decorator
+        def validate(self):
+            return {"macro avg": {"f1-score": 0.5}}
+
+        @latency_decorator
+        def test(self):
+            return {"score": 0.5}
+    return TestObjective
+
 
 @pytest.fixture
 def prometeus_url():
-    url =  os.environ.get("PROMETHEUS_URL", "http://localhost:9090")
+    url = os.environ.get("PROMETHEUS_URL", "http://localhost:9090")
     try:
         resp = requests.get(url)
         if resp.status_code != 200:
@@ -48,3 +53,21 @@ def resource_definition():
     test_file_path = os.path.join(Path.root_path, "test/test.yaml")
     def_dict = YMLHandler.load_yaml(test_file_path)
     return def_dict
+
+
+@pytest.fixture
+def prepared_objective():
+    test_file_path = os.path.join(Path.root_path, "test/test.yaml")
+    resource_definition = YMLHandler.load_yaml(test_file_path)
+    workload_def = resource_definition["workload"]
+    dl_framework = workload_def["dl_framework"]
+    model_cls = workload_def["model_cls"]
+    epochs = workload_def["epochs"]
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    task = workload_def["task"]
+
+    # test
+    objective = Objective(
+        dl_framework=dl_framework, model_cls=model_cls, epochs=epochs, device=device,
+        task=task)
+    return objective
