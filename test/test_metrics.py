@@ -4,7 +4,6 @@ from basht.metrics_storage import MetricsStorage
 from basht.resource_tracker import ResourceTracker
 from basht.results_tracker import ResultTracker
 
-from basht.workload.mnist.mnist_task import MnistTask
 from time import sleep
 
 
