@@ -1,11 +1,11 @@
-from ml_benchmark.metrics_storage import MetricsStorage
+from basht.metrics_storage import MetricsStorage
 import docker
 import json
 import os
 
 
-def test_latency_decorator(objective):
-    objective = objective()
+def test_latency_decorator(prepared_objective):
+    objective = prepared_objective
     metrics_storage = MetricsStorage()
 
     try:
@@ -21,8 +21,8 @@ def test_latency_decorator(objective):
     assert isinstance(json.dumps(result), str)
 
 
-def test_latency_decorator_using_env(objective):
-    objective = objective()
+def test_latency_decorator_using_env(prepared_objective):
+    objective = prepared_objective
     metrics_storage = MetricsStorage()
 
     try:

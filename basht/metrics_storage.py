@@ -5,10 +5,10 @@ import docker
 from docker.errors import APIError
 from sqlalchemy import create_engine, MetaData, Table, Column, String, Float, select, Integer, insert, BigInteger
 import psycopg2
-import os 
+import os
 
-from ml_benchmark.config import MetricsStorageConfig
-from ml_benchmark.metrics import Metric
+from basht.config import MetricsStorageConfig
+from basht.metrics import Metric
 
 class MetricsStorage:
 
@@ -86,7 +86,7 @@ class MetricsStorage:
         self.create_resource_table()
         self.create_classification_metrics_table()
         self.meta.create_all(self.engine,checkfirst=True)
-        
+
 
     def create_latency_table(self):
         self.latency = Table(
@@ -131,7 +131,7 @@ class MetricsStorage:
         resources = self.get_resource_results()
         classification = self.get_classification_results()
         return dict(latency=latency, resources=resources, classification=classification)
-    
+
     def _get_table_results(self,table):
         result_list = []
         with self.engine.connect() as conn:
@@ -162,7 +162,7 @@ class StoreStrategy(object):
             Setup the resource store, e.g., create a database connection.
         """
         pass
-    
+
     @abstractmethod
     def store(self, node_usage:Metric, **kwargs):
         """
@@ -170,7 +170,7 @@ class StoreStrategy(object):
         """
         pass
 
-#global store engine used as a singleton to safe 
+#global store engine used as a singleton to safe
 engine=None
 
 class MetricsStorageStrategy(StoreStrategy):
@@ -180,13 +180,13 @@ class MetricsStorageStrategy(StoreStrategy):
 
     def setup(self, **kwargs):
         if self.engine:
-            return 
+            return
 
         #resue the global engine if it exists
         # global engine
         # if engine:
         #     self.engine = engine
-            
+
         self.engine = self._create_engine(**kwargs)
         # engine = self.engine
 
@@ -202,14 +202,14 @@ class MetricsStorageStrategy(StoreStrategy):
                 return self.shape_connection_string(value)
         logging.warn("No Method was succsessful. Setting Tracker URL to current Host.")
         return MetricsStorageConfig.connection_string
-    
+
     def shape_connection_string(self, host):
         user = MetricsStorageConfig.user
         password = MetricsStorageConfig.password
         port = MetricsStorageConfig.port
         db = MetricsStorageConfig.db
         return f"postgresql://{user}:{password}@{host}:{port}/{db}"
-        
+
     def _create_engine(self, **kwargs):
         connection_string = self._get_connection_string(**kwargs)
         try:

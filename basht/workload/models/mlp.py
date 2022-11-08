@@ -1,13 +1,20 @@
 import torch.nn as nn
 import torch
 from torch.optim import Adam
+from basht.workload.models.model_interface import ObjModel
 
 
-class MLP(nn.Module):
-    def __init__(self, input_size, hidden_layer_config, output_size, learning_rate, weight_decay):
+class MLP(nn.Module, ObjModel):
+
+    name = "mlp"
+
+    def __init__(
+        self, input_size: int, output_size: int, hidden_layer_config: list = None,
+            learning_rate: float = 1e-3, weight_decay: float = 1e-6):
         """
-        A simple Feed Forward Network with a Sigmoid Activation Function after the final layer.
-        Performs binary classification and thus uses binary cross entropy loss.
+        A simple linear Feed Forward Network.
+        Performs classification and thus uses cross entropy loss. Default values always have to exists, except
+        for input and output sizes.
         Args:
             input_size ([type]): [description]
             hidden_layer_config ([type]): [description]
@@ -16,11 +23,12 @@ class MLP(nn.Module):
             weight_decay ([type]): [description]
         """
         super().__init__()
+        if not hidden_layer_config:
+            hidden_layer_config = [15]
         self.layers = self._construct_layer(
             input_size=input_size, hidden_layer_config=hidden_layer_config, output_size=output_size)
         self.criterion = nn.CrossEntropyLoss()
         self.softmax = nn.Softmax(dim=1)
-        self.relu = nn.LeakyReLU()
         self.optimizer = Adam(self.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     def _construct_layer(self, input_size, hidden_layer_config, output_size):
@@ -49,7 +57,9 @@ class MLP(nn.Module):
     def loss_function(self, x, target):
         return self.criterion(x, target)
 
-    def predict(self, logits):
+    def predict(self, x):
+        # TODO make argmax predictor customizable
+        logits = self(x)
         probabilities = self.softmax(logits)
         predictions = probabilities.to(dtype=torch.int16).argmax(dim=1)
         return predictions
@@ -62,6 +72,5 @@ class MLP(nn.Module):
         return loss.item()
 
     def test_step(self, x):
-        logits = self(x)
-        predictions = self.predict(logits)
-        return predictions
+        predictions = self.predict(x)
+        return predictions.detach()

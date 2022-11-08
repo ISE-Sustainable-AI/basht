@@ -4,8 +4,8 @@ from threading import Timer
 
 from prometheus_api_client import PrometheusConnect
 
-from ml_benchmark.metrics import NodeUsage
-from ml_benchmark.metrics_storage import MetricsStorageStrategy
+from basht.metrics import NodeUsage
+from basht.metrics_storage import MetricsStorageStrategy
 
 
 class RepeatTimer(Timer):
@@ -59,7 +59,7 @@ class ResourceTracker:
             self.node_map = dict(map(lambda x: (x["internal_ip"], x["node"]), map(lambda x: x["metric"], info)))
         else:
             self.node_map = {}
-        
+
 
     def update(self):
         try:
@@ -74,7 +74,7 @@ class ResourceTracker:
         # ? is there a better way to map nodes using the node_exporter
         memory = 'avg by (instance) (node_memory_MemFree_bytes/node_memory_MemTotal_bytes)'
         cpu = '100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[2m])*100))'
-        
+
         ##needs mapping
         network = f'sum by (instance) (rate({self.network_metric}_receive_bytes_total[2m])+rate({self.network_metric}_transmit_bytes_total[2m]))'
         #TODO: reduce measurments to only the ones we care about - dose currently not work with scaph_process_power_consumption_microwatts
@@ -121,10 +121,10 @@ class ResourceTracker:
             else:
                 n.wattage = -1
                 n.processes = -1
-            
+
             data.append(n)
             # logging.debug("Added node usage for %s", instance)
-        
+
         return data
 
     def track(self):

@@ -1,7 +1,7 @@
 
-from ml_benchmark.latency_tracker import LatencyTracker
-from ml_benchmark.metrics import Latency
-from ml_benchmark.results_tracker import ResultTracker
+from basht.latency_tracker import LatencyTracker
+from basht.metrics import Latency
+from basht.results_tracker import ResultTracker
 
 
 def validation_latency_decorator(func):
@@ -12,7 +12,7 @@ def validation_latency_decorator(func):
     We assume that that the decorated function returns a dictionary with the following keys:
         - "macro avg": the macro average of the validation with the keys:
             - "f1-score": the f1-score
-    
+
     """
     def result_func(*args, **kwargs):
         func.__self__ = args[0]
@@ -20,13 +20,13 @@ def validation_latency_decorator(func):
             result = func(*args, **kwargs)
         latency_tracker = LatencyTracker()
         tracker = ResultTracker()
-        
+
         latency_tracker.track(latency)
         #XXX this locks us into the f1-score, we probably want to track all callification metrics not just f1-score. MG please help :)
         tracker.track(func, result)
         func.__self__ = None
         return result
-        
+
     return result_func
 
 def latency_decorator(func):

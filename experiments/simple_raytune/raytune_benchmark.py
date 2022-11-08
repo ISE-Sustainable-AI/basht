@@ -1,7 +1,7 @@
 from ray import tune
 
-from ml_benchmark.benchmark_runner import Benchmark
-from ml_benchmark.workload.mnist.mnist_task import MnistTask
+from basht.benchmark_runner import Benchmark
+from basht.workload.mnist.mnist_task import MnistTask
 
 
 class RaytuneBenchmark(Benchmark):
@@ -93,7 +93,7 @@ class RaytuneBenchmark(Benchmark):
 
 
 if __name__ == "__main__":
-    from ml_benchmark.benchmark_runner import BenchmarkRunner
+    from basht.benchmark_runner import BenchmarkRunner
 
     # The basic config for the workload. For testing purposes set epochs to one.
     # For benchmarking take the default value of 100
