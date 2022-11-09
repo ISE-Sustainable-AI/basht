@@ -20,14 +20,14 @@ class OptunaTrial:
         self.task = task
 
     def __call__(self, trial):
-        # TODO: optuna does not take lists for gridsearch and sampling -
-        # you need to add building of lists internally
         hidden_layer_idx = trial.suggest_categorical(
             "hidden_layer_config", list(self.search_space["hidden_layer_config"].keys()))
         lr = trial.suggest_float(
-            "learning_rate", self.search_space["learning_rate"].min(), self.search_space["learning_rate"].max(), log=True)
+            "learning_rate", self.search_space["learning_rate"].min(),
+            self.search_space["learning_rate"].max(), log=True)
         decay = trial.suggest_float(
-            "weight_decay", self.search_space["weight_decay"].min(), self.search_space["weight_decay"].max(), log=True)
+            "weight_decay", self.search_space["weight_decay"].min(),
+            self.search_space["weight_decay"].max(), log=True)
         hyperparameter = {
             "learning_rate": lr, "weight_decay": decay,
             "hidden_layer_config": self.search_space.get("hidden_layer_config")[hidden_layer_idx]
@@ -46,7 +46,6 @@ def main():
         resource_def = YMLHandler.load_yaml(resource_path)
         study_name = os.environ.get("STUDY_NAME", "Test-Study")
         database_conn = os.environ.get("DB_CONN")
-        n_trials = int(os.environ.get("N_TRIALS", 2))
         hyperparameter = resource_def.get("hyperparameter")
         search_space = generate_search_space(hyperparameter)
         workload_def = resource_def.get("workload")
@@ -60,7 +59,7 @@ def main():
             sampler=optuna.samplers.GridSampler(search_space))
         study.optimize(
             optuna_trial,
-            callbacks=[MaxTrialsCallback(n_trials, states=(TrialState.COMPLETE,))])
+            callbacks=[MaxTrialsCallback(resource_def.get("trials"), states=(TrialState.COMPLETE,))])
         sleep(5)
         return True
     except Exception as e:
