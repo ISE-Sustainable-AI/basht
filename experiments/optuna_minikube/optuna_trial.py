@@ -2,11 +2,12 @@ import os
 import sys
 from time import sleep
 import optuna
-from basht.workload.objective import Objective
+from basht.workload.objective import Objective, ObjectiveAction
 from basht.utils.yaml import YMLHandler
 from utils import generate_search_space
 from optuna.study import MaxTrialsCallback
 from optuna.trial import TrialState
+from basht.workload.objective_storage import ObjectiveStorageInterface
 
 
 class OptunaTrial:
@@ -37,13 +38,21 @@ class OptunaTrial:
             dl_framework=self.dl_framework, model_cls=self.model_cls, epochs=self.epochs, device=self.device,
             task=self.task, hyperparameter=hyperparameter)
         self.objective.load()
-        for epoch in range(1, self.epochs+1):
-            self.objective.epoch_train()
-            validation_scores = self.objective.validate()
-            trial.report(validation_scores["macro avg"]["f1-score"], epoch)
+        objective_storage_interface = ObjectiveStorageInterface(self.objective)
+        objective_action = ObjectiveAction(
+            OptunaTrial.pruning_function, trial=trial,
+            objective_storage_interface=objective_storage_interface)
+        self.objective.train(action_function=objective_action)
+        validation_scores = self.objective.validate()
+        return validation_scores["macro avg"]["f1-score"]
+
+    @staticmethod
+    def pruning_function(trial, objective_storage_interface):
+        validation_scores = objective_storage_interface.get_validation_scores()["macro avg"]["f1-score"]
+        epoch = objective_storage_interface.get_current_epoch()
+        trial.report(validation_scores, epoch)
         if trial.should_prune():
             raise optuna.TrialPruned()
-        return validation_scores["macro avg"]["f1-score"]
 
 
 def main():

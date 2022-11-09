@@ -10,6 +10,7 @@ from basht.workload.task import TorchTask
 from basht.workload.task_components import Splitter, Loader, Batcher, Preprocessor, TorchImageFlattner, \
     TorchStandardBatcher, TorchStandardSplitter, MnistLoader, FMnistLoader
 from basht.workload.models import MLP
+from basht.workload.objective_storage import ObjectiveStorage
 
 
 class FunctionalObjective(ABC):
@@ -48,6 +49,17 @@ class FunctionalObjective(ABC):
         pass
 
 
+class ObjectiveAction:
+
+    def __init__(self, function, *args, **kwargs) -> None:
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self):
+        return self.function(*self.args, **self.kwargs)
+
+
 class TorchObjective(FunctionalObjective):
 
     """
@@ -61,6 +73,7 @@ class TorchObjective(FunctionalObjective):
         self.epochs = epochs
         self.device = torch.device(device)
         self.hyperparameter = hyperparameter
+        self.objective_storage = ObjectiveStorage()
 
     @latency_decorator
     def load(self):
@@ -69,16 +82,28 @@ class TorchObjective(FunctionalObjective):
         self.hyperparameter["output_size"] = self.task.output_size
 
     @latency_decorator
-    def train(self) -> dict:
+    def train(self, objective_action: callable = None, with_validation: bool = False) -> dict:
+        # model setup
+        if not self.model:
+            self.model = self.model_cls(**self.hyperparameter)
+            self.model = self.model.to(self.device)
         # train
+        training_results = {}
         epoch_losses = []
         for epoch in tqdm.tqdm(range(1, self.epochs+1)):
+            self.objective_storage.current_epoch = epoch
             batch_losses = self.epoch_train()
-            epoch_losses.append(sum(batch_losses)/len(batch_losses))
-        return {"train_loss": epoch_losses}
+            self.objective_storage.epoch_losses.append(sum(batch_losses)/len(batch_losses))
+            training_results["training_loss"] = epoch_losses
+            if with_validation:
+                validation_results = self._validate()
+                training_results.update(validation_results)
+                self.objective_storage.validation_results = validation_results
+            if objective_action:
+                objective_action()
+        return training_results
 
-    @validation_latency_decorator
-    def validate(self) -> dict:
+    def _validate(self) -> dict:
         self.model.eval()
         if not next(self.model.parameters()).device == self.device:
             self.model = self.model.to(self.device)
@@ -95,12 +120,14 @@ class TorchObjective(FunctionalObjective):
         val_preds = torch.cat(val_preds).cpu().numpy()
         return classification_report(val_targets, val_preds, output_dict=True, zero_division=1)
 
+    @validation_latency_decorator
+    def validate(self) -> dict:
+        validation_results = self._validate()
+        return validation_results
+
     def epoch_train(self):
-        # TODO: use integration modules
-        if not self.model:
-            # model setup
-            self.model = self.model_cls(**self.hyperparameter)
-            self.model = self.model.to(self.device)
+        if not next(self.model.parameters()).device == self.device:
+            raise ValueError("Model not on objective device!")
         batch_losses = []
         for x, y in self.task.train_loader:
             x = x.to(self.device)
