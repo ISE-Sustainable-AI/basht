@@ -40,16 +40,15 @@ class OptunaTrial:
         return validation_scores["macro avg"]["f1-score"]
 
 
-def main():
+def main(resource_def):
     try:
-        resource_path = os.path.join(os.path.dirname(__file__), "resource_definition.yml")
-        resource_def = YMLHandler.load_yaml(resource_path)
         study_name = os.environ.get("STUDY_NAME", "Test-Study")
         database_conn = os.environ.get("DB_CONN")
-        n_trials = int(os.environ.get("N_TRIALS", 2))
+       
         hyperparameter = resource_def.get("hyperparameter")
         search_space = generate_search_space(hyperparameter)
         workload_def = resource_def.get("workload")
+        n_trials = resource_def.get("trials")
         optuna_trial = OptunaTrial(
             search_space, dl_framework=workload_def.get("dl_framework"),
             model_cls=workload_def.get("model_cls"),
@@ -69,7 +68,9 @@ def main():
 
 
 if __name__ == "__main__":
-    if main():
+    resource_path = os.path.join(os.path.dirname(__file__), "resource_definition.yml")
+    resource_def = YMLHandler.load_yaml(resource_path)
+    if main(resource_def):
         sys.exit(0)
     else:
         sys.exit(1)
