@@ -18,12 +18,11 @@ def test_check_trail():
         resource_def.trials = 2
         resource_def.workload.epochs = 2
 
-        f = main(resource_def.to_dict())
+        f = main(resource_def)
         assert f
 
         lats = metrics_storage.get_latency_results()
-        assert len(lats) >= int(resource_def.trials) * \
-            2  # (validate+train)
+        assert len(lats) >= int(resource_def.trials) * 2  # (validate+train)
     finally:
         metrics_storage.stop_db()
 

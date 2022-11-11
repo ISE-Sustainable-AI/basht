@@ -1,6 +1,0 @@
-# generated file - do not edit
-hidden_layer_config:
-  end: [10, 10]
-  start: [10]
-  step_size: [10, 1]
-learning_rate: {end: 0.01, start: 0.0001, step_size: 1e-05}

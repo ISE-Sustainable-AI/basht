@@ -1,12 +1,14 @@
 import os
 import sys
 from time import sleep
+
 import optuna
-from basht.workload.objective import Objective
-from basht.utils.yaml import YMLHandler
-from utils import generate_search_space
 from optuna.study import MaxTrialsCallback
 from optuna.trial import TrialState
+from utils import generate_search_space
+
+from basht.resources import Resouces
+from basht.workload.objective import Objective
 
 
 class OptunaTrial:
@@ -39,27 +41,25 @@ class OptunaTrial:
         validation_scores = self.objective.validate()
         return validation_scores["macro avg"]["f1-score"]
 
-
-def main(resource_def):
+def main(resource:Resouces):
     try:
         study_name = os.environ.get("STUDY_NAME", "Test-Study")
         database_conn = os.environ.get("DB_CONN")
-       
-        hyperparameter = resource_def.get("hyperparameter")
-        search_space = generate_search_space(hyperparameter)
-        workload_def = resource_def.get("workload")
-        n_trials = resource_def.get("trials")
+
+        #TODO migrate generate_search_space to use Resource.hyperparameter instead of dict
+        search_space = generate_search_space(resource.hyperparameter.to_dict())
+        workload_def = resource.workload
         optuna_trial = OptunaTrial(
-            search_space, dl_framework=workload_def.get("dl_framework"),
-            model_cls=workload_def.get("model_cls"),
-            epochs=workload_def.get("epochs"), device=workload_def.get("device"),
-            task=workload_def.get("task"))
+            search_space, dl_framework=workload_def.dl_framework,
+            model_cls=workload_def.model_cls,
+            epochs=workload_def.epochs, device=workload_def.device,
+            task=workload_def.task.to_dict())
         study = optuna.create_study(
             study_name=study_name, storage=database_conn, direction="maximize", load_if_exists=True,
             sampler=optuna.samplers.GridSampler(search_space))
         study.optimize(
             optuna_trial,
-            callbacks=[MaxTrialsCallback(n_trials, states=(TrialState.COMPLETE,))])
+            callbacks=[MaxTrialsCallback(resource.trials, states=(TrialState.COMPLETE,))])
         sleep(5)
         return True
     except Exception as e:
@@ -69,7 +69,7 @@ def main(resource_def):
 
 if __name__ == "__main__":
     resource_path = os.path.join(os.path.dirname(__file__), "resource_definition.yml")
-    resource_def = YMLHandler.load_yaml(resource_path)
+    resource_def = Resouces.from_yaml(resource_path)
     if main(resource_def):
         sys.exit(0)
     else:

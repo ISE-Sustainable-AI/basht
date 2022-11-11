@@ -1,5 +1,5 @@
-from dataclasses import asdict, dataclass, field
-from typing import List, Literal, Union
+from dataclasses import asdict, dataclass, field, fields, is_dataclass
+from typing import List, Dict, Union, Any
 import yaml
 
 @dataclass
@@ -32,6 +32,9 @@ class Task:
     
     splitter: 'Splitter' = Splitter()
     batcher: 'Batcher' = Batcher()
+
+    def to_dict(self):
+        return asdict(self)
     
 
 
@@ -47,6 +50,9 @@ class Hyperparameter:
     weight_decay: 'HiddenLayerConfig' = HiddenLayerConfig(start=1e-6, end=1e-4, step_size=1e-5)
     hidden_layer_config: 'HiddenLayerConfig' = HiddenLayerConfig(start=[10], end=[100, 100,100], step_size=[10, 1])
 
+    def to_dict(self):
+        return asdict(self)
+
 @dataclass
 class Workload:
     epochs: int = 100
@@ -55,7 +61,7 @@ class Workload:
     model_cls: str = "mlp"
     device: str = "cpu"
 
-@dataclass
+@dataclass(init=False)
 class Resouces:
     """
         Resource definition for a HPO benchmark
@@ -74,23 +80,43 @@ class Resouces:
 
             hyperparameter (Hyperparameter): Hyperparameter definition for the benchmark, including the search space size, etc.
     """
-    metrics_ip: str = "auto" #TODO we should instead use a factory here
+    metricsIP: str = "auto" #TODO we should instead use a factory here
 
     trials: int = 100
 
-    worker_cpu: int = 2
-    worker_memory: int = 2
-    worker_count: int = 1
+    workerCpu: int = 2
+    workerMemory: int = 2
+    workerCount: int = 1
 
     
-    workload: 'Workload' = Workload()
-    hyperparameter: 'Hyperparameter' = Hyperparameter()
+    workload: Workload = Workload()
+    hyperparameter: Hyperparameter = Hyperparameter()
+
+    args: Dict[str, Any] = field(default_factory=dict)
+
+    def __init__(self, **kwargs):
+        self.args = dict()
+        names = set([f.name for f in fields(self)])
+        types = dict([(f.name,f.type) for f in fields(self)])
+        for k, v in kwargs.items():
+            if k in names:
+                if is_dataclass(types[k]):
+                    v = types[k](**v)
+                else:
+                    setattr(self, k, v)
+            else:
+                self.args[k] = v
 
     def to_dict(self):
         return asdict(self)
     
     def to_yaml(self):
         return yaml.dump(self.to_dict())
+
+    @staticmethod
+    def from_yaml(yaml_path:str):
+        with open(yaml_path, "r") as f:
+            return Resouces(**yaml.load(f, Loader=yaml.FullLoader))
 
 
 
