@@ -47,7 +47,7 @@ class OptunaTrial:
 
     @staticmethod
     def pruning_function(trial, objective_storage_interface):
-        validation_scores = objective_storage_interface.get_validation_scores()["macro avg"]["f1-score"]
+        validation_scores = objective_storage_interface.get_validation_scores()[-1]["macro avg"]["f1-score"]
         epoch = objective_storage_interface.get_current_epoch()
         trial.report(validation_scores, epoch)
         if trial.should_prune():

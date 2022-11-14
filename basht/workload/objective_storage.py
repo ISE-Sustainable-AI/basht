@@ -8,20 +8,20 @@ class ObjectiveStorage:
     validation_scores: dict = field(default_factory=list)
     training_scores: dict = field(default_factory=list)
 
-    def add_validation_scores(self, value):
+    def add_validation_scores(self, value: dict):
         if isinstance(value, dict):
             self.validation_scores.append(value)
         else:
             raise AttributeError("Validation Scores needs to be a dict.")
 
-    def add_training_scores(self, value):
-        if isinstance(value, dict):
+    def add_training_scores(self, value: float):
+        if isinstance(value, float):
             self.training_scores.append(value)
         else:
             raise AttributeError("Training Scores needs to be a dict.")
 
     def get_current_epoch_results(self):
-        return self.training_scores[self.current_epoch], self.validation_scores[self.current_epoch]
+        return self.training_scores[self.current_epoch-1], self.validation_scores[self.current_epoch-1]
 
 
 class ObjectiveStorageInterface:
