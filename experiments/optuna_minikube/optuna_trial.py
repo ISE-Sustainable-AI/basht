@@ -42,9 +42,8 @@ class OptunaTrial:
         objective_action = ObjectiveAction(
             OptunaTrial.pruning_function, trial=trial,
             objective_storage_interface=objective_storage_interface)
-        self.objective.train(action_function=objective_action)
-        validation_scores = self.objective.validate()
-        return validation_scores["macro avg"]["f1-score"]
+        results = self.objective.train(objective_action=objective_action, with_validation=True)
+        return results[1]["macro avg"]["f1-score"]
 
     @staticmethod
     def pruning_function(trial, objective_storage_interface):

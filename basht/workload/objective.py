@@ -10,6 +10,7 @@ from basht.workload.task_components import Splitter, Loader, Batcher, Preprocess
     TorchStandardBatcher, TorchStandardSplitter, MnistLoader, FMnistLoader
 from basht.workload.models import MLP
 from basht.workload.objective_storage import ObjectiveStorage
+from dataclasses import dataclass, field, asdict
 
 
 class FunctionalObjective(ABC):
@@ -177,7 +178,7 @@ class TaskBuilder:
 
 class Objective:
 
-    functional_objective = {
+    _functional_objective = {
         "torch": TorchObjective
     }
 
@@ -196,7 +197,7 @@ class Objective:
         self.model_cls = self.models.get(model_cls)
         self.epochs = epochs
         self.device = device
-        self._functional_objective = self.functional_objective.get(
+        self._functional_objective = self._functional_objective.get(
             dl_framework)(self.model_cls, self.epochs, self.device, self.hyperparameter)
         self._functional_objective.task = self._build_task(dl_framework, task)
         self.objective_storage = ObjectiveStorage()
@@ -219,17 +220,18 @@ class Objective:
 
     @latency_decorator
     def train(self, objective_action: callable = None, with_validation: bool = False):
-        self.functional_objective._prepare_training()
+        self._functional_objective._prepare_training()
         for epoch in range(1, self.epochs + 1):
             self.objective_storage.current_epoch = epoch
-            batch_losses = self.functional_objective.epoch_train()
-            self.objective_storage.add_training_scores(
-                {"training_losses": sum(batch_losses)/len(batch_losses)})
+            batch_losses = self._functional_objective.epoch_train()
+            # TODO: loss summarization should be custom
+            self.objective_storage.add_training_scores(sum(batch_losses)/len(batch_losses))
             if with_validation:
-                validation_results = self.functional_objective.validate()
+                validation_results = self._functional_objective.validate()
                 self.objective_storage.add_validation_scores(validation_results)
             if objective_action:
                 objective_action()
+        return self.objective_storage.get_current_epoch_results()
 
     @validation_latency_decorator
     def validate(self):
