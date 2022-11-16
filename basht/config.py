@@ -8,6 +8,7 @@ class Path:
     root_path = Path(file_dir).parent
     data_path = os.path.join(root_path, "data")
     experiments_path = os.path.join(root_path, "experiments")
+    test_path = os.path.join(root_path, "test")
 
 
 class MetricsStorageConfig:

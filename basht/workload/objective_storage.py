@@ -25,7 +25,6 @@ class ObjectiveStorage:
 
 
 class ObjectiveStorageInterface:
-    # TODO: avoid self reference, objective is gonna be in objective if executed in objective - check again
     def __init__(self, objective) -> None:
         self.objective_storage = objective.objective_storage
 

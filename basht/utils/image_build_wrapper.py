@@ -44,7 +44,8 @@ class MinikubeImageBuilder(ImageBuilder):
                 os.path.join(home_path, ".minikube/certs/cert.pem"),
                 os.path.join(home_path, ".minikube/certs/key.pem")),
             verify=True)
-        return docker.DockerClient(f"https://{minikube_ip}:{minikube_port}", use_ssh_client=False, tls=tls_config)
+        return docker.DockerClient(
+            f"https://{minikube_ip}:{minikube_port}", use_ssh_client=False, tls=tls_config)
 
     def deploy_image(self, image, tag, build_context):
         if not isinstance(image, str):
@@ -67,7 +68,15 @@ class MinikubeImageBuilder(ImageBuilder):
         return call.stdout.decode("utf-8").strip("\n")
 
     def cleanup(self, tag):
-        docker.containers.remove(tag)
+        try:
+            container = self.client.containers.get(tag)
+            container.remove()
+        except docker.errors.NotFound:
+            print(f"Could not find docker container with tag: {tag}")
+        try:
+            self.client.images.remove(tag)
+        except docker.errors.NotFound:
+            print(f"Could not find image with tag {tag}")
 
     def cleanup_minikube(self, tag):
         call = subprocess.run(["minikube", "image", "rm", tag], check=True)
