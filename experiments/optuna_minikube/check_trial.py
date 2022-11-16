@@ -19,9 +19,9 @@ def test_check_trail():
         assert f
 
         lats = metrics_storage.get_latency_results()
-        assert len(lats) >= int(os.environ["N_TRIALS"])*2 #(validate+train)
+        assert len(lats) >= int(os.environ["N_TRIALS"])*2  #(validate+train)
     finally:
         metrics_storage.stop_db()
 
-#TODO: do the same for the container ....
+# TODO: do the same for the container ....
 # def test_trail_container():

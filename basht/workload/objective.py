@@ -4,12 +4,13 @@ from basht.workload.models.model_interface import ObjModel
 from basht.decorators import latency_decorator, validation_latency_decorator
 from numpy import random
 from datetime import datetime
-import tqdm
 import torch
 from basht.workload.task import TorchTask
 from basht.workload.task_components import Splitter, Loader, Batcher, Preprocessor, TorchImageFlattner, \
     TorchStandardBatcher, TorchStandardSplitter, MnistLoader, FMnistLoader
 from basht.workload.models import MLP
+from basht.workload.objective_storage import ObjectiveStorage
+from dataclasses import dataclass, field, asdict
 
 
 class FunctionalObjective(ABC):
@@ -21,13 +22,14 @@ class FunctionalObjective(ABC):
     device = None
     _unique_id = None
     _created_at = None
+    model = None
 
     @abstractmethod
     def __init__(self, model_cls: ObjModel, epochs: int, device: str, hyperparameter: dict) -> None:
         pass
 
     @abstractmethod
-    def train(self):
+    def load(self):
         pass
 
     @abstractmethod
@@ -37,6 +39,25 @@ class FunctionalObjective(ABC):
     @abstractmethod
     def test(self):
         pass
+
+    @abstractmethod
+    def epoch_train(self):
+        pass
+
+    @abstractmethod
+    def _prepare_training(self):
+        pass
+
+
+class ObjectiveAction:
+
+    def __init__(self, function, *args, **kwargs) -> None:
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self):
+        return self.function(*self.args, **self.kwargs)
 
 
 class TorchObjective(FunctionalObjective):
@@ -53,33 +74,20 @@ class TorchObjective(FunctionalObjective):
         self.device = torch.device(device)
         self.hyperparameter = hyperparameter
 
-    @latency_decorator
-    def train(self) -> dict:
-        # prepare data
-        # TODO: has to be more general
+    def _prepare_training(self):
+        if not self.model:
+            self.model = self.model_cls(**self.hyperparameter)
+            self.model = self.model.to(self.device)
+
+    def load(self):
         self.task.prepare()
         self.hyperparameter["input_size"] = self.task.input_size
         self.hyperparameter["output_size"] = self.task.output_size
 
-        # model setup
-        self.model = self.model_cls(**self.hyperparameter)
-        self.model = self.model.to(self.device)
-        # train
-        epoch_losses = []
-        for epoch in tqdm.tqdm(range(1, self.epochs+1)):
-            batch_losses = []
-            for x, y in self.task.train_loader:
-                x = x.to(self.device)
-                y = y.to(self.device)
-                loss = self.model.train_step(x, y)
-                batch_losses.append(loss)
-            epoch_losses.append(sum(batch_losses)/len(batch_losses))
-        return {"train_loss": epoch_losses}
-
-    @validation_latency_decorator
     def validate(self) -> dict:
         self.model.eval()
-        self.model = self.model.to(self.device)
+        if not next(self.model.parameters()).device == self.device:
+            self.model = self.model.to(self.device)
         val_targets = []
         val_preds = []
         for x, y in self.task.val_loader:
@@ -92,6 +100,17 @@ class TorchObjective(FunctionalObjective):
         val_targets = torch.cat(val_targets).cpu().numpy()
         val_preds = torch.cat(val_preds).cpu().numpy()
         return classification_report(val_targets, val_preds, output_dict=True, zero_division=1)
+
+    def epoch_train(self) -> list:
+        if not next(self.model.parameters()).device == self.device:
+            raise ValueError("Model not on objective device!")
+        batch_losses = []
+        for x, y in self.task.train_loader:
+            x = x.to(self.device)
+            y = y.to(self.device)
+            loss = self.model.train_step(x, y)
+            batch_losses.append(loss)
+        return batch_losses
 
     def test(self) -> dict:
         self.model.eval()
@@ -159,7 +178,7 @@ class TaskBuilder:
 
 class Objective:
 
-    functional_objective = {
+    _functional_objective = {
         "torch": TorchObjective
     }
 
@@ -178,9 +197,10 @@ class Objective:
         self.model_cls = self.models.get(model_cls)
         self.epochs = epochs
         self.device = device
-        self._functional_objective = self.functional_objective.get(
+        self._functional_objective = self._functional_objective.get(
             dl_framework)(self.model_cls, self.epochs, self.device, self.hyperparameter)
         self._functional_objective.task = self._build_task(dl_framework, task)
+        self.objective_storage = ObjectiveStorage()
 
     def _build_task(self, dl_framework: str, task_definition: dict) -> any:
         task_builder = TaskBuilder(dl_framework)
@@ -194,16 +214,28 @@ class Objective:
             raise AttributeError("No propper task definition provided")
         return task_builder.task
 
-    @classmethod
-    def from_graph(cls, workload_config_graph):
-        pass
+    @latency_decorator
+    def load(self):
+        return self._functional_objective.load()
 
-    def train(self):
-        return self._functional_objective.train()
+    @latency_decorator
+    def train(self, objective_action: callable = None, with_validation: bool = False):
+        self._functional_objective._prepare_training()
+        for epoch in range(1, self.epochs + 1):
+            self.objective_storage.current_epoch = epoch
+            batch_losses = self._functional_objective.epoch_train()
+            # TODO: loss summarization should be custom
+            self.objective_storage.add_training_scores(sum(batch_losses)/len(batch_losses))
+            if with_validation:
+                validation_results = self._functional_objective.validate()
+                self.objective_storage.add_validation_scores(validation_results)
+            if objective_action:
+                objective_action()
+        return self.objective_storage.get_current_epoch_results()
 
+    @validation_latency_decorator
     def validate(self):
         return self._functional_objective.validate()
 
     def test(self):
         return self._functional_objective.test()
-

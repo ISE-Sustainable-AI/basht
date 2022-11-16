@@ -2,11 +2,12 @@ import os
 import sys
 from time import sleep
 import optuna
-from basht.workload.objective import Objective
+from basht.workload.objective import Objective, ObjectiveAction
 from basht.utils.yaml import YMLHandler
 from utils import generate_search_space
 from optuna.study import MaxTrialsCallback
 from optuna.trial import TrialState
+from basht.workload.objective_storage import ObjectiveStorageInterface
 
 
 class OptunaTrial:
@@ -32,20 +33,35 @@ class OptunaTrial:
             "learning_rate": lr, "weight_decay": decay,
             "hidden_layer_config": self.search_space.get("hidden_layer_config")[hidden_layer_idx]
         }
+
         self.objective = Objective(
             dl_framework=self.dl_framework, model_cls=self.model_cls, epochs=self.epochs, device=self.device,
             task=self.task, hyperparameter=hyperparameter)
-        self.objective.train()
-        validation_scores = self.objective.validate()
-        return validation_scores["macro avg"]["f1-score"]
+        self.objective.load()
+        objective_storage_interface = ObjectiveStorageInterface(self.objective)
+        objective_action = ObjectiveAction(
+            OptunaTrial.pruning_function, trial=trial,
+            objective_storage_interface=objective_storage_interface)
+        results = self.objective.train(objective_action=objective_action, with_validation=True)
+        return results[1]["macro avg"]["f1-score"]
+
+    @staticmethod
+    def pruning_function(trial, objective_storage_interface):
+        validation_scores = objective_storage_interface.get_validation_scores()[-1]["macro avg"]["f1-score"]
+        epoch = objective_storage_interface.get_current_epoch()
+        trial.report(validation_scores, epoch)
+        if trial.should_prune():
+            raise optuna.TrialPruned()
 
 
 def main():
     try:
         resource_path = os.path.join(os.path.dirname(__file__), "resource_definition.yml")
         resource_def = YMLHandler.load_yaml(resource_path)
+        print(resource_def)
         study_name = os.environ.get("STUDY_NAME", "Test-Study")
         database_conn = os.environ.get("DB_CONN")
+        n_trials = resource_def.get("trials")
         hyperparameter = resource_def.get("hyperparameter")
         search_space = generate_search_space(hyperparameter)
         workload_def = resource_def.get("workload")
@@ -56,10 +72,10 @@ def main():
             task=workload_def.get("task"))
         study = optuna.create_study(
             study_name=study_name, storage=database_conn, direction="maximize", load_if_exists=True,
-            sampler=optuna.samplers.GridSampler(search_space))
+            sampler=optuna.samplers.GridSampler(search_space), pruner=optuna.pruners.MedianPruner())
         study.optimize(
             optuna_trial,
-            callbacks=[MaxTrialsCallback(resource_def.get("trials"), states=(TrialState.COMPLETE,))])
+            callbacks=[MaxTrialsCallback(n_trials, states=(TrialState.COMPLETE,))])
         sleep(5)
         return True
     except Exception as e:
