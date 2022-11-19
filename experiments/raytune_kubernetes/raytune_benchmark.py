@@ -13,6 +13,7 @@ from kubernetes.utils import create_from_yaml, FailToCreateError
 from basht.benchmark_runner import Benchmark
 from basht.workload.objective import Objective
 from basht.utils.yaml import YamlTemplateFiller
+from basht.utils.generate_grid_search_space import generate_grid_search_space
 
 
 class TrialStopper(Stopper):
@@ -140,7 +141,7 @@ class RaytuneBenchmark(Benchmark):
         self.analysis = tune.run(
             raytune_func,
             config=dict(
-                hyperparameters=grid,
+                hyperparameters=self.create_ray_grid(grid),
             ),
             sync_config=tune.SyncConfig(
                 syncer=None  # Disable syncing
@@ -184,9 +185,10 @@ class RaytuneBenchmark(Benchmark):
 
     def _undeploy_watch_ray_cluster(self):
         w = watch.Watch()
-        for event in w.stream(self.k8s_custom_objects_api.list_namespaced_custom_object,
-                              group="cluster.ray.io", version="v1",
-                              namespace=self.namespace, plural="rayclusters"):
+        for event in w.stream(
+            self.k8s_custom_objects_api.list_namespaced_custom_object,
+            group="cluster.ray.io", version="v1",
+                namespace=self.namespace, plural="rayclusters"):
             print(f"Event: {event['type']} {event['object']['kind']} {event['object']['status']['phase']}")
             if event['type'] == "DELETED":
                 w.stop()
@@ -238,74 +240,31 @@ class RaytuneBenchmark(Benchmark):
 
         self._undeploy_watch_ray_operator()
 
+    def create_ray_grid(grid):
+        ray_grid = {}
+        for key, value in grid.items():
+            if type(grid[key]) is list:
+                ray_grid[key] = tune.grid_search(value)
+            else:
+                ray_grid[key] = value
+        return dict(ray_grid)
 
-def create_ray_grid(grid):
-    ray_grid = {}
-    for key, value in grid.items():
-        if type(grid[key]) is list:
-            ray_grid[key] = tune.grid_search(value)
-        else:
-            ray_grid[key] = value
-    return dict(ray_grid)
 
-
-if __name__ == "__main__":
+def main():
     from basht.benchmark_runner import BenchmarkRunner
-    import json
+    from urllib.request import urlopen
+    from basht.utils.yaml import YMLHandler
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--grid', help='Grid config, valid option: ["small", "medium", "large"]')
-    parser.add_argument(
-        '--nworkers', help='Number of workers, valid option: [1, 2, 4]', type=int)
-    parser.add_argument(
-        '--cpus', help='Number of cpus, valid option: [1, 2, 3, 4]', type=int)
-
-    args = parser.parse_args()
-    n_workers = args.nworkers
-    grid_option = args.grid
-    n_cpus = args.cpus
-
-    if n_workers is None:
-        print("Number of workers is not specified, default is 1")
-        n_workers = 1
-    else:
-        if n_workers not in [1, 2, 4]:
-            raise ValueError(
-                "Invalid number of workers: valid option: [1, 2, 4]")
-
-    if grid_option is None:
-        print("Grid option is not specified, default is small")
-        grid_option = "small"
-    else:
-        if grid_option not in ["small", "medium", "large"]:
-            raise ValueError(
-                "Invalid number of workers: valid option: [small, medium, large]")
-    n_trials_dict = {
-        "small": 8,
-        "medium": 16,
-        "large": 32
-    }
-    n_trials = n_trials_dict[grid_option]
-
-    if n_cpus is None:
-        print("Number of worker CPU is not specified, default is 2")
-        n_cpus = 2
-    else:
-        if n_cpus not in [1, 2, 3, 4]:
-            raise ValueError(
-                "Invalid number of worker CPU: valid option: [1, 2, 3, 4]")
-
-    with open("resource_definition.json") as res_def_file:
-        resource_definition = json.load(res_def_file)
-        resource_definition['workerCount'] = n_workers
-        resource_definition['workerCpu'] = n_cpus
-
-    with open(path.join(path.dirname(__file__), "grids", f"grid_{grid_option}.json")) as grid_def_file:
-        grid_definition = create_ray_grid(json.load(grid_def_file))
-        global_grid = grid_definition
+    resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
+    resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()
+    resource_definition["nfsServer"] = resource_definition["metricsIP"]
+    resource_definition["hyperparameters"] = generate_grid_search_space(
+        resource_definition["hyperparameters"])
 
     runner = BenchmarkRunner(
         benchmark_cls=RaytuneBenchmark, resources=resource_definition)
-
     runner.run()
+
+
+if __name__ == "__main__":
+    main()

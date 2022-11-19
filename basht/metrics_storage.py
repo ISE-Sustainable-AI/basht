@@ -10,6 +10,7 @@ import os
 from basht.config import MetricsStorageConfig
 from basht.metrics import Metric
 
+
 class MetricsStorage:
 
     port = MetricsStorageConfig.port

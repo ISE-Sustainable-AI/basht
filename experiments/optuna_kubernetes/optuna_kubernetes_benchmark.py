@@ -12,7 +12,7 @@ from basht.config import Path
 from basht.utils.image_build_wrapper import builder_from_string
 from basht.workload.objective import Objective
 from basht.utils.yaml import YamlTemplateFiller, YMLHandler
-from experiments.optuna_minikube.utils import generate_search_space
+from basht.utils.generate_grid_search_space import generate_grid_search_space
 
 
 class OptunaKubernetesBenchmark(Benchmark):
@@ -39,7 +39,7 @@ class OptunaKubernetesBenchmark(Benchmark):
         self.delete_after_run = resources.get("deleteAfterRun", True)
         self.metrics_ip = resources.get("metricsIP")
         self.trials = resources.get("trials", 10) #self._calculate_trial_number(resources.get("trials", 6))
-        self.grid = generate_search_space(resources.get("hyperparameter"))
+        self.grid = generate_grid_search_space(resources.get("hyperparameter"))
         self.workload = resources.get("workload")
 
     def _calculate_trial_number(self, n_trials):
@@ -241,7 +241,7 @@ class OptunaKubernetesBenchmark(Benchmark):
         return False
 
 
-if __name__ == "__main__":
+def main():
     from basht.benchmark_runner import BenchmarkRunner
     from urllib.request import urlopen
     resources = YMLHandler.load_yaml(path.join(path.dirname(__file__),"resource_definition.yml"))
@@ -261,3 +261,7 @@ if __name__ == "__main__":
     runner = BenchmarkRunner(
         benchmark_cls=OptunaKubernetesBenchmark, resources=resources)
     runner.run()
+
+
+if __name__ == "__main__":
+    main()

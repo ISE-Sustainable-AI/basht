@@ -1,5 +1,4 @@
 import numpy as np
-from basht.utils.yaml import YMLHandler
 import itertools
 from basht.config import Path
 import os
@@ -24,7 +23,7 @@ def generate_hidden_layer_config_space(hidden_layer_dict):
     return combinations
 
 
-def generate_search_space(hyperparameter):
+def generate_grid_search_space(hyperparameter: dict) -> dict:
     modified_search_space = {}
     for key, value in hyperparameter.items():
         if key == "hidden_layer_config":
@@ -38,5 +37,5 @@ def generate_search_space(hyperparameter):
 
 if __name__ == "__main__":
     file_path = os.path.join(Path.root_path, "experiments/optuna_minikube/resource_definition.yml")
-    search_space = generate_search_space(file_path)
+    search_space = generate_grid_search_space(file_path)
     print(search_space)

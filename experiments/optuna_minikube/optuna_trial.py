@@ -4,7 +4,7 @@ from time import sleep
 import optuna
 from basht.workload.objective import Objective, ObjectiveAction
 from basht.utils.yaml import YMLHandler
-from utils import generate_search_space
+from basht.utils.generate_grid_search_space import generate_grid_search_space
 from optuna.study import MaxTrialsCallback
 from optuna.trial import TrialState
 from basht.workload.objective_storage import ObjectiveStorageInterface
@@ -63,7 +63,7 @@ def main():
         database_conn = os.environ.get("DB_CONN")
         n_trials = resource_def.get("trials")
         hyperparameter = resource_def.get("hyperparameter")
-        search_space = generate_search_space(hyperparameter)
+        search_space = generate_grid_search_space(hyperparameter)
         workload_def = resource_def.get("workload")
         optuna_trial = OptunaTrial(
             search_space, dl_framework=workload_def.get("dl_framework"),

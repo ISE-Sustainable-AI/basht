@@ -2,8 +2,8 @@ kubernetesNamespace: st-hpo
 workerCpu: 2
 workerMemory: 4
 workerCount: 1
-metricsIP: 130.149.158.237
-nfsServer: 130.149.158.237
+metricsIP: auto # 130.149.158.237
+nfsServer: auto # 130.149.158.237
 nfsPath: /exports/raytune
 deleteAfterRun: True
 workload: # this is given to every trial and thus defines the performed work

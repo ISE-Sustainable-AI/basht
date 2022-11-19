@@ -11,7 +11,7 @@ from basht.utils.image_build_wrapper import builder_from_string
 from basht.workload.objective import Objective
 from basht.utils.yaml import YamlTemplateFiller
 from basht.utils.yaml import YMLHandler
-from experiments.optuna_minikube.utils import generate_search_space
+from basht.utils.generate_grid_search_space import generate_search_space
 
 
 class OptunaMinikubeBenchmark(Benchmark):
