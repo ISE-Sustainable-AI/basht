@@ -215,7 +215,7 @@ class OptunaKubernetesBenchmark(Benchmark):
         if self.delete_after_run:
             client.CoreV1Api().delete_namespace(self.namespace)
             self._watch_namespace()
-            # self.image_builder.cleanup(self.trial_tag)
+            self.image_builder.cleanup(self.trial_tag)
 
     def _watch_namespace(self):
         try:

@@ -1,6 +1,5 @@
 from os import path
 import subprocess
-import argparse
 
 import ray
 from ray import tune
@@ -27,6 +26,7 @@ class TrialStopper(Stopper):
 class RaytuneBenchmark(Benchmark):
 
     def __init__(self, resources) -> None:
+
         self.namespace = resources.get("kubernetesNamespace", "st-hpo")
         self.workerCpu = resources.get("workerCpu", 1)
         self.workerMemory = resources.get("workerMemory", 1)
@@ -35,9 +35,10 @@ class RaytuneBenchmark(Benchmark):
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
         self.grid = resources.get("hyperparameter")
+        self.delete_after_run = resources.get("delete_after_run")
 
         # K8s setup
-        config.load_kube_config()
+        config.load_kube_config(context=resources.get("kubernetesContext"))
         self.k8s_api_client = client.ApiClient()
         self.k8s_custom_objects_api = client.CustomObjectsApi()
         self.k8s_core_v1_api = client.CoreV1Api()
@@ -67,6 +68,15 @@ class RaytuneBenchmark(Benchmark):
             on a platform, e.g,. in the case of Kubernetes it referes to the steps nassary to deploy all pods
             and services in kubernetes.
         """
+        try:
+            resp = client.CoreV1Api().create_namespace(
+                client.V1Namespace(metadata=client.V1ObjectMeta(name=self.namespace)))
+            print("Namespace created. status='%s'" % str(resp))
+        except ApiException as e:
+            if self._is_create_conflict(e):
+                print("Deployment already exists")
+            else:
+                raise e
         # deploy ray operator
         try:
             create_from_yaml(
@@ -239,6 +249,9 @@ class RaytuneBenchmark(Benchmark):
             raise e
 
         self._undeploy_watch_ray_operator()
+        if self.delete_after_run:
+            client.CoreV1Api().delete_namespace(self.namespace)
+            self._watch_namespace()
 
     def create_ray_grid(grid):
         ray_grid = {}
@@ -249,6 +262,18 @@ class RaytuneBenchmark(Benchmark):
                 ray_grid[key] = value
         return dict(ray_grid)
 
+    @staticmethod
+    def _is_create_conflict(e):
+        if isinstance(e, ApiException):
+            if e.status == 409:
+                return True
+        if isinstance(e, FailToCreateError):
+            if e.api_exceptions is not None:
+                # lets quickly check if all status codes are 409 -> componetnes exist already
+                if set(map(lambda x: x.status, e.api_exceptions)) == {409}:
+                    return True
+        return False
+
 
 def main():
     from basht.benchmark_runner import BenchmarkRunner
@@ -258,8 +283,8 @@ def main():
     resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
     resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()
     resource_definition["nfsServer"] = resource_definition["metricsIP"]
-    resource_definition["hyperparameters"] = generate_grid_search_space(
-        resource_definition["hyperparameters"])
+    resource_definition["hyperparameter"] = generate_grid_search_space(
+        resource_definition["hyperparameter"])
 
     runner = BenchmarkRunner(
         benchmark_cls=RaytuneBenchmark, resources=resource_definition)

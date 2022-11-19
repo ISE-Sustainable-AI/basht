@@ -12,11 +12,11 @@ spec:
       labels:
         cluster.ray.io/component: operator
     spec:
-      serviceAccountName: ray-operator-serviceaccount
+      #serviceAccountName: ray-operator-serviceaccount
       containers:
         - name: ray
-          #imagePullPolicy: Always
-          image: rayproject/ray:latest-py38
+          imagePullPolicy: Always
+          image: rayproject/ray:366f0c-py310-cu112
           command: ["ray-operator"]
           env:
             - name: RAY_OPERATOR_POD_NAMESPACE
