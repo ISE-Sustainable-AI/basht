@@ -20,8 +20,14 @@ class ObjectiveStorage:
         else:
             raise AttributeError("Training Scores needs to be a dict.")
 
-    def get_current_epoch_results(self):
-        return self.training_scores[self.current_epoch-1], self.validation_scores[self.current_epoch-1]
+    def get_current_epoch_results(self) -> tuple:
+        if self.current_epoch < len(self.training_scores):
+            training_results = self.training_scores[self.current_epoch]
+        if self.current_epoch < len(self.validation_scores):
+            validation_results = self.validation_scores[self.current_epoch]
+        else:
+            validation_results = None
+        return training_results, validation_results
 
 
 class ObjectiveStorageInterface:

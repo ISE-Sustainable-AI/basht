@@ -102,7 +102,8 @@ class TorchObjective(FunctionalObjective):
         return classification_report(val_targets, val_preds, output_dict=True, zero_division=1)
 
     def epoch_train(self) -> list:
-        if not next(self.model.parameters()).device == self.device:
+        # TODO: for multiple GPUs this might be checked more
+        if not next(self.model.parameters()).device.type == self.device.type:
             raise ValueError("Model not on objective device!")
         batch_losses = []
         for x, y in self.task.train_loader:
@@ -221,7 +222,7 @@ class Objective:
     @latency_decorator
     def train(self, objective_action: callable = None, with_validation: bool = False):
         self._functional_objective._prepare_training()
-        for epoch in range(1, self.epochs + 1):
+        for epoch in range(0, self.epochs):
             self.objective_storage.current_epoch = epoch
             batch_losses = self._functional_objective.epoch_train()
             # TODO: loss summarization should be custom
