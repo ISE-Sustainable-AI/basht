@@ -10,5 +10,5 @@ Run Raytune Benchmark:
 ## Minikube
 - I started nfs on minikube
 - I took out the service account name in the ray-operator.yml
-- I set image pull policy in the operator yml to always
-- I changed to a specific image version
+- I set image pull policy in the operator yml to ifnotpresent
+- I have to find out the current image version that is used

@@ -15,8 +15,8 @@ spec:
       #serviceAccountName: ray-operator-serviceaccount
       containers:
         - name: ray
-          imagePullPolicy: Always
-          image: rayproject/ray:366f0c-py310-cu112
+          imagePullPolicy: IfNotPresent
+          image: rayproject/ray:latest-py38
           command: ["ray-operator"]
           env:
             - name: RAY_OPERATOR_POD_NAMESPACE
