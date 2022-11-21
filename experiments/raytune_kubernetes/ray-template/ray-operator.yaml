@@ -12,7 +12,7 @@ spec:
       labels:
         cluster.ray.io/component: operator
     spec:
-      #serviceAccountName: ray-operator-serviceaccount
+      serviceAccountName: ray-operator-serviceaccount
       containers:
         - name: ray
           imagePullPolicy: IfNotPresent

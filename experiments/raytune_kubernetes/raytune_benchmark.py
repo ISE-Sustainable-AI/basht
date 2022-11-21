@@ -11,8 +11,9 @@ from kubernetes.utils import create_from_yaml, FailToCreateError
 
 from basht.benchmark_runner import Benchmark
 from basht.workload.objective import Objective
-from basht.utils.yaml import YamlTemplateFiller
+from basht.utils.yaml import YamlTemplateFiller, YMLHandler
 from basht.utils.generate_grid_search_space import generate_grid_search_space
+from basht.config import Path
 
 
 class TrialStopper(Stopper):
@@ -35,7 +36,7 @@ class RaytuneBenchmark(Benchmark):
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
         self.grid = resources.get("hyperparameter")
-        self.delete_after_run = resources.get("delete_after_run")
+        self.delete_after_run = resources.get("deleteAfterRun")
 
         # K8s setup
         config.load_kube_config(context=resources.get("kubernetesContext"))
@@ -68,7 +69,9 @@ class RaytuneBenchmark(Benchmark):
             on a platform, e.g,. in the case of Kubernetes it referes to the steps nassary to deploy all pods
             and services in kubernetes.
         """
+        # create the namespace
         try:
+
             resp = client.CoreV1Api().create_namespace(
                 client.V1Namespace(metadata=client.V1ObjectMeta(name=self.namespace)))
             print("Namespace created. status='%s'" % str(resp))
@@ -77,6 +80,38 @@ class RaytuneBenchmark(Benchmark):
                 print("Deployment already exists")
             else:
                 raise e
+        # create serviceaccount
+        try:
+            body = {"metadata": {"name": "ray-operator-serviceaccount"}}
+            client.CoreV1Api().create_namespaced_service_account(self.namespace, body)
+        except ApiException as e:
+            print("Service Account was not created.")
+            raise e
+        # create roles
+        try:
+            role = YMLHandler.load_yaml(
+                path.join(
+                    Path.root_path, "experiments/raytune_kubernetes/ray-template/preliminaries/role.yaml"))
+            role_binding = YMLHandler.load_yaml(
+                path.join(
+                    Path.root_path, "experiments/raytune_kubernetes/ray-template/preliminaries/role-binding.yaml"))
+            client.RbacAuthorizationV1Api().create_namespaced_role(self.namespace, body=role)
+            client.RbacAuthorizationV1Api().create_namespaced_role_binding(self.namespace, body=role_binding)
+        except ApiException as e:
+            print("Role could not be created")
+            raise e
+        # create resource definition
+        try:
+            resource_def = YMLHandler.load_yaml(
+                path.join(
+                    Path.root_path, "experiments/raytune_kubernetes/ray-template/preliminaries/cluster_crd.yaml"))
+            client.ApiextensionsV1Api().create_custom_resource_definition(body=resource_def)
+        except ApiException as e:
+            if self._is_create_conflict(e):
+                print("Deployment already exists")
+            else:
+                raise e
+
         # deploy ray operator
         try:
             create_from_yaml(

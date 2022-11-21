@@ -135,7 +135,7 @@ class OptunaKubernetesBenchmark(Benchmark):
             for t in range(1,14):
                 self._watch_trials(timeout=120*t)
         except Exception as e:
-            #TODO deal with mitigatable errors
+            # TODO deal with mitigatable errors
             raise e
 
     def _getDBURL(self):

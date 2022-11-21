@@ -12,3 +12,7 @@ Run Raytune Benchmark:
 - I took out the service account name in the ray-operator.yml
 - I set image pull policy in the operator yml to ifnotpresent
 - I have to find out the current image version that is used
+- I added service account creation
+- I added role, rolebindings and custom resource creation
+- to delete raycluster edit the raycluster and delete the finalizer: https://stackoverflow.com/questions/71164028/disabling-ray-finalizer-condition
+- create exports/raytune folder, for mounting the nfs docker container
