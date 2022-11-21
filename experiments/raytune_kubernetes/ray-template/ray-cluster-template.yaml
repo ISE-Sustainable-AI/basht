@@ -44,7 +44,7 @@ spec:
           containers:
             - name: ray-node
               #imagePullPolicy: Always
-              image: vdocker2603/ml-benchmark-raytune-k8s
+              image: tawalaya/raytune_trial_image:latest # vdocker2603/ml-benchmark-raytune-k8s
               # Do not change this command - it keeps the pod alive until it is
               # explicitly killed.
               command: ["/bin/bash", "-c", "--"]
@@ -109,7 +109,7 @@ spec:
           containers:
             - name: ray-node
               #imagePullPolicy: Always
-              image: vdocker2603/ml-benchmark-raytune-k8s
+              image: tawalaya/raytune_trial_image:latest # vdocker2603/ml-benchmark-raytune-k8s
               # Do not change this command - it keeps the pod alive until it is
               # explicitly killed.
               command: ["/bin/bash", "-c", "--"]

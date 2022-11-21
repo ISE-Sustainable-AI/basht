@@ -16,7 +16,7 @@ spec:
       containers:
         - name: ray
           imagePullPolicy: IfNotPresent
-          image: rayproject/ray:latest-py38
+          image: rayproject/ray:2.1.0-py39
           command: ["ray-operator"]
           env:
             - name: RAY_OPERATOR_POD_NAMESPACE

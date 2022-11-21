@@ -14,5 +14,6 @@ Run Raytune Benchmark:
 - I have to find out the current image version that is used
 - I added service account creation
 - I added role, rolebindings and custom resource creation
-- to delete raycluster edit the raycluster and delete the finalizer: https://stackoverflow.com/questions/71164028/disabling-ray-finalizer-condition
+- to delete raycluster edit the raycluster and delete the finalizer: https://stackoverflow.com/questions/71164028/disabling-ray-finalizer-condition or 'kubectl patch rayclusters.cluster.ray.io ray-cluster -p '{"metadata":{"finalizers":null}}' --type=merge'
 - create exports/raytune folder, for mounting the nfs docker container
+- changed the image in the cluster template to match the self created custom image "dockerfile.trial"

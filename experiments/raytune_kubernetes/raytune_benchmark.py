@@ -149,15 +149,17 @@ class RaytuneBenchmark(Benchmark):
             )
         except FailToCreateError as e:
             raise e
+        # wait
+        self._deploy_watch()
+
         with open("portforward_log.txt", 'w') as pf_log:
             self.portforward_proc = subprocess.Popen(
                 ["kubectl", "-n", self.namespace, "port-forward",
                     "service/ray-cluster-ray-head", "10001:10001"],
                 stdout=pf_log
             )
-        ray.init("ray://localhost:10001")
 
-        self._deploy_watch()
+        ray.init("ray://localhost:10001")
 
     def setup(self):
         return
