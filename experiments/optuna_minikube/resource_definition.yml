@@ -5,7 +5,7 @@ workerCount: 1
 trials: 20
 metricsIP:  auto ##urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
 kubernetesMasterIP: minikube ##subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n")
-dockerImageTag: optuna-trial2:latest
+dockerImageTag: optuna-trial:latest
 dockerImageBuilder: minikube
 kubernetesNamespace: optuna-study
 kubernetesContext: "minikube"
