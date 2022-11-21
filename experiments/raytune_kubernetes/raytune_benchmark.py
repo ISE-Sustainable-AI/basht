@@ -1,5 +1,6 @@
 from os import path
 import subprocess
+import time
 
 import ray
 from ray import tune
@@ -77,7 +78,7 @@ class RaytuneBenchmark(Benchmark):
             print("Namespace created. status='%s'" % str(resp))
         except ApiException as e:
             if self._is_create_conflict(e):
-                print("Deployment already exists")
+                print("Deployment (namespace) already exists")
             else:
                 raise e
         # create serviceaccount
@@ -120,8 +121,10 @@ class RaytuneBenchmark(Benchmark):
                 namespace=self.namespace, verbose=True
             )
         except FailToCreateError as e:
-            raise e
-
+            if self._is_create_conflict(e):
+                print("Deployment (operator) already exists")
+            else:
+                raise e
         # deploy ray cluster
         ray_cluster_definition = {
             "ray_worker_num": self.workerCount - 1,
@@ -138,9 +141,14 @@ class RaytuneBenchmark(Benchmark):
             ray_cluster_definition
         )
 
+        # wait for operator to be ready
+
+        time.sleep(30)
+
         ray_cluster_json_objects = next(ray_cluster_yml_objects)
-        try:
-            self.k8s_custom_objects_api.create_namespaced_custom_object(
+
+        self._k8s_create(
+            lambda: self.k8s_custom_objects_api.create_namespaced_custom_object(
                 group="cluster.ray.io",
                 version="v1",
                 namespace=self.namespace,
@@ -160,6 +168,18 @@ class RaytuneBenchmark(Benchmark):
             )
 
         ray.init("ray://localhost:10001")
+
+    def _k8s_create(self, create_fn, delete_fn):
+        try:
+            create_fn()
+        except Exception as e:
+            if self._is_create_conflict(e):
+                print("Deployment (cluster) already exists")
+                delete_fn()
+                time.sleep(5)
+                create_fn()
+            else:
+                raise e
 
     def setup(self):
         return
