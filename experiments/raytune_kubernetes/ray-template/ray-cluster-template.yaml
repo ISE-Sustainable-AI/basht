@@ -38,9 +38,8 @@ spec:
               emptyDir:
                 medium: Memory
             - name: ray-results
-              nfs:
-                server: $nfs_server
-                path: $nfs_path
+              persistentVolumeClaim:
+                claimName: "test"
           containers:
             - name: ray-node
               #imagePullPolicy: Always
@@ -103,9 +102,8 @@ spec:
               emptyDir: #{}
                 medium: Memory
             - name: ray-results
-              nfs:
-                server: $nfs_server
-                path: $nfs_path
+              persistentVolumeClaim:
+                claimName: "test"
           containers:
             - name: ray-node
               #imagePullPolicy: Always

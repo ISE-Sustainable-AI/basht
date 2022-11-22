@@ -22,8 +22,6 @@ Run Raytune Benchmark:
 
 
 ## TODO:
-
-- nodeport statt proxy
 - nfs in cluster
-- metrics recording
+- pruning
 

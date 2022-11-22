@@ -1,20 +1,19 @@
-from os import path
 import subprocess
 import time
+from os import path
 
 import ray
+from kubernetes import client, config, watch
+from kubernetes.client import ApiException
+from kubernetes.utils import FailToCreateError, create_from_yaml
 from ray import tune
 from ray.tune import Stopper
 
-from kubernetes import client, config, watch
-from kubernetes.client import ApiException
-from kubernetes.utils import create_from_yaml, FailToCreateError
-
 from basht.benchmark_runner import Benchmark
-from basht.workload.objective import Objective
-from basht.utils.yaml import YamlTemplateFiller, YMLHandler
-from basht.utils.generate_grid_search_space import generate_grid_search_space
 from basht.config import Path
+from basht.utils.generate_grid_search_space import generate_grid_search_space
+from basht.utils.yaml import YamlTemplateFiller, YMLHandler
+from basht.workload.objective import Objective
 
 
 class TrialStopper(Stopper):
@@ -34,7 +33,7 @@ class RaytuneBenchmark(Benchmark):
         self.workerMemory = resources.get("workerMemory", 1)
         self.workerCount = resources.get("workerCount", 1)
         self.metricsIP = resources.get("metricsIP")
-        self.kubernets_master_ip = resources.get("kubernetesMasterIP")
+        self.kubernetes_master_ip = resources.get("kubernetesMasterIP")
         self.ray_node_port = resources.get("rayNodePort")
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
@@ -91,6 +90,20 @@ class RaytuneBenchmark(Benchmark):
         except ApiException as e:
             print("Service Account was not created.")
             raise e
+
+        try:
+            pv = YMLHandler.load_yaml(
+                path.join(
+                    Path.root_path, "experiments/raytune_kubernetes/ray-template/preliminaries/pv.yaml"))
+            self.k8s_core_v1_api.create_namespaced_persistent_volume_claim(
+                namespace=self.namespace,
+                body=pv
+            )
+        except ApiException as e:
+            # TODO
+            print("PV failed.... go fix-")
+            raise e
+
         # create roles
         try:
             role = YMLHandler.load_yaml(
@@ -178,7 +191,7 @@ class RaytuneBenchmark(Benchmark):
             print(f"updated ray service {resp.status}")
         except ApiException as e:
             raise e
-
+        # TODO schreibfehler_
         ray.init(f"ray://{self.kubernetes_master_ip}:{self.ray_node_port}")
 
     def setup(self):
@@ -339,13 +352,14 @@ class RaytuneBenchmark(Benchmark):
 
 
 def main():
-    from basht.benchmark_runner import BenchmarkRunner
     from urllib.request import urlopen
+
+    from basht.benchmark_runner import BenchmarkRunner
     from basht.utils.yaml import YMLHandler
 
     resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
     resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()
-    resource_definition["nfsServer"] = resource_definition["metricsIP"]
+    resource_definition["nfsServer"] = "nfs-server" #resource_definition["metricsIP"]
     resource_definition["kubernetesMasterIP"] = "192.168.49.2"
     resource_definition["hyperparameter"] = generate_grid_search_space(
         resource_definition["hyperparameter"])

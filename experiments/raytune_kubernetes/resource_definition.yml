@@ -2,12 +2,11 @@ kubernetesContext: minikube # kube-user@ise-kube
 kubernetesNamespace: st-hpo #might need to switch kubernetes context before
 workerCpu: 2
 workerMemory: 4
-workerCount: 1
+workerCount: 2
 metricsIP: auto # 130.149.158.237
-nfsServer: auto # 130.149.158.237
 kubernetesMasterIP: auto # 192.168.49.2
 rayNodePort: 30003
-nfsPath: /exports/raytune
+# TODO add pvc class type
 deleteAfterRun: True
 workload: # this is given to every trial and thus defines the performed work
   dl_framework: torch
