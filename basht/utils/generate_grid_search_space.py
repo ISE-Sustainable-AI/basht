@@ -30,8 +30,8 @@ def generate_grid_search_space(hyperparameter: dict) -> dict:
             combinations = generate_hidden_layer_config_space(value)
             modified_search_space[key] = combinations
         else:
-            item_search_space = np.arange(value["start"], value["end"], value["step_size"])
-            modified_search_space[key] = np.append(item_search_space, value["end"])
+            item_search_space = np.arange(value["start"], value["end"], value["step_size"]).tolist()
+            modified_search_space[key] = np.append(item_search_space, value["end"]).tolist()
     return modified_search_space
 
 

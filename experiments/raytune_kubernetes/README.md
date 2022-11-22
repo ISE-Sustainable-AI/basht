@@ -16,4 +16,14 @@ Run Raytune Benchmark:
 - I added role, rolebindings and custom resource creation
 - to delete raycluster edit the raycluster and delete the finalizer: https://stackoverflow.com/questions/71164028/disabling-ray-finalizer-condition or 'kubectl patch rayclusters.cluster.ray.io ray-cluster -p '{"metadata":{"finalizers":null}}' --type=merge'
 - create exports/raytune folder, for mounting the nfs docker container
-- changed the image in the cluster template to match the self created custom image "dockerfile.trial"
+- changed the image in the cluster template to the one that is build locally and pushed to the public docker registry
+- i changed the objective function into a static method of the class, to avoid pickling errors
+- i changed the grid creation for raytune, to avoid errors with numpy and whatsoever
+
+
+## TODO:
+
+- nodeport statt proxy
+- nfs in cluster
+- metrics recording
+

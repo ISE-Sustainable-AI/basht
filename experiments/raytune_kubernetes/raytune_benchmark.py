@@ -38,6 +38,7 @@ class RaytuneBenchmark(Benchmark):
         self.nfsPath = resources.get("nfsPath")
         self.grid = resources.get("hyperparameter")
         self.delete_after_run = resources.get("deleteAfterRun")
+        self.workload = resources.get("workload")
 
         # K8s setup
         config.load_kube_config(context=resources.get("kubernetesContext"))
@@ -146,15 +147,13 @@ class RaytuneBenchmark(Benchmark):
         time.sleep(30)
 
         ray_cluster_json_objects = next(ray_cluster_yml_objects)
-
-        self._k8s_create(
-            lambda: self.k8s_custom_objects_api.create_namespaced_custom_object(
+        try:
+            self.k8s_custom_objects_api.create_namespaced_custom_object(
                 group="cluster.ray.io",
                 version="v1",
                 namespace=self.namespace,
                 plural="rayclusters",
-                body=ray_cluster_json_objects
-            )
+                body=ray_cluster_json_objects)
         except FailToCreateError as e:
             raise e
         # wait
@@ -169,47 +168,37 @@ class RaytuneBenchmark(Benchmark):
 
         ray.init("ray://localhost:10001")
 
-    def _k8s_create(self, create_fn, delete_fn):
-        try:
-            create_fn()
-        except Exception as e:
-            if self._is_create_conflict(e):
-                print("Deployment (cluster) already exists")
-                delete_fn()
-                time.sleep(5)
-                create_fn()
-            else:
-                raise e
-
     def setup(self):
         return
+
+    @staticmethod
+    def raytune_func(config, checkpoint_dir=None):
+        hyperparameter = config.get("hyperparameters")
+        workload = config.get("workload")
+        objective = Objective(
+            dl_framework=workload.get("dl_framework"), model_cls=workload.get("model_cls"),
+            epochs=workload.get("epochs"), device=workload.get("device"),
+            task=workload.get("task"), hyperparameter=hyperparameter)
+        # these are the results, that can be used for the hyperparameter search
+        objective.load()
+        objective.train()
+        validation_scores = objective.validate()
+        tune.report(
+            macro_f1_score=validation_scores["macro avg"]["f1-score"])
 
     def run(self):
         """
             Executing the hyperparameter optimization on the deployed platfrom.
             use the metrics object to collect and store all measurments on the workers.
         """
-        grid = self.grid
-
-        def raytune_func(config, checkpoint_dir=None):
-            hyperparameter = config.get("hyperparameters")
-
-            objective = Objective(
-                dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
-                epochs=self.workload.get("epochs"), device=self.workload.get("device"),
-                task=self.workload.get("task"), hyperparameter=hyperparameter)
-            # these are the results, that can be used for the hyperparameter search
-            objective.load()
-            objective.train()
-            validation_scores = objective.validate()
-            tune.report(
-                macro_f1_score=validation_scores["macro avg"]["f1-score"])
-
+        grid = self.create_ray_grid(self.grid)
+        config = dict(
+                hyperparameters=grid,
+                workload=self.workload
+            )
         self.analysis = tune.run(
-            raytune_func,
-            config=dict(
-                hyperparameters=self.create_ray_grid(grid),
-            ),
+            RaytuneBenchmark.raytune_func,
+            config=config,
             sync_config=tune.SyncConfig(
                 syncer=None  # Disable syncing
             ),
@@ -234,6 +223,7 @@ class RaytuneBenchmark(Benchmark):
             dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
             epochs=self.workload.get("epochs"), device=self.workload.get("device"),
             task=self.workload.get("task"), hyperparameter=hyperparameter)
+        objective.load()
         self.training_loss = objective.train()
         self.test_scores = objective.test()
 
@@ -310,14 +300,17 @@ class RaytuneBenchmark(Benchmark):
             client.CoreV1Api().delete_namespace(self.namespace)
             self._watch_namespace()
 
+    @staticmethod
     def create_ray_grid(grid):
         ray_grid = {}
         for key, value in grid.items():
-            if type(grid[key]) is list:
+            if isinstance(value, dict):
+                value = list(value.values())
+            if isinstance(value, list):
                 ray_grid[key] = tune.grid_search(value)
             else:
                 ray_grid[key] = value
-        return dict(ray_grid)
+        return ray_grid
 
     @staticmethod
     def _is_create_conflict(e):
