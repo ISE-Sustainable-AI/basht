@@ -5,6 +5,8 @@ workerMemory: 4
 workerCount: 1
 metricsIP: auto # 130.149.158.237
 nfsServer: auto # 130.149.158.237
+kubernetesMasterIP: auto # 192.168.49.2
+rayNodePort: 30003
 nfsPath: /exports/raytune
 deleteAfterRun: True
 workload: # this is given to every trial and thus defines the performed work

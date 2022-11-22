@@ -34,6 +34,8 @@ class RaytuneBenchmark(Benchmark):
         self.workerMemory = resources.get("workerMemory", 1)
         self.workerCount = resources.get("workerCount", 1)
         self.metricsIP = resources.get("metricsIP")
+        self.kubernets_master_ip = resources.get("kubernetesMasterIP")
+        self.ray_node_port = resources.get("rayNodePort")
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
         self.grid = resources.get("hyperparameter")
@@ -142,10 +144,6 @@ class RaytuneBenchmark(Benchmark):
             ray_cluster_definition
         )
 
-        # wait for operator to be ready
-
-        time.sleep(30)
-
         ray_cluster_json_objects = next(ray_cluster_yml_objects)
         try:
             self.k8s_custom_objects_api.create_namespaced_custom_object(
@@ -159,14 +157,29 @@ class RaytuneBenchmark(Benchmark):
         # wait
         self._deploy_watch()
 
-        with open("portforward_log.txt", 'w') as pf_log:
-            self.portforward_proc = subprocess.Popen(
-                ["kubectl", "-n", self.namespace, "port-forward",
-                    "service/ray-cluster-ray-head", "10001:10001"],
-                stdout=pf_log
+        try:
+            resp = self.k8s_core_v1_api.patch_namespaced_service(
+                name="ray-cluster-ray-head",
+                namespace=self.namespace,
+                body={
+                    "spec": {
+                        "type": "NodePort",
+                        "ports": [
+                            {
+                                "name": "client",
+                                # TODO make this a configuration !
+                                "nodePort": self.ray_node_port,
+                                "port": 10001
+                            }
+                        ]
+                    }
+                }
             )
+            print(f"updated ray service {resp.status}")
+        except ApiException as e:
+            raise e
 
-        ray.init("ray://localhost:10001")
+        ray.init(f"ray://{self.kubernetes_master_ip}:{self.ray_node_port}")
 
     def setup(self):
         return
@@ -333,6 +346,7 @@ def main():
     resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
     resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()
     resource_definition["nfsServer"] = resource_definition["metricsIP"]
+    resource_definition["kubernetesMasterIP"] = "192.168.49.2"
     resource_definition["hyperparameter"] = generate_grid_search_space(
         resource_definition["hyperparameter"])
 
