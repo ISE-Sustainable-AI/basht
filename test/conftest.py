@@ -58,7 +58,7 @@ def resource_definition():
 
 @pytest.fixture
 def prepared_objective():
-    res = Resouces()
+    res = Resources()
     res.trials = 2
     res.workload.epochs = 2
     res.workload.device = "cuda" if torch.cuda.is_available() else "cpu"

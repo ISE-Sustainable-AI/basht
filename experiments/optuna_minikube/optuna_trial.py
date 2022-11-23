@@ -60,8 +60,8 @@ def main(resource_def: Resources):
         study_name = os.environ.get("STUDY_NAME", "Test-Study")
         database_conn = os.environ.get("DB_CONN")
 
-        # TODO migrate generate_search_space to use Resource.hyperparameter instead of dict
-        search_space = generate_grid_search_space(resource_def.hyperparameter.to_dict())
+        # TODO migrate generate_search_space to use Resource.hyperparameter instead of dict - whole example doesnt work yet
+        search_space = generate_grid_search_space(resource_def.searchspace.to_dict())
         workload_def = resource_def.workload
         optuna_trial = OptunaTrial(
             search_space, dl_framework=workload_def.dl_framework,

@@ -97,7 +97,7 @@ class Resources:
     deleteAfterRun: bool = True
 
     workload: Workload = Workload()
-    searchspace: SearchSpace = field(default_factory=dict)  # TODO: SearchSpace()
+    searchspace: SearchSpace = SearchSpace()
 
     args: Dict[str, Any] = field(default_factory=dict)
 
