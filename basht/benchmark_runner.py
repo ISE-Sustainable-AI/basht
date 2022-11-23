@@ -16,7 +16,7 @@ from basht.metrics_storage import MetricsStorage
 from basht.resource_tracker import ResourceTracker
 from basht.metrics import Latency
 
-
+#TODO: update to use Resources class
 class Benchmark(ABC):
     """
     This class serves as an Interface for a benchmark. All neccessary methods have to be implemented in the

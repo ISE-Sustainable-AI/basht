@@ -1,8 +1,8 @@
 
-import os
 from time import sleep
 from experiments.optuna_minikube.optuna_trial import main
 from basht.metrics_storage import MetricsStorage
+from basht.resources import Resources
 
 
 def test_check_trail():
@@ -10,16 +10,15 @@ def test_check_trail():
     try:
         metrics_storage.start_db()
         sleep(5)
-        os.environ["METRICS_STORAGE_HOST"] = MetricsStorage.host
-        os.environ["DB_CONN"] = MetricsStorage.connection_string
-        os.environ["N_TRIALS"] = "10"
-        os.environ["EPOCHS"] = "1"
 
-        f = main()
-        assert f
+        resource_def = Resources()
+        resource_def.trials = 2
+        resource_def.workload.epochs = 2
 
+        f = main(resource_def)
         lats = metrics_storage.get_latency_results()
-        assert len(lats) >= int(os.environ["N_TRIALS"])*2  #(validate+train)
+        assert f
+        assert len(lats) >= int(resource_def.trials) * 2  # TODO: this is to implicit
     finally:
         metrics_storage.stop_db()
 

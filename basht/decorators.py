@@ -29,6 +29,7 @@ def validation_latency_decorator(func):
 
     return result_func
 
+
 def latency_decorator(func):
     """A Decorator to record the latency of the decorated function. Once it is recorded the LatencyTracker
     writes the result into the postgres databse.

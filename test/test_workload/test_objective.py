@@ -11,5 +11,4 @@ class TestObjective:
 
         # assert
         assert objective
-        assert isinstance(objective.workload_definition, dict)
         assert objective._functional_objective

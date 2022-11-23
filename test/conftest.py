@@ -3,9 +3,8 @@ import requests
 import os
 
 from basht.decorators import latency_decorator, validation_latency_decorator
-from basht.config import Path
-from basht.utils.yaml import YMLHandler
 from basht.workload.objective import Objective
+from basht.resources import Resources
 import torch
 
 
@@ -50,24 +49,23 @@ def prometeus_url():
 
 @pytest.fixture
 def resource_definition():
-    test_file_path = os.path.join(Path.root_path, "test/test.yaml")
-    def_dict = YMLHandler.load_yaml(test_file_path)
-    return def_dict
+    res = Resources()
+    res.trials = 2
+    res.workload.epochs = 2
+
+    return res
 
 
 @pytest.fixture
 def prepared_objective():
-    test_file_path = os.path.join(Path.root_path, "test/test.yaml")
-    resource_definition = YMLHandler.load_yaml(test_file_path)
-    workload_def = resource_definition["workload"]
-    dl_framework = workload_def["dl_framework"]
-    model_cls = workload_def["model_cls"]
-    epochs = workload_def["epochs"]
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    task = workload_def["task"]
+    res = Resources()
+    res.trials = 2
+    res.workload.epochs = 2
+    res.workload.device = "cuda" if torch.cuda.is_available() else "cpu"
+    task = res.workload.task.to_dict()
 
     # test
     objective = Objective(
-        dl_framework=dl_framework, model_cls=model_cls, epochs=epochs, device=device,
+        dl_framework=res.workload.dl_framework, model_cls=res.workload.model_cls, epochs=res.workload.epochs, device=res.workload.device,
         task=task)
     return objective

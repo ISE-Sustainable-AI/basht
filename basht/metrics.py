@@ -34,6 +34,7 @@ class NodeUsage(Metric):
         self.network_usage = None
         self.accelerator_usage = None
         self.wattage = None
+        self.nfs_usage = None
         self.processes = None
 
     def to_dict(self):
@@ -43,6 +44,7 @@ class NodeUsage(Metric):
             cpu_usage=self.cpu_usage,
             memory_usage=self.memory_usage,
             network_usage=self.network_usage,
+            nfs_usage=self.nfs_usage,
             wattage=self.wattage,
             processes=int(self.processes),
         )

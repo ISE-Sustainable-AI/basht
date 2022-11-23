@@ -10,8 +10,8 @@ This repository supplies a job to benchmark hyperparameter tuning.
 
 ### Prerequisites
 
-* Ubuntu >= 16.04 (not tested on MAC OS)
-* Python >= 3.7.0
+* Ubuntu >= 20.04 (not tested on MAC OS)
+* Python >= 3.9.13
 * [PyTorch](https://pytorch.org/get-started/locally/)
 
 Note: If you run your benchmark on GPU make sure to install [Cuda](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html) and install the correct PyTorch Version, which fits your Cuda version.

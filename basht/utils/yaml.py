@@ -1,4 +1,5 @@
 from string import Template
+
 import ruamel.yaml
 
 
@@ -6,10 +7,9 @@ class YMLHandler:
 
     @staticmethod
     def load_yaml(file_path):
-        """Safely writes an object to a YAML-File.
+        """Loads a yaml file and returns a dictionary
         Args:
-            yaml_path (str): filename to write yaml to
-            obj (any): object to save as yaml
+            file_path (str): filename to load yaml from
         """
         with open(file_path, "r") as f:
             file_dict = ruamel.yaml.safe_load(f)

@@ -42,7 +42,7 @@ class ResourceTracker:
         available = set(self.prm.all_metrics())
 
         #check node_exporter metrics - cpu/memory
-        required = {"node_memory_MemFree_bytes", "node_memory_MemTotal_bytes", "node_cpu_seconds_total","scaph_host_power_microwatts","scaph_process_power_consumption_microwatts"}
+        required = {"node_memory_MemFree_bytes", "node_memory_MemTotal_bytes", "node_cpu_seconds_total","scaph_host_power_microwatts","scaph_process_power_consumption_microwatts","node_nfs_rpcs_total"}
         if not required.issubset(available):
             raise ValueError("Prometheus does not provide the required metrics.")
 
@@ -74,7 +74,7 @@ class ResourceTracker:
         # ? is there a better way to map nodes using the node_exporter
         memory = 'avg by (instance) (node_memory_MemFree_bytes/node_memory_MemTotal_bytes)'
         cpu = '100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[2m])*100))'
-
+        nfs = 'sum by (node) (node_nfs_rpcs_total)'
         ##needs mapping
         network = f'sum by (instance) (rate({self.network_metric}_receive_bytes_total[2m])+rate({self.network_metric}_transmit_bytes_total[2m]))'
         #TODO: reduce measurments to only the ones we care about - dose currently not work with scaph_process_power_consumption_microwatts
@@ -90,6 +90,7 @@ class ResourceTracker:
         cpu_result = self.prm.custom_query(cpu)
         network_result = self.prm.custom_query(network)
         wattage_result = self.prm.custom_query(wattage)
+        nfs_result = self.prm.custom_query(nfs)
         processes_result = self.prm.custom_query(processes)
 
         logging.debug("Got results from Prometheus.", mem_result, cpu_result, network_result)
@@ -99,11 +100,13 @@ class ResourceTracker:
         #grab the data per instance
         mem_result = dict(map(lambda x: (self._try_norm(x["metric"]["instance"]), float(x["value"][1])), mem_result))
         cpu_result = dict(map(lambda x: (self._try_norm(x["metric"]["instance"]), float(x["value"][1])), cpu_result))
+        
         network_result = dict(map(lambda x: (self._try_norm(x["metric"]["instance"]), float(x["value"][1])), network_result))
         wattage_result = dict(map(lambda x: (self._try_norm(x["metric"]["node"]), float(x["value"][1])), wattage_result))
         processes_result = dict(map(lambda x: (self._try_norm(x["metric"]["node"]), float(x["value"][1])), processes_result))
+        nfs_result = dict(map(lambda x: (self._try_norm(x["metric"]["node"]), float(x["value"][1])), nfs_result))
 
-        logging.debug("Processed Prometheus Results", mem_result, cpu_result, network_result, wattage_result, processes_result)
+        logging.debug("Processed Prometheus Results", mem_result, cpu_result, network_result, wattage_result, processes_result, nfs_result)
 
         # assert mem_result.keys() == cpu_result.keys() == network_result.keys()
 
@@ -115,6 +118,7 @@ class ResourceTracker:
             n.cpu_usage = cpu_result.get(instance, 0)
             n.memory_usage = mem_result.get(instance, 0)
             n.network_usage = network_result.get(instance, 0)
+            n.nfs_usage = nfs_result.get(instance, 0)
             if instance in wattage_result:
                 n.wattage = wattage_result[instance]
                 n.processes = processes_result[instance]

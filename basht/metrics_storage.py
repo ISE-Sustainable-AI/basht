@@ -108,6 +108,7 @@ class MetricsStorage:
             Column("cpu_usage", Float),
             Column("memory_usage", Float),
             Column("network_usage", Float),
+            Column("nfs_usage", Float),
             Column("accelerator_usage", Float),
             Column("wattage", Float),
             Column("processes", Integer),

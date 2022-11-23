@@ -55,7 +55,7 @@ class OptunaKubernetesBenchmark(Benchmark):
         Deploy DB
         """
         # TODO: deal with exsiting resources...
-
+        #XXX is this still relevant??!
         if self.hyperparameter:
             #TODO: XXX we got to fix this dependency thing. eitehr merge minikube/kubernetes or use the same baseclass or something...
             f = path.join(path.dirname(__file__),"..","optuna_minikube","hyperparameter_space.yml")

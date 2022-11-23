@@ -1,13 +1,14 @@
 import os
 import sys
 from time import sleep
+
 import optuna
 from basht.workload.objective import Objective, ObjectiveAction
-from basht.utils.yaml import YMLHandler
 from basht.utils.generate_grid_search_space import generate_grid_search_space
 from optuna.study import MaxTrialsCallback
 from optuna.trial import TrialState
 from basht.workload.objective_storage import ObjectiveStorageInterface
+from basht.resources import Resources
 
 
 class OptunaTrial:
@@ -24,11 +25,11 @@ class OptunaTrial:
         hidden_layer_idx = trial.suggest_categorical(
             "hidden_layer_config", list(self.search_space["hidden_layer_config"].keys()))
         lr = trial.suggest_float(
-            "learning_rate", self.search_space["learning_rate"].min(),
-            self.search_space["learning_rate"].max(), log=True)
+            "learning_rate", min(self.search_space["learning_rate"]),
+            max(self.search_space["learning_rate"]), log=True)
         decay = trial.suggest_float(
-            "weight_decay", self.search_space["weight_decay"].min(),
-            self.search_space["weight_decay"].max(), log=True)
+            "weight_decay", min(self.search_space["weight_decay"]),
+            max(self.search_space["weight_decay"]), log=True)
         hyperparameter = {
             "learning_rate": lr, "weight_decay": decay,
             "hidden_layer_config": self.search_space.get("hidden_layer_config")[hidden_layer_idx]
@@ -54,28 +55,25 @@ class OptunaTrial:
             raise optuna.TrialPruned()
 
 
-def main():
+def main(resource_def: Resources):
     try:
-        resource_path = os.path.join(os.path.dirname(__file__), "resource_definition.yml")
-        resource_def = YMLHandler.load_yaml(resource_path)
-        print(resource_def)
         study_name = os.environ.get("STUDY_NAME", "Test-Study")
         database_conn = os.environ.get("DB_CONN")
-        n_trials = resource_def.get("trials")
-        hyperparameter = resource_def.get("hyperparameter")
-        search_space = generate_grid_search_space(hyperparameter)
-        workload_def = resource_def.get("workload")
+
+        # TODO migrate generate_search_space to use Resource.hyperparameter instead of dict - whole example doesnt work yet
+        search_space = generate_grid_search_space(resource_def.searchspace.to_dict())
+        workload_def = resource_def.workload
         optuna_trial = OptunaTrial(
-            search_space, dl_framework=workload_def.get("dl_framework"),
-            model_cls=workload_def.get("model_cls"),
-            epochs=workload_def.get("epochs"), device=workload_def.get("device"),
-            task=workload_def.get("task"))
+            search_space, dl_framework=workload_def.dl_framework,
+            model_cls=workload_def.model_cls,
+            epochs=workload_def.epochs, device=workload_def.device,
+            task=workload_def.task.to_dict())
         study = optuna.create_study(
             study_name=study_name, storage=database_conn, direction="maximize", load_if_exists=True,
             sampler=optuna.samplers.GridSampler(search_space), pruner=optuna.pruners.MedianPruner())
         study.optimize(
             optuna_trial,
-            callbacks=[MaxTrialsCallback(n_trials, states=(TrialState.COMPLETE,))])
+            callbacks=[MaxTrialsCallback(resource_def.trials, states=(TrialState.COMPLETE,))])
         sleep(5)
         return True
     except Exception as e:
@@ -84,7 +82,9 @@ def main():
 
 
 if __name__ == "__main__":
-    if main():
+    resource_path = os.path.join(os.path.dirname(__file__), "resource_definition.yml")
+    resource_def = Resources.from_yaml(resource_path)
+    if main(resource_def):
         sys.exit(0)
     else:
         sys.exit(1)
