@@ -1,18 +1,19 @@
-from os import path
 import subprocess
-import argparse
+import time
+from os import path
 
 import ray
+from kubernetes import client, config, watch
+from kubernetes.client import ApiException
+from kubernetes.utils import FailToCreateError, create_from_yaml
 from ray import tune
 from ray.tune import Stopper
 
-from kubernetes import client, config, watch
-from kubernetes.client import ApiException
-from kubernetes.utils import create_from_yaml, FailToCreateError
-
 from basht.benchmark_runner import Benchmark
+from basht.config import Path
+from basht.utils.generate_grid_search_space import generate_grid_search_space
+from basht.utils.yaml import YamlTemplateFiller, YMLHandler
 from basht.workload.objective import Objective
-from basht.utils.yaml import YamlTemplateFiller
 
 
 class TrialStopper(Stopper):
@@ -26,18 +27,22 @@ class TrialStopper(Stopper):
 class RaytuneBenchmark(Benchmark):
 
     def __init__(self, resources) -> None:
+
         self.namespace = resources.get("kubernetesNamespace", "st-hpo")
         self.workerCpu = resources.get("workerCpu", 1)
         self.workerMemory = resources.get("workerMemory", 1)
         self.workerCount = resources.get("workerCount", 1)
         self.metricsIP = resources.get("metricsIP")
+        self.kubernetes_master_ip = resources.get("kubernetesMasterIP")
+        self.ray_node_port = resources.get("rayNodePort")
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
-
         self.grid = resources.get("hyperparameter")
+        self.delete_after_run = resources.get("deleteAfterRun")
+        self.workload = resources.get("workload")
 
         # K8s setup
-        config.load_kube_config()
+        config.load_kube_config(context=resources.get("kubernetesContext"))
         self.k8s_api_client = client.ApiClient()
         self.k8s_custom_objects_api = client.CustomObjectsApi()
         self.k8s_core_v1_api = client.CoreV1Api()
@@ -67,6 +72,63 @@ class RaytuneBenchmark(Benchmark):
             on a platform, e.g,. in the case of Kubernetes it referes to the steps nassary to deploy all pods
             and services in kubernetes.
         """
+        # create the namespace
+        try:
+
+            resp = client.CoreV1Api().create_namespace(
+                client.V1Namespace(metadata=client.V1ObjectMeta(name=self.namespace)))
+            print("Namespace created. status='%s'" % str(resp))
+        except ApiException as e:
+            if self._is_create_conflict(e):
+                print("Deployment (namespace) already exists")
+            else:
+                raise e
+        # create serviceaccount
+        try:
+            body = {"metadata": {"name": "ray-operator-serviceaccount"}}
+            client.CoreV1Api().create_namespaced_service_account(self.namespace, body)
+        except ApiException as e:
+            print("Service Account was not created.")
+            raise e
+
+        try:
+            pv = YMLHandler.load_yaml(
+                path.join(
+                    Path.root_path, "experiments/raytune_kubernetes/ray-template/preliminaries/pv.yaml"))
+            self.k8s_core_v1_api.create_namespaced_persistent_volume_claim(
+                namespace=self.namespace,
+                body=pv
+            )
+        except ApiException as e:
+            # TODO
+            print("PV failed.... go fix-")
+            raise e
+
+        # create roles
+        try:
+            role = YMLHandler.load_yaml(
+                path.join(
+                    Path.root_path, "experiments/raytune_kubernetes/ray-template/preliminaries/role.yaml"))
+            role_binding = YMLHandler.load_yaml(
+                path.join(
+                    Path.root_path, "experiments/raytune_kubernetes/ray-template/preliminaries/role-binding.yaml"))
+            client.RbacAuthorizationV1Api().create_namespaced_role(self.namespace, body=role)
+            client.RbacAuthorizationV1Api().create_namespaced_role_binding(self.namespace, body=role_binding)
+        except ApiException as e:
+            print("Role could not be created")
+            raise e
+        # create resource definition
+        try:
+            resource_def = YMLHandler.load_yaml(
+                path.join(
+                    Path.root_path, "experiments/raytune_kubernetes/ray-template/preliminaries/cluster_crd.yaml"))
+            client.ApiextensionsV1Api().create_custom_resource_definition(body=resource_def)
+        except ApiException as e:
+            if self._is_create_conflict(e):
+                print("Deployment already exists")
+            else:
+                raise e
+
         # deploy ray operator
         try:
             create_from_yaml(
@@ -75,8 +137,10 @@ class RaytuneBenchmark(Benchmark):
                 namespace=self.namespace, verbose=True
             )
         except FailToCreateError as e:
-            raise e
-
+            if self._is_create_conflict(e):
+                print("Deployment (operator) already exists")
+            else:
+                raise e
         # deploy ray cluster
         ray_cluster_definition = {
             "ray_worker_num": self.workerCount - 1,
@@ -100,48 +164,67 @@ class RaytuneBenchmark(Benchmark):
                 version="v1",
                 namespace=self.namespace,
                 plural="rayclusters",
-                body=ray_cluster_json_objects
-            )
+                body=ray_cluster_json_objects)
         except FailToCreateError as e:
             raise e
-
+        # wait
         self._deploy_watch()
 
-    def setup(self):
-        with open("portforward_log.txt", 'w') as pf_log:
-            self.portforward_proc = subprocess.Popen(
-                ["kubectl", "-n", self.namespace, "port-forward",
-                    "service/ray-cluster-ray-head", "10001:10001"],
-                stdout=pf_log
+        try:
+            resp = self.k8s_core_v1_api.patch_namespaced_service(
+                name="ray-cluster-ray-head",
+                namespace=self.namespace,
+                body={
+                    "spec": {
+                        "type": "NodePort",
+                        "ports": [
+                            {
+                                "name": "client",
+                                # TODO make this a configuration !
+                                "nodePort": self.ray_node_port,
+                                "port": 10001
+                            }
+                        ]
+                    }
+                }
             )
-        ray.init("ray://localhost:10001")
+            print(f"updated ray service {resp.status}")
+        except ApiException as e:
+            raise e
+        # TODO schreibfehler_
+        ray.init(f"ray://{self.kubernetes_master_ip}:{self.ray_node_port}")
+
+    def setup(self):
+        return
+
+    @staticmethod
+    def raytune_func(config, checkpoint_dir=None):
+        hyperparameter = config.get("hyperparameters")
+        workload = config.get("workload")
+        objective = Objective(
+            dl_framework=workload.get("dl_framework"), model_cls=workload.get("model_cls"),
+            epochs=workload.get("epochs"), device=workload.get("device"),
+            task=workload.get("task"), hyperparameter=hyperparameter)
+        # these are the results, that can be used for the hyperparameter search
+        objective.load()
+        objective.train()
+        validation_scores = objective.validate()
+        tune.report(
+            macro_f1_score=validation_scores["macro avg"]["f1-score"])
 
     def run(self):
         """
             Executing the hyperparameter optimization on the deployed platfrom.
             use the metrics object to collect and store all measurments on the workers.
         """
-        grid = self.grid
-
-        def raytune_func(config, checkpoint_dir=None):
-            hyperparameter = config.get("hyperparameters")
-
-            objective = Objective(
-                dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
-                epochs=self.workload.get("epochs"), device=self.workload.get("device"),
-                task=self.workload.get("task"), hyperparameter=hyperparameter)
-            # these are the results, that can be used for the hyperparameter search
-            objective.load()
-            objective.train()
-            validation_scores = objective.validate()
-            tune.report(
-                macro_f1_score=validation_scores["macro avg"]["f1-score"])
-
-        self.analysis = tune.run(
-            raytune_func,
-            config=dict(
+        grid = self.create_ray_grid(self.grid)
+        config = dict(
                 hyperparameters=grid,
-            ),
+                workload=self.workload
+            )
+        self.analysis = tune.run(
+            RaytuneBenchmark.raytune_func,
+            config=config,
             sync_config=tune.SyncConfig(
                 syncer=None  # Disable syncing
             ),
@@ -166,6 +249,7 @@ class RaytuneBenchmark(Benchmark):
             dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
             epochs=self.workload.get("epochs"), device=self.workload.get("device"),
             task=self.workload.get("task"), hyperparameter=hyperparameter)
+        objective.load()
         self.training_loss = objective.train()
         self.test_scores = objective.test()
 
@@ -186,7 +270,8 @@ class RaytuneBenchmark(Benchmark):
         w = watch.Watch()
         for event in w.stream(
             self.k8s_custom_objects_api.list_namespaced_custom_object,
-                group="cluster.ray.io", version="v1", namespace=self.namespace, plural="rayclusters"):
+            group="cluster.ray.io", version="v1",
+                namespace=self.namespace, plural="rayclusters"):
             print(f"Event: {event['type']} {event['object']['kind']} {event['object']['status']['phase']}")
             if event['type'] == "DELETED":
                 w.stop()
@@ -237,28 +322,52 @@ class RaytuneBenchmark(Benchmark):
             raise e
 
         self._undeploy_watch_ray_operator()
+        if self.delete_after_run:
+            client.CoreV1Api().delete_namespace(self.namespace)
+            self._watch_namespace()
+
+    @staticmethod
+    def create_ray_grid(grid):
+        ray_grid = {}
+        for key, value in grid.items():
+            if isinstance(value, dict):
+                value = list(value.values())
+            if isinstance(value, list):
+                ray_grid[key] = tune.grid_search(value)
+            else:
+                ray_grid[key] = value
+        return ray_grid
+
+    @staticmethod
+    def _is_create_conflict(e):
+        if isinstance(e, ApiException):
+            if e.status == 409:
+                return True
+        if isinstance(e, FailToCreateError):
+            if e.api_exceptions is not None:
+                # lets quickly check if all status codes are 409 -> componetnes exist already
+                if set(map(lambda x: x.status, e.api_exceptions)) == {409}:
+                    return True
+        return False
 
 
-def create_ray_grid(grid):
-    ray_grid = {}
-    for key, value in grid.items():
-        if type(grid[key]) is list:
-            ray_grid[key] = tune.grid_search(value)
-        else:
-            ray_grid[key] = value
-    return dict(ray_grid)
+def main():
+    from urllib.request import urlopen
 
-
-if __name__ == "__main__":
     from basht.benchmark_runner import BenchmarkRunner
     from basht.utils.yaml import YMLHandler
-    import os
-    from basht.config import Path
 
-    yml_path = os.path.join(Path.root, "experiments/raytune_kubernetes/resource_definition.yml")
-    resource_definition = YMLHandler.load_yaml("resource_definition.yml")
+    resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
+    resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()
+    resource_definition["nfsServer"] = "nfs-server"  # resource_definition["metricsIP"]
+    resource_definition["kubernetesMasterIP"] = "192.168.49.2"
+    resource_definition["hyperparameter"] = generate_grid_search_space(
+        resource_definition["hyperparameter"])
 
     runner = BenchmarkRunner(
         benchmark_cls=RaytuneBenchmark, resources=resource_definition)
-
     runner.run()
+
+
+if __name__ == "__main__":
+    main()

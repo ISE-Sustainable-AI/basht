@@ -1,0 +1,7 @@
+FROM python:3.8-slim
+RUN pip install nni
+RUN pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
+
+RUN pip install ml-benchmark
+
+CMD ["/bin/bash"]
