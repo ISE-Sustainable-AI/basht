@@ -189,8 +189,9 @@ class BenchmarkRunner():
             # Undeploy the SUT
             try:
                 self.benchmark.undeploy()
-            except Exception:
-                pass
+            except Exception as e:
+                print(e)
+                print("System under Testc could not be undeployed.")
 
             try:
                 self.metrics_storage.stop_db()

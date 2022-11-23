@@ -359,7 +359,7 @@ def main():
 
     resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
     resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()
-    resource_definition["nfsServer"] = "nfs-server" #resource_definition["metricsIP"]
+    resource_definition["nfsServer"] = "nfs-server"  # resource_definition["metricsIP"]
     resource_definition["kubernetesMasterIP"] = "192.168.49.2"
     resource_definition["hyperparameter"] = generate_grid_search_space(
         resource_definition["hyperparameter"])
