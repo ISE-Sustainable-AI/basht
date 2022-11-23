@@ -1,14 +1,12 @@
-
-workerCpu: 3.25
-workerMemory: 6
-workerCount: 1
-trials: 2
-epochs: 2
-metricsIP:  auto ##urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
-kubernetesMasterIP: minikube ##subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n")
-dockerImageTag: tawalaya/optuna-trial:latest
-dockerImageBuilder: docker
-kubernetesContext: kube-user@ise-kube
+kubernetesContext: minikube # kube-user@ise-kube
+kubernetesNamespace: st-hpo #might need to switch kubernetes context before
+workerCpu: 2
+workerMemory: 4
+workerCount: 2
+metricsIP: auto # 130.149.158.237
+kubernetesMasterIP: auto # 192.168.49.2
+rayNodePort: 30003
+# TODO add pvc class type
 deleteAfterRun: True
 workload: # this is given to every trial and thus defines the performed work
   dl_framework: torch
@@ -35,11 +33,11 @@ hyperparameter:
     start: 1e-4
     end: 1e-2
     step_size: 1e-3
-  weight_decay:
-    start: 1e-6
-    end: 1e-4
-    step_size: 1e-5
-  hidden_layer_config:
-    start: [10]
-    end: [100, 100, 100]
-    step_size: [10, 1]
+  # weight_decay:
+  #   start: 1e-6
+  #   end: 1e-4
+  #   step_size: 1e-5
+  # hidden_layer_config:
+  #   start: [10]
+  #   end: [20, 20]
+  #   step_size: [10, 1]

@@ -10,6 +10,7 @@ def test_latency_decorator(prepared_objective):
 
     try:
         metrics_storage.start_db()
+        objective.load()
         objective.train()
         objective.validate()
         objective.test()
@@ -28,6 +29,7 @@ def test_latency_decorator_using_env(prepared_objective):
     try:
         metrics_storage.start_db()
         os.environ["METRICS_STORAGE_HOST"] = MetricsStorage.host
+        objective.load()
         objective.train()
         objective.validate()
         objective.test()

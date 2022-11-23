@@ -18,7 +18,7 @@ if __name__ == "__main__":
         "dockerImageBuilder": "docker",
         # force random namespaces to reduce conflicts
         # "kubernetesNamespace": "optuna-study",
-        "kubernetesContext": "admin@smile",
+        "kubernetesContext": "kube-user@ise-kube",
         "kubernetesMasterIP": "130.149.158.143",
         "prometheus_url": "http://130.149.158.143:30041",
         "deleteAfterRun": True,
