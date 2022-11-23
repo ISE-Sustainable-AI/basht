@@ -1,10 +1,11 @@
 import logging
-from basht.latency_tracker import Tracker #TODO: move to utils
+from basht.latency_tracker import Tracker
 from basht.metrics import Result
 from basht.metrics_storage import MetricsStorageStrategy
 
+
 class ResultTracker(Tracker):
-    def __init__(self,store=MetricsStorageStrategy):
+    def __init__(self, store=MetricsStorageStrategy):
         self.store = store()
         self.store.setup()
 
@@ -18,7 +19,7 @@ class ResultTracker(Tracker):
         r.classification_metrics = result
 
         try:
-            self.store.store(r,table_name="classification_metrics")
+            self.store.store(r, table_name="classification_metrics")
             logging.info("Stored result")
         except Exception as e:
             logging.error(f"failed to store result {e}")

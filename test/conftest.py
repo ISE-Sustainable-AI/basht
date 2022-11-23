@@ -3,10 +3,8 @@ import requests
 import os
 
 from basht.decorators import latency_decorator, validation_latency_decorator
-from basht.config import Path
-from basht.utils.yaml import YMLHandler
 from basht.workload.objective import Objective
-from basht.resources import Resouces
+from basht.resources import Resources
 import torch
 
 
@@ -51,7 +49,7 @@ def prometeus_url():
 
 @pytest.fixture
 def resource_definition():
-    res = Resouces()
+    res = Resources()
     res.trials = 2
     res.workload.epochs = 2
 

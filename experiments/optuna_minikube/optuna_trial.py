@@ -25,11 +25,11 @@ class OptunaTrial:
         hidden_layer_idx = trial.suggest_categorical(
             "hidden_layer_config", list(self.search_space["hidden_layer_config"].keys()))
         lr = trial.suggest_float(
-            "learning_rate", self.search_space["learning_rate"].min(),
-            self.search_space["learning_rate"].max(), log=True)
+            "learning_rate", min(self.search_space["learning_rate"]),
+            max(self.search_space["learning_rate"]), log=True)
         decay = trial.suggest_float(
-            "weight_decay", self.search_space["weight_decay"].min(),
-            self.search_space["weight_decay"].max(), log=True)
+            "weight_decay", min(self.search_space["weight_decay"]),
+            max(self.search_space["weight_decay"]), log=True)
         hyperparameter = {
             "learning_rate": lr, "weight_decay": decay,
             "hidden_layer_config": self.search_space.get("hidden_layer_config")[hidden_layer_idx]
@@ -55,14 +55,14 @@ class OptunaTrial:
             raise optuna.TrialPruned()
 
 
-def main(resource: Resources):
+def main(resource_def: Resources):
     try:
         study_name = os.environ.get("STUDY_NAME", "Test-Study")
         database_conn = os.environ.get("DB_CONN")
 
         # TODO migrate generate_search_space to use Resource.hyperparameter instead of dict
-        search_space = generate_grid_search_space(resource.hyperparameter.to_dict())
-        workload_def = resource.workload
+        search_space = generate_grid_search_space(resource_def.hyperparameter.to_dict())
+        workload_def = resource_def.workload
         optuna_trial = OptunaTrial(
             search_space, dl_framework=workload_def.dl_framework,
             model_cls=workload_def.model_cls,
@@ -73,7 +73,7 @@ def main(resource: Resources):
             sampler=optuna.samplers.GridSampler(search_space), pruner=optuna.pruners.MedianPruner())
         study.optimize(
             optuna_trial,
-            callbacks=[MaxTrialsCallback(resource.trials, states=(TrialState.COMPLETE,))])
+            callbacks=[MaxTrialsCallback(resource_def.trials, states=(TrialState.COMPLETE,))])
         sleep(5)
         return True
     except Exception as e:
