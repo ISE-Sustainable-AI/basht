@@ -28,10 +28,10 @@ class RaytuneBenchmark(Benchmark):
 
     def __init__(self, resources) -> None:
 
-        self.namespace = resources.get("kubernetesNamespace", "st-hpo")
-        self.workerCpu = resources.get("workerCpu", 1)
-        self.workerMemory = resources.get("workerMemory", 1)
-        self.workerCount = resources.get("workerCount", 1)
+        self.namespace = resources.get("kubernetesNamespace")
+        self.workerCpu = resources.get("workerCpu")
+        self.workerMemory = resources.get("workerMemory")
+        self.workerCount = resources.get("workerCount")
         self.metricsIP = resources.get("metricsIP")
         self.kubernetes_master_ip = resources.get("kubernetesMasterIP")
         self.ray_node_port = resources.get("rayNodePort")
