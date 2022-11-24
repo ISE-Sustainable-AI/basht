@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: test
+  name: ray-results
 spec:
-  storageClassName: standard #TODO make this a config thing
+  storageClassName: $storageClass
   resources:
     requests:
       storage: 5Gi

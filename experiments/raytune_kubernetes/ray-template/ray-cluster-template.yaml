@@ -39,11 +39,11 @@ spec:
                 medium: Memory
             - name: ray-results
               persistentVolumeClaim:
-                claimName: "test"
+                claimName: "ray-results"
           containers:
             - name: ray-node
               #imagePullPolicy: Always
-              image: tawalaya/raytune_trial_image:latest # vdocker2603/ml-benchmark-raytune-k8s
+              image: $docker_image # vdocker2603/ml-benchmark-raytune-k8s
               # Do not change this command - it keeps the pod alive until it is
               # explicitly killed.
               command: ["/bin/bash", "-c", "--"]
@@ -81,6 +81,9 @@ spec:
                   # allocate a very large object store in each pod that may
                   # cause problems for other pods.
                   memory: $worker_mem
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
     - name: rayWorkerType
       minWorkers: $ray_worker_num
       maxWorkers: $ray_worker_num
@@ -103,11 +106,11 @@ spec:
                 medium: Memory
             - name: ray-results
               persistentVolumeClaim:
-                claimName: "test"
+                claimName: "ray-results"
           containers:
             - name: ray-node
               #imagePullPolicy: Always
-              image: tawalaya/raytune_trial_image:latest # vdocker2603/ml-benchmark-raytune-k8s
+              image: $docker_image 
               # Do not change this command - it keeps the pod alive until it is
               # explicitly killed.
               command: ["/bin/bash", "-c", "--"]
@@ -145,6 +148,10 @@ spec:
                   # allocate a very large object store in each pod that may
                   # cause problems for other pods.
                   memory: $worker_mem
+                # TODO we should make this configurable / optional
+                securityContext:
+                  runAsUser: 0
+                  runAsGroup: 0
   # Commands to start Ray on the head node. You don't need to change this.
   # Note dashboard-host is set to 0.0.0.0 so that Kubernetes can port forward.
   headStartRayCommands:
