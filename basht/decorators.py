@@ -42,16 +42,17 @@ def latency_decorator(func):
     def latency_func(*args, **kwargs):
         result = None
         func.__self__ = args[0]
+        latency_tracker = LatencyTracker()
         try:
             with Latency(func) as latency:
                 result = func(*args, **kwargs)
         except Exception as e:
+            latency.stop()
             latency._calculate_duration()
-            latency_tracker = LatencyTracker()
+            latency._mark_as_aborted()
+            raise e
+        finally:
             latency_tracker.track(latency)
             func.__self__ = None
-            raise e
-        latency_tracker = LatencyTracker()
-        latency_tracker.track(latency)
         return result
     return latency_func
