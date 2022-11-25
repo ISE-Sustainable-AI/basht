@@ -1,4 +1,3 @@
-import random
 from os import path
 from time import sleep
 import optuna
@@ -11,7 +10,7 @@ from basht.utils.image_build_wrapper import builder_from_string
 from basht.workload.objective import Objective
 from basht.utils.yaml import YamlTemplateFiller
 from basht.utils.yaml import YMLHandler
-from experiments.optuna_minikube.utils import generate_search_space
+from basht.utils.generate_grid_search_space import generate_grid_search_space
 
 
 class OptunaMinikubeBenchmark(Benchmark):
@@ -25,20 +24,20 @@ class OptunaMinikubeBenchmark(Benchmark):
             resources (dict): _description_
         """
         config.load_kube_config(context=resources.get("kubernetesContext"))
-        self.namespace = resources.get("kubernetesNamespace", f"optuna-study-{random.randint(0, 10024)}")
+        self.namespace = resources.get("kubernetesNamespace")
         # ensures that we can work with kubernetes
         # TODO: if this fails we woun't know about it until we try to run the experiment...
-        self.image_builder = builder_from_string(resources.get("dockerImageBuilder", "minikube"))()
+        self.image_builder = builder_from_string(resources.get("dockerImageBuilder"))()
         self.master_ip = resources.get("kubernetesMasterIP")
-        self.trial_tag = resources.get("dockerImageTag", "optuna-trial:latest")
-        self.study_name = resources.get("studyName", "optuna-study")
-        self.workerCpu = resources.get("workerCpu", 2)
-        self.workerMemory = resources.get("workerMemory", 2)
-        self.workerCount = resources.get("workerCount", 4)
-        self.delete_after_run = resources.get("deleteAfterRun", True)
+        self.trial_tag = resources.get("dockerImageTag")
+        self.study_name = resources.get("studyName")
+        self.workerCpu = resources.get("workerCpu")
+        self.workerMemory = resources.get("workerMemory")
+        self.workerCount = resources.get("workerCount")
+        self.delete_after_run = resources.get("deleteAfterRun")
         self.metrics_ip = resources.get("metricsIP")
-        self.trials = resources.get("trials", 10)
-        self.grid = generate_search_space(resources.get("hyperparameter"))
+        self.trials = resources.get("trials")
+        self.search_space = generate_grid_search_space(resources.get("hyperparameter"))
         self.workload = resources.get("workload")
 
     def deploy(self) -> None:
@@ -147,18 +146,29 @@ class OptunaMinikubeBenchmark(Benchmark):
     def test(self):
 
         def optuna_trial(trial):
-            hidden_layer_idx = trial.suggest_categorical(
-                "hidden_layer_config", list(self.grid["hidden_layer_config"].keys()))
-            lr = trial.suggest_float(
-                "learning_rate", self.grid["learning_rate"].min(),
-                self.grid["learning_rate"].max(), log=True)
-            decay = trial.suggest_float(
-                "weight_decay", self.grid["weight_decay"].min(),
-                self.grid["weight_decay"].max(), log=True)
+            if self.search_space.get("hidden_lyer_config"):
+                hidden_layer_idx = trial.suggest_categorical(
+                    "hidden_layer_config", list(self.search_space["hidden_layer_config"].keys()))
+                hidden_layer_config = self.search_space.get("hidden_layer_config")[hidden_layer_idx]
+            else:
+                hidden_layer_config = None
+            if self.search_space.get("learning_rate"):
+                lr = trial.suggest_float(
+                    "learning_rate", min(self.search_space["learning_rate"]),
+                    max(self.search_space["learning_rate"]), log=True)
+            else:
+                lr = None
+            if self.search_space.get("weight_decay"):
+                decay = trial.suggest_float(
+                    "weight_decay", min(self.search_space["weight_decay"]),
+                    max(self.search_space["weight_decay"]), log=True)
+            else:
+                decay = None
             hyperparameter = {
                 "learning_rate": lr, "weight_decay": decay,
-                "hidden_layer_config": self.grid.get("hidden_layer_config")[hidden_layer_idx]
+                "hidden_layer_config": hidden_layer_config
             }
+            hyperparameter = {key: value for key, value in hyperparameter.items() if value}
             objective = Objective(
                 dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
                 epochs=self.workload.get("epochs"), device=self.workload.get("device"),
@@ -207,7 +217,6 @@ class OptunaMinikubeBenchmark(Benchmark):
                         and deployment_spec.status.available_replicas > 0:
                     w.stop()
                     return True
-
         return False
 
 
@@ -227,8 +236,6 @@ if __name__ == "__main__":
         "metricsIP": urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
         "kubernetesMasterIP": subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n")}
     resources.update(to_automate)
-
-    # TODO: hyperparams.
 
     # import an use the runner
     runner = BenchmarkRunner(

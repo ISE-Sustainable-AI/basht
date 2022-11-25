@@ -1,14 +1,15 @@
 
-workerCpu: 6
+workerCpu: 2
 workerMemory: 4
-workerCount: 1
+workerCount: 2
 trials: 20
 metricsIP:  auto ##urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
 kubernetesMasterIP: minikube ##subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n")
-dockerImageTag: optuna-trial2:latest
+dockerImageTag: optuna-trial:latest
 dockerImageBuilder: minikube
 kubernetesNamespace: optuna-study
-kubernetesContext: "minikube"
+kubernetesContext: minikube
+studyName: optuna-study
 deleteAfterRun: True
 workload: # this is given to every trial and thus defines the performed work
   dl_framework: torch
@@ -28,21 +29,21 @@ workload: # this is given to every trial and thus defines the performed work
         val_batch_size: 50
         test_batch_size: 50
   model_cls: mlp
-  epochs: 50
+  epochs: 5
   device: cpu
 hyperparameter:
   learning_rate:
     start: 1e-4
     end: 1e-2
     step_size: 1e-3
-  weight_decay:
-    start: 1e-6
-    end: 1e-4
-    step_size: 1e-5
-  hidden_layer_config:
-    start: [10]
-    end: [100, 100, 100]
-    step_size: [10, 1]
+  # weight_decay:
+  #   start: 1e-6
+  #   end: 1e-4
+  #   step_size: 1e-5
+  # hidden_layer_config:
+  #   start: [10]
+  #   end: [100, 100, 100]
+  #   step_size: [10, 1]
 
 
 # TODO: distinguish between Platform and Application definition as well

@@ -139,3 +139,5 @@ data/
 #
 .envs
 test/test_ml_benchmark/hyperparameter_space.yml
+portforward_log.txt
+.vscode

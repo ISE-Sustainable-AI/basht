@@ -176,7 +176,7 @@ class BenchmarkRunner():
 
             # just to be save we wait a bit before killing shit.
 
-        except (docker.errors.APIError, AttributeError, ValueError, RuntimeError) as e:
+        except (docker.errors.APIError, AttributeError, ValueError, RuntimeError, KeyboardInterrupt) as e:
             print(e)
             raise ValueError("No Results obtained, Benchmark failed.")
         finally:
@@ -189,8 +189,9 @@ class BenchmarkRunner():
             # Undeploy the SUT
             try:
                 self.benchmark.undeploy()
-            except Exception:
-                pass
+            except Exception as e:
+                print(e)
+                print("System under Testc could not be undeployed.")
 
             try:
                 self.metrics_storage.stop_db()

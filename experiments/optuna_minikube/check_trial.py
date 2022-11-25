@@ -25,3 +25,7 @@ def test_check_trail():
 
 # TODO: do the same for the container ....
 # def test_trail_container():
+
+
+if __name__ == "__main__":
+    test_check_trail()
