@@ -30,8 +30,8 @@ class Experiment:
                 )
 
     def horizontal_exp(self):
-        start = 1
-        end = 3
+        start = 2
+        end = 4
 
         for worker_num in range(start, end):
             self.resource_definition.update(
