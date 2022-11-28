@@ -25,6 +25,7 @@ class TrialStopper(Stopper):
 log = logging.getLogger('RaytuneBenchmark')
 log.setLevel(logging.DEBUG)
 
+
 class RaytuneBenchmark(Benchmark):
     _path = path.dirname(__file__)
 
@@ -166,7 +167,7 @@ class RaytuneBenchmark(Benchmark):
             "nfs_server": self.nfsServer,
             "nfs_path": self.nfsPath,
             "RAY_HEAD_IP": "$RAY_HEAD_IP",
-             "docker_image":self.docker_image_tag
+            "docker_image": self.docker_image_tag
         }
 
         ray_cluster_yml_objects = YamlTemplateFiller.load_and_fill_yaml_template(

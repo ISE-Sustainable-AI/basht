@@ -62,7 +62,7 @@ class Experiment:
 
     def start_benchmark(self):
         filled_template = YamlTemplateFiller.load_and_fill_yaml_template(
-            self.template_path, self.resource_definition)
+            self.template_path, self.resource_definition, as_dict=True)
         filled_template_path = os.path.join(self.benchmark_cls._path, "resource_definition.yml")
         YMLHandler.as_yaml(filled_template_path, filled_template)
 
@@ -71,5 +71,5 @@ class Experiment:
 
 
 if __name__ == "__main__":
-    experiment = Experiment(benchmark_cls=OptunaKubernetesBenchmark, name="horizontal")
+    experiment = Experiment(benchmark_cls=OptunaKubernetesBenchmark, name="horizontal", k8s_context="minikube")
     experiment.horizontal_exp()
