@@ -9,7 +9,7 @@ from urllib.request import urlopen
 class Experiment:
 
     def __init__(
-        self, benchmark_cls, k8s_context="admin@smile", k8s_namespace="k8s_study",
+        self, benchmark_cls, k8s_context="admin@smile", k8s_namespace="k8s-study",
         k8s_master_ip="130.149.158.143",
             dockertag="tawalaya/ccgrid-study",
             metrics_ip=None, prometheus_url="http://130.149.158.143:30041", name=None) -> None:
