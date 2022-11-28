@@ -1,6 +1,6 @@
 from os import path
 import logging
-
+from time import sleep
 import ray
 from kubernetes import client, config, watch
 from kubernetes.client import ApiException
@@ -28,17 +28,16 @@ log.setLevel(logging.DEBUG)
 class RaytuneBenchmark(Benchmark):
 
     def __init__(self, resources) -> None:
-        
-        self.namespace = resources.get("kubernetesNamespace", "st-hpo")
-        self.workerCpu = resources.get("workerCpu", 1)
-        self.workerMemory = resources.get("workerMemory", 1)
-        self.workerCount = resources.get("workerCount", 1)
+        self.namespace = resources.get("kubernetesNamespace")
+        self.workerCpu = resources.get("workerCpu")
+        self.workerMemory = resources.get("workerMemory")
+        self.workerCount = resources.get("workerCount")
         self.metricsIP = resources.get("metricsIP")
         self.kubernetes_master_ip = resources.get("kubernetesMasterIP")
         self.ray_node_port = resources.get("rayNodePort")
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
-        self.grid = resources.get("hyperparameter")
+        self.search_space = resources.get("hyperparameter")
         self.delete_after_run = resources.get("deleteAfterRun")
         self.workload = resources.get("workload")
         self.storageClass = resources.get("kubernetesStorageClass","standard")
@@ -236,9 +235,9 @@ class RaytuneBenchmark(Benchmark):
             Executing the hyperparameter optimization on the deployed platfrom.
             use the metrics object to collect and store all measurments on the workers.
         """
-        grid = self.create_ray_grid(self.grid)
+        search_space = self.create_ray_grid(self.search_space)
         config = dict(
-                hyperparameters=grid,
+                hyperparameters=search_space,
                 workload=self.workload
             )
         self.analysis = tune.run(
@@ -386,9 +385,21 @@ class RaytuneBenchmark(Benchmark):
                     return True
         return False
 
+
     @staticmethod
     def _is_create_conflict(e):
        return RaytuneBenchmark._is_status(e, 409)
+
+    def _watch_namespace(self):
+        c = client.CoreV1Api()
+        no_exception = True
+        while no_exception:
+            try:
+                c.read_namespace_status(self.namespace)
+                sleep(2)
+            except ApiException:
+                no_exception = False
+
 
 def main():
     from urllib.request import urlopen

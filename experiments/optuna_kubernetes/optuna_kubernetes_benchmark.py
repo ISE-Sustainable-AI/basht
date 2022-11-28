@@ -56,11 +56,6 @@ class OptunaKubernetesBenchmark(Benchmark):
         """
         # TODO: deal with exsiting resources...
 
-        if self.hyperparameter:
-            #TODO: XXX we got to fix this dependency thing. eitehr merge minikube/kubernetes or use the same baseclass or something...
-            f = path.join(path.dirname(__file__),"..","optuna_minikube","hyperparameter_space.yml")
-            YMLHandler.as_yaml(f, self.hyperparameter)
-
         try:
             resp = client.CoreV1Api().create_namespace(
                 client.V1Namespace(metadata=client.V1ObjectMeta(name=self.namespace)))
@@ -252,10 +247,10 @@ def main():
         "dockerImageTag": "tawalaya/optuna-trial:latest",
         "dockerImageBuilder": "docker",
         "kubernetesNamespace": "optuna-study",
-        "kubernetesContext": "kube-user@ise-kube",
+        "kubernetesContext": "admin@smile",
         "kubernetesMasterIP": "130.149.158.143",
         "prometheus_url": "http://130.149.158.143:30041",
-        "deleteAfterRun": True,
+        "deleteAfterRun": False,
     }
     resources.update(to_automate)
     runner = BenchmarkRunner(

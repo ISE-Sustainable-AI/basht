@@ -21,18 +21,29 @@ class OptunaTrial:
         self.task = task
 
     def __call__(self, trial):
-        hidden_layer_idx = trial.suggest_categorical(
-            "hidden_layer_config", list(self.search_space["hidden_layer_config"].keys()))
-        lr = trial.suggest_float(
-            "learning_rate", self.search_space["learning_rate"].min(),
-            self.search_space["learning_rate"].max(), log=True)
-        decay = trial.suggest_float(
-            "weight_decay", self.search_space["weight_decay"].min(),
-            self.search_space["weight_decay"].max(), log=True)
+        if self.search_space.get("hidden_lyer_config"):
+            hidden_layer_idx = trial.suggest_categorical(
+                "hidden_layer_config", list(self.search_space["hidden_layer_config"].keys()))
+            hidden_layer_config = self.search_space.get("hidden_layer_config")[hidden_layer_idx]
+        else:
+            hidden_layer_config = None
+        if self.search_space.get("learning_rate"):
+            lr = trial.suggest_float(
+                "learning_rate", min(self.search_space["learning_rate"]),
+                max(self.search_space["learning_rate"]), log=True)
+        else:
+            lr = None
+        if self.search_space.get("weight_decay"):
+            decay = trial.suggest_float(
+                "weight_decay", min(self.search_space["weight_decay"]),
+                max(self.search_space["weight_decay"]), log=True)
+        else:
+            decay = None
         hyperparameter = {
             "learning_rate": lr, "weight_decay": decay,
-            "hidden_layer_config": self.search_space.get("hidden_layer_config")[hidden_layer_idx]
+            "hidden_layer_config": hidden_layer_config
         }
+        hyperparameter = {key: value for key, value in hyperparameter.items() if value}
 
         self.objective = Objective(
             dl_framework=self.dl_framework, model_cls=self.model_cls, epochs=self.epochs, device=self.device,
@@ -74,8 +85,8 @@ def main():
             study_name=study_name, storage=database_conn, direction="maximize", load_if_exists=True,
             sampler=optuna.samplers.GridSampler(search_space), pruner=optuna.pruners.MedianPruner())
         study.optimize(
-            optuna_trial,
-            callbacks=[MaxTrialsCallback(n_trials, states=(TrialState.COMPLETE,))])
+            optuna_trial)
+            # callbacks=[MaxTrialsCallback(n_trials, states=(TrialState.COMPLETE,))])
         sleep(5)
         return True
     except Exception as e:
