@@ -71,5 +71,5 @@ class Experiment:
 
 
 if __name__ == "__main__":
-    experiment = Experiment(benchmark_cls=OptunaKubernetesBenchmark, name="horizontal", k8s_context="minikube")
+    experiment = Experiment(benchmark_cls=OptunaKubernetesBenchmark, name="horizontal")
     experiment.horizontal_exp()
