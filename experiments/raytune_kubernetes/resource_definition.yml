@@ -1,5 +1,5 @@
 kubernetesContext: minikube # kube-user@ise-kube
-kubernetesNamespace: st-hpo #might need to switch kubernetes context before
+kubernetesNamespace: ray-study #might need to switch kubernetes context before
 workerCpu: 2
 workerMemory: 4
 workerCount: 2

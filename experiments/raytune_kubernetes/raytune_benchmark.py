@@ -1,7 +1,5 @@
-import subprocess
-import time
 from os import path
-
+from time import sleep
 import ray
 from kubernetes import client, config, watch
 from kubernetes.client import ApiException
@@ -37,7 +35,7 @@ class RaytuneBenchmark(Benchmark):
         self.ray_node_port = resources.get("rayNodePort")
         self.nfsServer = resources.get("nfsServer")
         self.nfsPath = resources.get("nfsPath")
-        self.grid = resources.get("hyperparameter")
+        self.search_space = resources.get("hyperparameter")
         self.delete_after_run = resources.get("deleteAfterRun")
         self.workload = resources.get("workload")
 
@@ -217,9 +215,9 @@ class RaytuneBenchmark(Benchmark):
             Executing the hyperparameter optimization on the deployed platfrom.
             use the metrics object to collect and store all measurments on the workers.
         """
-        grid = self.create_ray_grid(self.grid)
+        search_space = self.create_ray_grid(self.search_space)
         config = dict(
-                hyperparameters=grid,
+                hyperparameters=search_space,
                 workload=self.workload
             )
         self.analysis = tune.run(
@@ -298,7 +296,7 @@ class RaytuneBenchmark(Benchmark):
             Deploy step.
         """
         ray.shutdown()
-        self.portforward_proc.terminate()
+        # self.portforward_proc.terminate()
 
         # undeploy ray cluster
         try:
@@ -349,6 +347,16 @@ class RaytuneBenchmark(Benchmark):
                 if set(map(lambda x: x.status, e.api_exceptions)) == {409}:
                     return True
         return False
+
+    def _watch_namespace(self):
+        c = client.CoreV1Api()
+        no_exception = True
+        while no_exception:
+            try:
+                c.read_namespace_status(self.namespace)
+                sleep(2)
+            except ApiException:
+                no_exception = False
 
 
 def main():
