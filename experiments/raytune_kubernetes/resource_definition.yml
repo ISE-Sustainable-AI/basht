@@ -1,7 +1,7 @@
 rayNodePort: 30003
-kubernetesContext: admin@smile # kube-user@ise-kube
+kubernetesContext: kube-user@ise-kube
 kubernetesNamespace: st-hpo #might need to switch kubernetes context before
-kubernetesStorageClass: zfs 
+kubernetesStorageClass: zfs
 kubernetesMasterIP: auto # 192.168.49.2
 dockerImageTag: tawalaya/raytune_trial_image:latest
 workerCpu: 2

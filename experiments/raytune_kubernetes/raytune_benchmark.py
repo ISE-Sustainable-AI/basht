@@ -26,6 +26,7 @@ log = logging.getLogger('RaytuneBenchmark')
 log.setLevel(logging.DEBUG)
 
 class RaytuneBenchmark(Benchmark):
+    _path = path.dirname(__file__)
 
     def __init__(self, resources) -> None:
         self.namespace = resources.get("kubernetesNamespace")
@@ -136,7 +137,7 @@ class RaytuneBenchmark(Benchmark):
                 body=next(pv) # XXX we must fix load_and_fill_yaml_template
             )
             log.info("PersistentVolumeClaim created")
-        except ApiException as e: 
+        except ApiException as e:
             if self._is_create_conflict(e):
                 log.info("persistent volume exists, might contain data from previous runs")
             else :
@@ -208,7 +209,7 @@ class RaytuneBenchmark(Benchmark):
         except ApiException as e:
             log.error("failed to update ray coordinator service to expose port")
             raise e
-        
+
         ray.init(f"ray://{self.kubernetes_master_ip}:{self.ray_node_port}")
         log.info("Ray is ready")
 
@@ -350,7 +351,7 @@ class RaytuneBenchmark(Benchmark):
                 name="ray-results"
             )
             log.info("PersistentVolumeClaim deleted successfully")
-        except ApiException as e: 
+        except ApiException as e:
              if not RaytuneBenchmark._is_status(e, 404):
                 log.error("failed to delete volume claim, unclean environment")
                 raise e

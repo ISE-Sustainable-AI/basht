@@ -1,24 +1,24 @@
 import os
 import sys
-from time import sleep
+
 import optuna
-from basht.workload.objective import Objective, ObjectiveAction
-from basht.utils.yaml import YMLHandler
+
 from basht.utils.generate_grid_search_space import generate_grid_search_space
-from optuna.study import MaxTrialsCallback
-from optuna.trial import TrialState
+from basht.utils.yaml import YMLHandler
+from basht.workload.objective import Objective, ObjectiveAction
 from basht.workload.objective_storage import ObjectiveStorageInterface
 
 
 class OptunaTrial:
 
-    def __init__(self, search_space, dl_framework, model_cls, epochs, device, task) -> None:
+    def __init__(self, search_space, dl_framework, model_cls, epochs, device, task, pruning) -> None:
         self.search_space = search_space
         self.dl_framework = dl_framework
         self.model_cls = model_cls
         self.epochs = epochs
         self.device = device
         self.task = task
+        self.pruning = pruning
 
     def __call__(self, trial):
         if self.search_space.get("hidden_lyer_config"):
@@ -49,12 +49,16 @@ class OptunaTrial:
             dl_framework=self.dl_framework, model_cls=self.model_cls, epochs=self.epochs, device=self.device,
             task=self.task, hyperparameter=hyperparameter)
         self.objective.load()
-        objective_storage_interface = ObjectiveStorageInterface(self.objective)
-        objective_action = ObjectiveAction(
-            OptunaTrial.pruning_function, trial=trial,
-            objective_storage_interface=objective_storage_interface)
-        results = self.objective.train(objective_action=objective_action, with_validation=True)
-        return results[1]["macro avg"]["f1-score"]
+        if self.pruning:
+            objective_storage_interface = ObjectiveStorageInterface(self.objective)
+            objective_action = ObjectiveAction(
+                OptunaTrial.pruning_function, trial=trial,
+                objective_storage_interface=objective_storage_interface)
+            results = self.objective.train(objective_action=objective_action, with_validation=True)[1]
+        else:
+            self.objective.train()
+            results = self.objective.validate()
+        return results["macro avg"]["f1-score"]
 
     @staticmethod
     def pruning_function(trial, objective_storage_interface):
@@ -66,28 +70,35 @@ class OptunaTrial:
 
 
 def main():
+    pruning_dict = {
+        "median": optuna.pruners.MedianPruner()
+    }
+
     try:
         resource_path = os.path.join(os.path.dirname(__file__), "resource_definition.yml")
         resource_def = YMLHandler.load_yaml(resource_path)
         print(resource_def)
         study_name = os.environ.get("STUDY_NAME", "Test-Study")
         database_conn = os.environ.get("DB_CONN")
-        n_trials = resource_def.get("trials")
         hyperparameter = resource_def.get("hyperparameter")
+
+        pruning_obj = None
+        if resource_def.get("pruning"):
+            pruning_obj = pruning_dict.get(resource_def.get("pruning"))
+
         search_space = generate_grid_search_space(hyperparameter)
         workload_def = resource_def.get("workload")
         optuna_trial = OptunaTrial(
             search_space, dl_framework=workload_def.get("dl_framework"),
             model_cls=workload_def.get("model_cls"),
             epochs=workload_def.get("epochs"), device=workload_def.get("device"),
-            task=workload_def.get("task"))
+            task=workload_def.get("task"), pruning=resource_def.get("pruning"))
         study = optuna.create_study(
             study_name=study_name, storage=database_conn, direction="maximize", load_if_exists=True,
-            sampler=optuna.samplers.GridSampler(search_space), pruner=optuna.pruners.MedianPruner())
-        study.optimize(
-            optuna_trial)
-            # callbacks=[MaxTrialsCallback(n_trials, states=(TrialState.COMPLETE,))])
-        sleep(5)
+            sampler=optuna.samplers.GridSampler(search_space), pruner=pruning_obj)
+        study.optimize(optuna_trial)
+
+        # this used to be important but nobody rembered why ... sleep(5)
         return True
     except Exception as e:
         print(e)

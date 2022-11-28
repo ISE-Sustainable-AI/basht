@@ -26,6 +26,8 @@ spec:
         metadata:
           generateName: ray-head-type-
         spec:
+          nodeSelector:
+            scaphandre : "true"
           restartPolicy: Never
           # This volume allocates shared memory for Ray to use for its plasma
           # object store. If you do not provide this, Ray will fall back to
@@ -94,6 +96,8 @@ spec:
           generateName: ray-worker-type-
         spec:
           restartPolicy: Never
+          nodeSelector:
+            scaphandre : "true"
           # This volume allocates shared memory for Ray to use for its plasma
           # object store. If you do not provide this, Ray will fall back to
           # /tmp which cause slowdowns if is not a shared memory volume.
@@ -110,7 +114,7 @@ spec:
           containers:
             - name: ray-node
               #imagePullPolicy: Always
-              image: $docker_image 
+              image: $docker_image
               # Do not change this command - it keeps the pod alive until it is
               # explicitly killed.
               command: ["/bin/bash", "-c", "--"]

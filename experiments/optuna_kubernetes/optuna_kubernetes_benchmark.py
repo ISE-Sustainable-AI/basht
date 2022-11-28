@@ -16,6 +16,7 @@ from basht.utils.generate_grid_search_space import generate_grid_search_space
 
 
 class OptunaKubernetesBenchmark(Benchmark):
+    _path = path.dirname(__file__)
 
     def __init__(self, resources: dict) -> None:
         """
