@@ -71,3 +71,15 @@ def prepared_objective():
         dl_framework=dl_framework, model_cls=model_cls, epochs=epochs, device=device,
         task=task)
     return objective
+
+
+@pytest.fixture
+def exception_function():
+
+    def cause_exception(cause):
+        if cause:
+            raise AttributeError("This is an Example")
+        else:
+            return True
+
+    return cause_exception

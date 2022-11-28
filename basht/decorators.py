@@ -22,7 +22,7 @@ def validation_latency_decorator(func):
         tracker = ResultTracker()
 
         latency_tracker.track(latency)
-        #XXX this locks us into the f1-score, we probably want to track all callification metrics not just f1-score. MG please help :)
+        # XXX this locks us into the f1-score, we probably want to track all callification metrics not just f1-score. MG please help :)
         tracker.track(func, result)
         func.__self__ = None
         return result
@@ -40,11 +40,19 @@ def latency_decorator(func):
         func (_type_): _description_
     """
     def latency_func(*args, **kwargs):
+        result = None
         func.__self__ = args[0]
-        with Latency(func) as latency:
-            result = func(*args, **kwargs)
         latency_tracker = LatencyTracker()
-        latency_tracker.track(latency)
-        func.__self__ = None
+        try:
+            with Latency(func) as latency:
+                result = func(*args, **kwargs)
+        except Exception as e:
+            latency.stop()
+            latency._calculate_duration()
+            latency._mark_as_aborted()
+            raise e
+        finally:
+            latency_tracker.track(latency)
+            func.__self__ = None
         return result
     return latency_func

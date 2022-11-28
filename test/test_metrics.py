@@ -1,6 +1,8 @@
 import logging
 from basht.metrics_storage import MetricsStorage
 from basht.resource_tracker import ResourceTracker
+import unittest
+from basht.metrics import Latency
 
 from time import sleep
 

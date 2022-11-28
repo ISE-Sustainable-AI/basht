@@ -99,6 +99,7 @@ class OptunaMinikubeBenchmark(Benchmark):
             "study_name": self.study_name,
             "metrics_ip": self.metrics_ip,
         }
+        print(f"Jobs will be created with the following configuration:\n{job_definition}")
         job_yml_objects = YamlTemplateFiller.load_and_fill_yaml_template(
             path.join(path.dirname(__file__), "ops/manifests/trial/job.yml"), job_definition)
         try:

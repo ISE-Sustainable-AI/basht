@@ -3,7 +3,7 @@ import logging
 import time
 import docker
 from docker.errors import APIError
-from sqlalchemy import create_engine, MetaData, Table, Column, String, Float, select, Integer, insert, BigInteger
+from sqlalchemy import create_engine, MetaData, Table, Column, String, Float, select, Integer, insert, BigInteger, Boolean
 import psycopg2
 import os
 
@@ -86,8 +86,7 @@ class MetricsStorage:
         self.create_latency_table()
         self.create_resource_table()
         self.create_classification_metrics_table()
-        self.meta.create_all(self.engine,checkfirst=True)
-
+        self.meta.create_all(self.engine, checkfirst=True)
 
     def create_latency_table(self):
         self.latency = Table(
@@ -96,7 +95,8 @@ class MetricsStorage:
             Column("function_name", String),
             Column("start_time", String),
             Column("end_time", String),
-            Column("duration_sec", Float)
+            Column("duration_sec", Float),
+            Column("aborted", Boolean)
             #TODO add fingerprint
         )
 
@@ -165,7 +165,7 @@ class StoreStrategy(object):
         pass
 
     @abstractmethod
-    def store(self, node_usage:Metric, **kwargs):
+    def store(self, node_usage: Metric, **kwargs):
         """
             Store the node usage in the resource store.
         """

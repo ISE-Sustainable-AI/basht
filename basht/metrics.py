@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timedelta
 from uuid import uuid4
 import socket
+import random
 from dataclasses import dataclass, asdict
 
 
@@ -50,7 +51,7 @@ class NodeUsage(Metric):
             node_dict["accelerator_usage"] = self.accelerator_usage
 
         return {key: _convert_datetime_to_unix(value) for key, value in node_dict.items()}
-    
+
     def __repr__(self):
         return str(self.to_dict())
 
@@ -78,7 +79,7 @@ class Result(Metric):
             measure=self.measure,
             **self.fp
         )
-        
+
 
 
 def _fingerprint(metric,func):
@@ -95,7 +96,8 @@ def _fingerprint(metric,func):
         obj_hash = hash(func.__self__)
     except AttributeError as e:
         logging.warn(f"fingerprinting error {e}")
-        raise AttributeError("Functions need to be part of a class in order to measure their latency. {e}")
+        Warning("Functions need to be part of a class in order to measure their latency. {e}\n Using random value for hash instead.")
+        obj_hash = random.randint(1, 1000)
 
     return {
         "process_id": process_id,
@@ -125,7 +127,7 @@ class Latency(Metric):
         """
         super().__init__()
         #TODO: make each id filed also availible as a column
-        fp = _fingerprint(self,func)
+        fp = _fingerprint(self, func)
         obj_hash = fp["obj_hash"]
         function_name: str = func.__name__
         self.function_name = function_name
@@ -134,6 +136,7 @@ class Latency(Metric):
         self.start_time: float = None
         self.end_time: float = None
         self.duration_sec: float = None
+        self.aborted: bool = False
 
     def to_dict(self):
         latency_dict = dict(
@@ -141,12 +144,19 @@ class Latency(Metric):
             function_name=self.function_name,
             start_time=self.start_time,
             end_time=self.end_time,
-            duration_sec=self.duration_sec
+            duration_sec=self.duration_sec,
+            aborted=self.aborted
         )
         # latency_dict.update(super().to_dict())
         latency_dict = {key: _convert_times_to_float(value) for key, value in latency_dict.items()}
 
         return latency_dict
+
+    def start(self):
+        self.start_time = datetime.now()
+
+    def stop(self):
+        self.end_time = datetime.now()
 
     def __enter__(self):
         """Entering point of the context manager.
@@ -154,23 +164,29 @@ class Latency(Metric):
         Returns:
             _type_: _description_
         """
-        self.start_time = datetime.now()
+        self.start()
+
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, exc_type, exc_value, traceback):
         """
         Exit point of the context manager.
         """
-        self.end_time = datetime.now()
+        self.stop()
         self._calculate_duration()
 
     def _calculate_duration(self):
         self.duration_sec = self.end_time - self.start_time
 
+    def _mark_as_aborted(self):
+        self.aborted = True
+
 
 def _convert_times_to_float(value):
     if isinstance(value, timedelta):
         return value.total_seconds()
+    elif isinstance(value, bool):
+        return value
     else:
         return str(value)
 
