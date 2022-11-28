@@ -46,4 +46,4 @@ class YamlTemplateFiller:
         """
         with open(yaml_path, "r") as f:
             job_template = Template(f.read())
-        return ruamel.yaml.safe_load_all(job_template.substitute(yaml_values))
+        return next(ruamel.yaml.safe_load_all(job_template.substitute(yaml_values)))

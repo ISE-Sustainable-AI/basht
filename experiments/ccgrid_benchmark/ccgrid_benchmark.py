@@ -62,7 +62,7 @@ class Experiment:
 
     def start_benchmark(self):
         filled_template = YamlTemplateFiller.load_and_fill_yaml_template(
-            self.template_path, self.resource_definition)[0]
+            self.template_path, self.resource_definition)
         filled_template_path = os.path.join(self.benchmark_cls._path, "resource_definition.yml")
         YMLHandler.as_yaml(filled_template_path, filled_template)
 
