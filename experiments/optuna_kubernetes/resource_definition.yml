@@ -1,5 +1,5 @@
 # generated file - do not edit
-deleteAfterRun: false
+deleteAfterRun: true
 dockerImageBuilder: docker
 dockerImageTag: tawalaya/ccgrid-study
 hyperparameter:
@@ -11,6 +11,7 @@ kubernetesStorageClass: zfs
 metricsIP: 130.149.158.243
 prometheus_url: http://130.149.158.143:30041
 rayNodePort: 30003
+studyName: optuna-study
 workerCount: 2
 workerCpu: 2
 workerMemory: 2
