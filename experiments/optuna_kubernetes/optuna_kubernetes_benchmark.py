@@ -97,7 +97,7 @@ class OptunaKubernetesBenchmark(Benchmark):
         """
         # TODO: compile grid and task into image
         self.image_builder.deploy_image(
-            "experiments/optuna_minikube/dockerfile.trial", self.trial_tag, Path.root_path)
+            "experiments/optuna_kubernetes/dockerfile.trial", self.trial_tag, Path.root_path)
         print(f"Image: {self.trial_tag}")
 
     def run(self):
@@ -120,7 +120,7 @@ class OptunaKubernetesBenchmark(Benchmark):
             if self._is_create_conflict(e):
                 # lets remove the old one and try again
                 client.BatchV1Api().delete_namespaced_job(name="optuna-trial", namespace=self.namespace)
-                #wait for that to complete
+                # wait for that to complete
                 sleep(5)
                 # try again
                 create_from_yaml(
@@ -150,7 +150,7 @@ class OptunaKubernetesBenchmark(Benchmark):
         study = optuna.load_study(study_name=self.study_name, storage=self._getDBURL())
         self.best_trial = study.best_trial
 
-    def _watch_trials(self,timeout=120):
+    def _watch_trials(self, timeout=120):
         """
         Checks if Trials (Kubernetes Jobs) are completed. If not the process waits on it.
         """
