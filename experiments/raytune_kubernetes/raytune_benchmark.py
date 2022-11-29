@@ -37,9 +37,7 @@ class RaytuneBenchmark(Benchmark):
         self.metricsIP = resources.get("metricsIP")
         self.kubernetes_master_ip = resources.get("kubernetesMasterIP")
         self.ray_node_port = resources.get("rayNodePort")
-        self.nfsServer = resources.get("nfsServer")
-        self.nfsPath = resources.get("nfsPath")
-        self.search_space = resources.get("hyperparameter")
+        self.search_space = generate_grid_search_space(resources.get("hyperparameter"))
         self.delete_after_run = resources.get("deleteAfterRun")
         self.workload = resources.get("workload")
         self.storageClass = resources.get("kubernetesStorageClass")
@@ -94,7 +92,7 @@ class RaytuneBenchmark(Benchmark):
         except ApiException as e:
             if self._is_create_conflict(e):
                 log.info("Service Account  already exists")
-            else :
+            else:
                 log.error("Service Account was not created.")
                 raise e
 
@@ -112,7 +110,7 @@ class RaytuneBenchmark(Benchmark):
         except ApiException as e:
             if self._is_create_conflict(e):
                 log.info("role or role binding already exists")
-            else :
+            else:
                 log.error("failed to create role or role binding.")
                 raise e
         # create resource definition
@@ -141,7 +139,7 @@ class RaytuneBenchmark(Benchmark):
         except ApiException as e:
             if self._is_create_conflict(e):
                 log.info("persistent volume exists, might contain data from previous runs")
-            else :
+            else:
                 log.error("failed to create persistent volume needed for ray coordinator")
                 raise e
 
@@ -164,8 +162,6 @@ class RaytuneBenchmark(Benchmark):
             "worker_cpu": self.workerCpu,
             "worker_mem": f"{self.workerMemory}Gi",
             "metrics_ip": self.metricsIP,
-            "nfs_server": self.nfsServer,
-            "nfs_path": self.nfsPath,
             "RAY_HEAD_IP": "$RAY_HEAD_IP",
             "docker_image": self.docker_image_tag
         }
@@ -412,7 +408,6 @@ def main():
     resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
     resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()# resource_definition["metricsIP"]
     resource_definition["kubernetesMasterIP"] = "130.149.158.143"
-    resource_definition["hyperparameter"] = generate_grid_search_space(resource_definition["hyperparameter"])
 
     runner = BenchmarkRunner(
         benchmark_cls=RaytuneBenchmark, resources=resource_definition)
