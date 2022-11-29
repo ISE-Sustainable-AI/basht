@@ -178,7 +178,7 @@ class OptunaMinikubeBenchmark(Benchmark):
             # these are the results, that can be used for the hyperparameter search
             objective.load()
             objective.train()
-            validation_scores = objective.validate()
+            validation_scores = objective.test()
             return validation_scores["macro avg"]["f1-score"]
 
         self.scores = optuna_trial(self.best_trial)

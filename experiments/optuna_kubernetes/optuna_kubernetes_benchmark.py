@@ -175,18 +175,29 @@ class OptunaKubernetesBenchmark(Benchmark):
 
     def test(self):
         def optuna_trial(trial):
-            hidden_layer_idx = trial.suggest_categorical(
-                "hidden_layer_config", list(self.grid["hidden_layer_config"].keys()))
-            lr = trial.suggest_float(
-                "learning_rate", self.grid["learning_rate"].min(),
-                self.grid["learning_rate"].max(), log=True)
-            decay = trial.suggest_float(
-                "weight_decay", self.grid["weight_decay"].min(),
-                self.grid["weight_decay"].max(), log=True)
+            if self.search_space.get("hidden_lyer_config"):
+                hidden_layer_idx = trial.suggest_categorical(
+                    "hidden_layer_config", list(self.search_space["hidden_layer_config"].keys()))
+                hidden_layer_config = self.search_space.get("hidden_layer_config")[hidden_layer_idx]
+            else:
+                hidden_layer_config = None
+            if self.search_space.get("learning_rate"):
+                lr = trial.suggest_float(
+                    "learning_rate", min(self.search_space["learning_rate"]),
+                    max(self.search_space["learning_rate"]), log=True)
+            else:
+                lr = None
+            if self.search_space.get("weight_decay"):
+                decay = trial.suggest_float(
+                    "weight_decay", min(self.search_space["weight_decay"]),
+                    max(self.search_space["weight_decay"]), log=True)
+            else:
+                decay = None
             hyperparameter = {
                 "learning_rate": lr, "weight_decay": decay,
-                "hidden_layer_config": self.grid.get("hidden_layer_config")[hidden_layer_idx]
+                "hidden_layer_config": hidden_layer_config
             }
+            hyperparameter = {key: value for key, value in hyperparameter.items() if value}
             objective = Objective(
                 dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
                 epochs=self.workload.get("epochs"), device=self.workload.get("device"),
@@ -194,7 +205,7 @@ class OptunaKubernetesBenchmark(Benchmark):
             # these are the results, that can be used for the hyperparameter search
             objective.load()
             objective.train()
-            validation_scores = objective.validate()
+            validation_scores = objective.test()
             return validation_scores["macro avg"]["f1-score"]
 
         self.scores = optuna_trial(self.best_trial)
