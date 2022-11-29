@@ -42,8 +42,8 @@ class RaytuneBenchmark(Benchmark):
         self.search_space = resources.get("hyperparameter")
         self.delete_after_run = resources.get("deleteAfterRun")
         self.workload = resources.get("workload")
-        self.storageClass = resources.get("kubernetesStorageClass","standard")
-        self.docker_image_tag = resources.get("dockerImageTag", "raytune_trial_image")
+        self.storageClass = resources.get("kubernetesStorageClass")
+        self.docker_image_tag = resources.get("dockerImageTag")
         # K8s setup
         config.load_kube_config(context=resources.get("kubernetesContext"))
         self.k8s_api_client = client.ApiClient()

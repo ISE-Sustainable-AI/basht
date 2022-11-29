@@ -114,8 +114,9 @@ class OptunaKubernetesBenchmark(Benchmark):
         job_yml_objects = YamlTemplateFiller.load_and_fill_yaml_template(
             path.join(path.dirname(__file__), "ops/manifests/trial/job.yml"), job_definition)
         try:
-            create_from_yaml(
+            resp = create_from_yaml(
                 client.ApiClient(), yaml_objects=job_yml_objects, namespace=self.namespace, verbose=True)
+            print(f"Job creation response: {resp[0]}")
         except FailToCreateError as e:
             if self._is_create_conflict(e):
                 # lets remove the old one and try again
@@ -225,11 +226,14 @@ class OptunaKubernetesBenchmark(Benchmark):
             self.image_builder.cleanup(self.trial_tag)
 
     def _watch_namespace(self):
+        c = client.CoreV1Api()
         try:
-            #TODO: XXX fix me!
-            client.CoreV1Api().read_namespace_status(self.namespace).to_dict()
-            sleep(2)
-        except client.exceptions.ApiException:
+            response = True
+            while response:
+                response = c.read_namespace_status(self.namespace).to_dict()
+                sleep(5)
+                print("Waiting for Namespace deletion....")
+        except ApiException:
             return
 
     def _watch_db(self):

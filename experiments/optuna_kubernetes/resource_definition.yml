@@ -3,22 +3,23 @@ deleteAfterRun: true
 dockerImageBuilder: docker
 dockerImageTag: tawalaya/ccgrid-study
 hyperparameter:
-  learning_rate: {end: 0.01, start: 0.007, step_size: 0.001}
+  learning_rate: {end: 0.01, start: 0.008, step_size: 0.001}
 kubernetesContext: admin@smile
 kubernetesMasterIP: 130.149.158.143
 kubernetesNamespace: k8s-study
 kubernetesStorageClass: zfs
-metricsIP: 130.149.158.243
+metricsIP: 130.149.158.80
 prometheus_url: http://130.149.158.143:30041
 rayNodePort: 30003
 studyName: optuna-study
-workerCount: 2
+trials: 2
+workerCount: 4
 workerCpu: 2
 workerMemory: 2
 workload:
   device: cpu
   dl_framework: torch
-  epochs: 5
+  epochs: 1
   model_cls: mlp
   task:
     batcher:

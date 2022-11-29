@@ -10,7 +10,9 @@ kubernetesStorageClass: zfs
 workerCount: $workerCount
 metricsIP: $metrics_ip # 130.149.158.237
 prometheus_url: $prometheus_url
-deleteAfterRun: False
+studyName: optuna-study
+deleteAfterRun: true
+trials: 2
 workload: # this is given to every trial and thus defines the performed work
   dl_framework: torch
   task:
@@ -29,11 +31,11 @@ workload: # this is given to every trial and thus defines the performed work
         val_batch_size: 50
         test_batch_size: 50
   model_cls: mlp
-  epochs: 5
+  epochs: 1
   device: cpu
 hyperparameter:
   learning_rate:
-    start: 5e-3
+    start: 8e-3
     end: 1e-2
     step_size: 1e-3
   # weight_decay:

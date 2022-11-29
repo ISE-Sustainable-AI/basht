@@ -31,7 +31,7 @@ class Experiment:
 
     def horizontal_exp(self):
         start = 2
-        end = 6
+        end = 5
 
         for worker_num in range(start, end):
             self.resource_definition.update(
@@ -71,5 +71,6 @@ class Experiment:
 
 
 if __name__ == "__main__":
-    experiment = Experiment(benchmark_cls=OptunaKubernetesBenchmark, name="horizontal")
+    benchmark_cls = RaytuneBenchmark
+    experiment = Experiment(benchmark_cls=benchmark_cls, name="horizontal")
     experiment.horizontal_exp()
