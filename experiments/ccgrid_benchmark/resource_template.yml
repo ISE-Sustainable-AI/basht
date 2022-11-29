@@ -33,7 +33,7 @@ workload: # this is given to every trial and thus defines the performed work
   device: cpu
 hyperparameter:
   learning_rate:
-    start: 1e-4
+    start: 5e-3
     end: 1e-2
     step_size: 1e-3
   # weight_decay:
