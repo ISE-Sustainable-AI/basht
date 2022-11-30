@@ -13,7 +13,7 @@ prometheus_url: $prometheus_url
 studyName: optuna-study
 deleteAfterRun: true
 trials: 2
-workload: # this is given to every trial and thus defines the performed work
+workload:
   dl_framework: torch
   task:
     loader: mnist

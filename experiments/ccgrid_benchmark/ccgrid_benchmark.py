@@ -11,7 +11,7 @@ class Experiment:
     def __init__(
         self, benchmark_cls, k8s_context="admin@smile", k8s_namespace="k8s-study",
         k8s_master_ip="130.149.158.143",
-            dockertag="tawalaya/ccgrid-study",
+            dockertag="tawalaya/ccgrid-study:latest",
             metrics_ip=None, prometheus_url="http://130.149.158.143:30041", name=None) -> None:
 
         self.benchmark_cls = benchmark_cls
@@ -31,14 +31,14 @@ class Experiment:
 
     def horizontal_exp(self):
         start = 2
-        end = 4
+        end = 5
 
         for worker_num in range(start, end):
             self.resource_definition.update(
                 dict(
                     workerCount=worker_num,
-                    workerCpu=4,
-                    workerMemory=2
+                    workerCpu=2,
+                    workerMemory=4
                 )
             )
             self.start_benchmark()
@@ -51,7 +51,7 @@ class Experiment:
             self.resource_definition.update(dict(
                 workerCpu=cpu,
                 workerMemory=memory,
-                workerCount=1
+                workerCount=2
             ))
             self.start_benchmark()
 
@@ -72,5 +72,6 @@ class Experiment:
 
 if __name__ == "__main__":
     benchmark_cls = RaytuneBenchmark
-    experiment = Experiment(benchmark_cls=benchmark_cls, name="horizontal")
+    experiment = Experiment(
+        benchmark_cls=benchmark_cls, name="horizontal")
     experiment.horizontal_exp()

@@ -400,14 +400,14 @@ class RaytuneBenchmark(Benchmark):
 
 
 def main():
-    from urllib.request import urlopen
+    # from urllib.request import urlopen
 
     from basht.benchmark_runner import BenchmarkRunner
-    from basht.utils.yaml import YMLHandler
+    # from basht.utils.yaml import YMLHandler
 
     resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
-    resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()# resource_definition["metricsIP"]
-    resource_definition["kubernetesMasterIP"] = "130.149.158.143"
+    # resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()# resource_definition["metricsIP"]
+    # resource_definition["kubernetesMasterIP"] = "130.149.158.143"
 
     runner = BenchmarkRunner(
         benchmark_cls=RaytuneBenchmark, resources=resource_definition)
