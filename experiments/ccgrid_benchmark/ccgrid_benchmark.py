@@ -71,7 +71,8 @@ class Experiment:
 
 
 if __name__ == "__main__":
-    benchmark_cls = RaytuneBenchmark
-    experiment = Experiment(
-        benchmark_cls=benchmark_cls, name="horizontal")
-    experiment.horizontal_exp()
+    for benchmark_cls in [OptunaKubernetesBenchmark, RaytuneBenchmark]:
+    # benchmark_cls = RaytuneBenchmark
+        experiment = Experiment(
+            benchmark_cls=benchmark_cls, name="horizontal")
+        experiment.horizontal_exp()
