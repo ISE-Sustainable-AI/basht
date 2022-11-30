@@ -25,7 +25,9 @@ class TrialStopper(Stopper):
 log = logging.getLogger('RaytuneBenchmark')
 log.setLevel(logging.DEBUG)
 
+
 class RaytuneBenchmark(Benchmark):
+    _path = path.dirname(__file__)
 
     def __init__(self, resources) -> None:
         self.namespace = resources.get("kubernetesNamespace")
@@ -35,13 +37,11 @@ class RaytuneBenchmark(Benchmark):
         self.metricsIP = resources.get("metricsIP")
         self.kubernetes_master_ip = resources.get("kubernetesMasterIP")
         self.ray_node_port = resources.get("rayNodePort")
-        self.nfsServer = resources.get("nfsServer")
-        self.nfsPath = resources.get("nfsPath")
-        self.search_space = resources.get("hyperparameter")
+        self.search_space = generate_grid_search_space(resources.get("hyperparameter"))
         self.delete_after_run = resources.get("deleteAfterRun")
         self.workload = resources.get("workload")
-        self.storageClass = resources.get("kubernetesStorageClass","standard")
-        self.docker_image_tag = resources.get("dockerImageTag", "raytune_trial_image")
+        self.storageClass = resources.get("kubernetesStorageClass")
+        self.docker_image_tag = resources.get("dockerImageTag")
         # K8s setup
         config.load_kube_config(context=resources.get("kubernetesContext"))
         self.k8s_api_client = client.ApiClient()
@@ -92,7 +92,7 @@ class RaytuneBenchmark(Benchmark):
         except ApiException as e:
             if self._is_create_conflict(e):
                 log.info("Service Account  already exists")
-            else :
+            else:
                 log.error("Service Account was not created.")
                 raise e
 
@@ -110,7 +110,7 @@ class RaytuneBenchmark(Benchmark):
         except ApiException as e:
             if self._is_create_conflict(e):
                 log.info("role or role binding already exists")
-            else :
+            else:
                 log.error("failed to create role or role binding.")
                 raise e
         # create resource definition
@@ -136,10 +136,10 @@ class RaytuneBenchmark(Benchmark):
                 body=next(pv) # XXX we must fix load_and_fill_yaml_template
             )
             log.info("PersistentVolumeClaim created")
-        except ApiException as e: 
+        except ApiException as e:
             if self._is_create_conflict(e):
                 log.info("persistent volume exists, might contain data from previous runs")
-            else :
+            else:
                 log.error("failed to create persistent volume needed for ray coordinator")
                 raise e
 
@@ -162,10 +162,8 @@ class RaytuneBenchmark(Benchmark):
             "worker_cpu": self.workerCpu,
             "worker_mem": f"{self.workerMemory}Gi",
             "metrics_ip": self.metricsIP,
-            "nfs_server": self.nfsServer,
-            "nfs_path": self.nfsPath,
             "RAY_HEAD_IP": "$RAY_HEAD_IP",
-             "docker_image":self.docker_image_tag
+            "docker_image": self.docker_image_tag
         }
 
         ray_cluster_yml_objects = YamlTemplateFiller.load_and_fill_yaml_template(
@@ -208,7 +206,7 @@ class RaytuneBenchmark(Benchmark):
         except ApiException as e:
             log.error("failed to update ray coordinator service to expose port")
             raise e
-        
+
         ray.init(f"ray://{self.kubernetes_master_ip}:{self.ray_node_port}")
         log.info("Ray is ready")
 
@@ -350,7 +348,7 @@ class RaytuneBenchmark(Benchmark):
                 name="ray-results"
             )
             log.info("PersistentVolumeClaim deleted successfully")
-        except ApiException as e: 
+        except ApiException as e:
              if not RaytuneBenchmark._is_status(e, 404):
                 log.error("failed to delete volume claim, unclean environment")
                 raise e
@@ -402,15 +400,14 @@ class RaytuneBenchmark(Benchmark):
 
 
 def main():
-    from urllib.request import urlopen
+    # from urllib.request import urlopen
 
     from basht.benchmark_runner import BenchmarkRunner
-    from basht.utils.yaml import YMLHandler
+    # from basht.utils.yaml import YMLHandler
 
     resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
-    resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()# resource_definition["metricsIP"]
-    resource_definition["kubernetesMasterIP"] = "130.149.158.143"
-    resource_definition["hyperparameter"] = generate_grid_search_space(resource_definition["hyperparameter"])
+    # resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()# resource_definition["metricsIP"]
+    # resource_definition["kubernetesMasterIP"] = "130.149.158.143"
 
     runner = BenchmarkRunner(
         benchmark_cls=RaytuneBenchmark, resources=resource_definition)

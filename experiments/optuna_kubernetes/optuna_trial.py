@@ -78,7 +78,7 @@ def main():
         resource_path = os.path.join(os.path.dirname(__file__), "resource_definition.yml")
         resource_def = YMLHandler.load_yaml(resource_path)
         print(resource_def)
-        study_name = os.environ.get("STUDY_NAME", "Test-Study")
+        study_name = resource_def.get("studyName")
         database_conn = os.environ.get("DB_CONN")
         hyperparameter = resource_def.get("hyperparameter")
 

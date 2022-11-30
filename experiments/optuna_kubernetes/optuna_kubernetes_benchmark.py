@@ -16,6 +16,7 @@ from basht.utils.generate_grid_search_space import generate_grid_search_space
 
 
 class OptunaKubernetesBenchmark(Benchmark):
+    _path = path.dirname(__file__)
 
     def __init__(self, resources: dict) -> None:
         """
@@ -29,17 +30,17 @@ class OptunaKubernetesBenchmark(Benchmark):
         self.namespace = resources.get("kubernetesNamespace", f"optuna-study-{random.randint(0, 10024)}")
         # ensures that we can work with kubernetes
         # TODO: if this fails we woun't know about it until we try to run the experiment...
-        self.image_builder = builder_from_string(resources.get("dockerImageBuilder", "minikube"))()
+        self.image_builder = builder_from_string(resources.get("dockerImageBuilder"))()
         self.master_ip = resources.get("kubernetesMasterIP")
-        self.trial_tag = resources.get("dockerImageTag", "optuna-trial:latest")
-        self.study_name = resources.get("studyName", "optuna-study")
-        self.workerCpu = resources.get("workerCpu", 2)
-        self.workerMemory = resources.get("workerMemory", 2)
-        self.workerCount = resources.get("workerCount", 4)
-        self.delete_after_run = resources.get("deleteAfterRun", True)
+        self.trial_tag = resources.get("dockerImageTag")
+        self.study_name = resources.get("studyName")
+        self.workerCpu = resources.get("workerCpu")
+        self.workerMemory = resources.get("workerMemory")
+        self.workerCount = resources.get("workerCount")
+        self.delete_after_run = resources.get("deleteAfterRun")
         self.metrics_ip = resources.get("metricsIP")
-        self.trials = resources.get("trials", 10) #self._calculate_trial_number(resources.get("trials", 6))
-        self.grid = generate_grid_search_space(resources.get("hyperparameter"))
+        self.trials = resources.get("trials")
+        self.search_space = generate_grid_search_space(resources.get("hyperparameter"))
         self.workload = resources.get("workload")
 
     def _calculate_trial_number(self, n_trials):
@@ -96,7 +97,7 @@ class OptunaKubernetesBenchmark(Benchmark):
         """
         # TODO: compile grid and task into image
         self.image_builder.deploy_image(
-            "experiments/optuna_minikube/dockerfile.trial", self.trial_tag, Path.root_path)
+            "experiments/optuna_kubernetes/dockerfile.trial", self.trial_tag, Path.root_path)
         print(f"Image: {self.trial_tag}")
 
     def run(self):
@@ -113,13 +114,14 @@ class OptunaKubernetesBenchmark(Benchmark):
         job_yml_objects = YamlTemplateFiller.load_and_fill_yaml_template(
             path.join(path.dirname(__file__), "ops/manifests/trial/job.yml"), job_definition)
         try:
-            create_from_yaml(
+            resp = create_from_yaml(
                 client.ApiClient(), yaml_objects=job_yml_objects, namespace=self.namespace, verbose=True)
+            print(f"Job creation response: {resp[0]}")
         except FailToCreateError as e:
             if self._is_create_conflict(e):
                 # lets remove the old one and try again
                 client.BatchV1Api().delete_namespaced_job(name="optuna-trial", namespace=self.namespace)
-                #wait for that to complete
+                # wait for that to complete
                 sleep(5)
                 # try again
                 create_from_yaml(
@@ -149,7 +151,7 @@ class OptunaKubernetesBenchmark(Benchmark):
         study = optuna.load_study(study_name=self.study_name, storage=self._getDBURL())
         self.best_trial = study.best_trial
 
-    def _watch_trials(self,timeout=120):
+    def _watch_trials(self, timeout=120):
         """
         Checks if Trials (Kubernetes Jobs) are completed. If not the process waits on it.
         """
@@ -174,18 +176,29 @@ class OptunaKubernetesBenchmark(Benchmark):
 
     def test(self):
         def optuna_trial(trial):
-            hidden_layer_idx = trial.suggest_categorical(
-                "hidden_layer_config", list(self.grid["hidden_layer_config"].keys()))
-            lr = trial.suggest_float(
-                "learning_rate", self.grid["learning_rate"].min(),
-                self.grid["learning_rate"].max(), log=True)
-            decay = trial.suggest_float(
-                "weight_decay", self.grid["weight_decay"].min(),
-                self.grid["weight_decay"].max(), log=True)
+            if self.search_space.get("hidden_lyer_config"):
+                hidden_layer_idx = trial.suggest_categorical(
+                    "hidden_layer_config", list(self.search_space["hidden_layer_config"].keys()))
+                hidden_layer_config = self.search_space.get("hidden_layer_config")[hidden_layer_idx]
+            else:
+                hidden_layer_config = None
+            if self.search_space.get("learning_rate"):
+                lr = trial.suggest_float(
+                    "learning_rate", min(self.search_space["learning_rate"]),
+                    max(self.search_space["learning_rate"]), log=True)
+            else:
+                lr = None
+            if self.search_space.get("weight_decay"):
+                decay = trial.suggest_float(
+                    "weight_decay", min(self.search_space["weight_decay"]),
+                    max(self.search_space["weight_decay"]), log=True)
+            else:
+                decay = None
             hyperparameter = {
                 "learning_rate": lr, "weight_decay": decay,
-                "hidden_layer_config": self.grid.get("hidden_layer_config")[hidden_layer_idx]
+                "hidden_layer_config": hidden_layer_config
             }
+            hyperparameter = {key: value for key, value in hyperparameter.items() if value}
             objective = Objective(
                 dl_framework=self.workload.get("dl_framework"), model_cls=self.workload.get("model_cls"),
                 epochs=self.workload.get("epochs"), device=self.workload.get("device"),
@@ -193,7 +206,7 @@ class OptunaKubernetesBenchmark(Benchmark):
             # these are the results, that can be used for the hyperparameter search
             objective.load()
             objective.train()
-            validation_scores = objective.validate()
+            validation_scores = objective.test()
             return validation_scores["macro avg"]["f1-score"]
 
         self.scores = optuna_trial(self.best_trial)
@@ -213,11 +226,14 @@ class OptunaKubernetesBenchmark(Benchmark):
             self.image_builder.cleanup(self.trial_tag)
 
     def _watch_namespace(self):
+        c = client.CoreV1Api()
         try:
-            #TODO: XXX fix me!
-            client.CoreV1Api().read_namespace_status(self.namespace).to_dict()
-            sleep(2)
-        except client.exceptions.ApiException:
+            response = True
+            while response:
+                response = c.read_namespace_status(self.namespace).to_dict()
+                sleep(5)
+                print("Waiting for Namespace deletion....")
+        except ApiException:
             return
 
     def _watch_db(self):

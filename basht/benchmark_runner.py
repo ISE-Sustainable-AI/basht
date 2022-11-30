@@ -93,7 +93,8 @@ class BenchmarkRunner():
 
     def __init__(
             self, benchmark_cls: Benchmark,
-            resources: dict) -> None:
+            resources: dict,
+            name: str = "") -> None:
         """
         This class runs a Benchmark.
         It is responsibile for setting up everything that is needed upfront to run the benchmark and manages
@@ -117,7 +118,7 @@ class BenchmarkRunner():
         # generate a unique name from the config
         self.rundate = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         benchmark_path = os.path.abspath(os.path.dirname(inspect.getabsfile(benchmark_cls)))
-        self.bench_name = f"{benchmark_cls.__name__}"
+        self.bench_name = f"{benchmark_cls.__name__}__{name}__"
         self.bench_goal = resources.get("goal", "debug")
         self.benchmark_folder = os.path.join(benchmark_path, f"benchmark__{self.bench_name}")
         self.create_benchmark_folder(self.benchmark_folder)

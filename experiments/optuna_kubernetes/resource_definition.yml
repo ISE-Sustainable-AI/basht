@@ -1,45 +1,32 @@
-
-workerCpu: 3.25
-workerMemory: 6
-workerCount: 1
-trials: 2
-epochs: 2
-metricsIP:  auto ##urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
-kubernetesMasterIP: minikube ##subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n")
-dockerImageTag: tawalaya/optuna-trial:latest
+# generated file - do not edit
+deleteAfterRun: true
 dockerImageBuilder: docker
-kubernetesContext: kube-user@ise-kube
-deleteAfterRun: True
-workload: # this is given to every trial and thus defines the performed work
-  dl_framework: torch
-  task:
-    loader: mnist
-    preprocessors:
-      - ImageFlattner
-    splitter:
-      type: StandardSplitter
-      config:
-        val_split: 0.2
-        test_split: 0.2
-    batcher:
-      type: StandardBatcher
-      config:
-        train_batch_size: 50
-        val_batch_size: 50
-        test_batch_size: 50
-  model_cls: mlp
-  epochs: 5
-  device: cpu
+dockerImageTag: tawalaya/ccgrid-study
 hyperparameter:
-  learning_rate:
-    start: 1e-4
-    end: 1e-2
-    step_size: 1e-3
-  weight_decay:
-    start: 1e-6
-    end: 1e-4
-    step_size: 1e-5
-  hidden_layer_config:
-    start: [10]
-    end: [100, 100, 100]
-    step_size: [10, 1]
+  learning_rate: {end: 0.01, start: 0.008, step_size: 0.001}
+kubernetesContext: admin@smile
+kubernetesMasterIP: 130.149.158.143
+kubernetesNamespace: k8s-study
+kubernetesStorageClass: zfs
+metricsIP: 130.149.158.80
+prometheus_url: http://130.149.158.143:30041
+rayNodePort: 30003
+studyName: optuna-study
+trials: 2
+workerCount: 4
+workerCpu: 2
+workerMemory: 2
+workload:
+  device: cpu
+  dl_framework: torch
+  epochs: 1
+  model_cls: mlp
+  task:
+    batcher:
+      config: {test_batch_size: 50, train_batch_size: 50, val_batch_size: 50}
+      type: StandardBatcher
+    loader: mnist
+    preprocessors: [ImageFlattner]
+    splitter:
+      config: {test_split: 0.2, val_split: 0.2}
+      type: StandardSplitter

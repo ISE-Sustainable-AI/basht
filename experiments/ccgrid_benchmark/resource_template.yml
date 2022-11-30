@@ -1,15 +1,19 @@
+kubernetesContext: $kubecontext # kube-user@ise-kube
+kubernetesNamespace: $namespace #might need to switch kubernetes context before
+kubernetesMasterIP: $kubemasterIP # 192.168.49.2
+dockerImageTag: $image_tag
+workerCpu: $workerCpu
+workerMemory: $workerMemory
+dockerImageBuilder: docker
 rayNodePort: 30003
-kubernetesContext: kube-user@ise-kube
-kubernetesNamespace: st-hpo #might need to switch kubernetes context before
 kubernetesStorageClass: zfs
-kubernetesMasterIP: auto # 192.168.49.2
-dockerImageTag: tawalaya/raytune_trial_image:latest
-workerCpu: 2
-workerMemory: 4
-workerCount: 2
-metricsIP: auto # 130.149.158.237
-deleteAfterRun: False
-workload: # this is given to every trial and thus defines the performed work
+workerCount: $workerCount
+metricsIP: $metrics_ip # 130.149.158.237
+prometheus_url: $prometheus_url
+studyName: optuna-study
+deleteAfterRun: true
+trials: 2
+workload:
   dl_framework: torch
   task:
     loader: mnist
@@ -27,11 +31,11 @@ workload: # this is given to every trial and thus defines the performed work
         val_batch_size: 50
         test_batch_size: 50
   model_cls: mlp
-  epochs: 5
+  epochs: 1
   device: cpu
 hyperparameter:
   learning_rate:
-    start: 1e-4
+    start: 8e-3
     end: 1e-2
     step_size: 1e-3
   # weight_decay:

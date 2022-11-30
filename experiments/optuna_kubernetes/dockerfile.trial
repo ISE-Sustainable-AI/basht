@@ -4,11 +4,11 @@ RUN pip install pip --upgrade
 RUN pip install torch==1.10.2 torchvision==0.11.3
 RUN pip install optuna==2.10.1
 
-COPY experiments/optuna_minikube experiments/optuna_minikube
+COPY experiments/optuna_kubernetes experiments/optuna_kubernetes
 COPY data data
 COPY setup.py setup.py
 COPY basht basht
 
 RUN pip install -e .
 
-CMD ["python", "experiments/optuna_minikube/optuna_trial.py"]
+CMD ["python", "experiments/optuna_kubernetes/optuna_trial.py"]

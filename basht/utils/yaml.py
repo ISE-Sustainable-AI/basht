@@ -33,7 +33,7 @@ class YamlTemplateFiller:
         self.yaml_handler = YMLHandler()
 
     @staticmethod
-    def load_and_fill_yaml_template(yaml_path: str, yaml_values: dict) -> dict:
+    def load_and_fill_yaml_template(yaml_path: str, yaml_values: dict, as_dict: bool = False) -> dict:
         """Loads a YAML-Template File with placeholders in it and returns and object with filled placeholder
         values. Values are gathered from a provided dictionary.
 
@@ -46,4 +46,7 @@ class YamlTemplateFiller:
         """
         with open(yaml_path, "r") as f:
             job_template = Template(f.read())
-        return ruamel.yaml.safe_load_all(job_template.substitute(yaml_values))
+        filled_template = ruamel.yaml.safe_load_all(job_template.substitute(yaml_values))
+        if as_dict:
+            filled_template = next(filled_template)
+        return filled_template

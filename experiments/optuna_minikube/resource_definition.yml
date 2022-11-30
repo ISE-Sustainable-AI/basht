@@ -3,6 +3,7 @@ workerCpu: 2
 workerMemory: 4
 workerCount: 2
 trials: 20
+pruning: 
 metricsIP:  auto ##urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
 kubernetesMasterIP: minikube ##subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n")
 dockerImageTag: optuna-trial:latest
