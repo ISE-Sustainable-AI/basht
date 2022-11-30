@@ -31,13 +31,13 @@ class Experiment:
 
     def horizontal_exp(self):
         start = 2
-        end = 5
+        end = 6
 
         for worker_num in range(start, end):
             self.resource_definition.update(
                 dict(
                     workerCount=worker_num,
-                    workerCpu=2,
+                    workerCpu=4,
                     workerMemory=4
                 )
             )
