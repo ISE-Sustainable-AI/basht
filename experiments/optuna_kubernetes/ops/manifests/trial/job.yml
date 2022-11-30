@@ -12,7 +12,7 @@ spec:
       containers:
       - name: optuna-trial
         image: $worker_image
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         resources:
           limits:
             cpu: $worker_cpu
