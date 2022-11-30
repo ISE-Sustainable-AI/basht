@@ -8,17 +8,18 @@ def generate_hidden_layer_config_space(hidden_layer_dict):
     start = hidden_layer_dict.get("start")
     end = hidden_layer_dict.get("end")
     step_size = hidden_layer_dict.get("step_size")
-
     neuron_steps = step_size[0]
-    neuron_count_span = range(min(start), max(end), neuron_steps)
-    layer_steps = step_size[1]
 
+    if neuron_steps or neuron_steps > 0:
+        neuron_count_span = range(min(start), max(end)+1, neuron_steps)
+    else:
+        neuron_count_span = start
+    layer_steps = step_size[1]
     combinations = []
 
-    for layer_number in range(len(start)+1, len(end)+1, layer_steps):
-        combination = itertools.combinations_with_replacement(neuron_count_span, layer_number)
+    for layer_number in range(len(start), len(end)+1, layer_steps):
+        combination = itertools.product(neuron_count_span, repeat=layer_number)
         combinations.extend(list(combination))
-    combinations.append(tuple(end))
     combinations = {i: combinations[i] for i in range(len(combinations))}
     return combinations
 
@@ -36,6 +37,18 @@ def generate_grid_search_space(hyperparameter: dict) -> dict:
 
 
 if __name__ == "__main__":
-    file_path = os.path.join(Path.root_path, "experiments/optuna_minikube/resource_definition.yml")
-    search_space = generate_grid_search_space(file_path)
+    search_space = {
+        "learning_rate": {
+            "start": 1e-2,
+            "end": 5e-2,
+            "step_size": 1e-2
+        },
+        "hidden_layer_config": {
+            "start": [10],
+            "end": [10, 30],
+            "step_size": [10, 1]
+        }
+    }
+
+    search_space = generate_grid_search_space(search_space)
     print(search_space)
