@@ -139,6 +139,7 @@ class BenchmarkRunner():
         else:
             logging.warning("No Prometheus URL provided. Resource Tracker will not be used.")
             self.resource_tracker = None
+        print(10*"#" + f"Starting Experiment with configuration: {self.resources}" + 10*"#")
 
     def run(self):
         """
