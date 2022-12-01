@@ -113,7 +113,7 @@ spec:
                 claimName: "ray-results"
           containers:
             - name: ray-node
-              #imagePullPolicy: Always
+              imagePullPolicy: IfNotPresent
               image: $docker_image
               # Do not change this command - it keeps the pod alive until it is
               # explicitly killed.
