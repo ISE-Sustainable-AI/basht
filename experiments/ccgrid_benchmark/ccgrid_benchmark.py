@@ -45,8 +45,8 @@ class Experiment:
             self.start_benchmark("horizontal")
 
     def vertical_exp(self):
-        memory_list = [4, 6, 8, 10, 12]
-        cpu_list = [4, 6, 8, 10, 12]
+        memory_list = [4, 6]  # [4, 6, 8, 10, 12]
+        cpu_list = [4, 6]  # # [4, 6, 8, 10, 12]
 
         for cpu, memory in zip(cpu_list, memory_list):
             self.resource_definition.update(dict(
@@ -69,12 +69,16 @@ class Experiment:
         for i in range(self.reps):
             runner = BenchmarkRunner(
                 benchmark_cls=self.benchmark_cls, resources=filled_template,
-                name=f"__{self.name}" + f"__{exp_type}" + f"{i}")
+                name=f"__{self.name}" + f"__{exp_type}" + f"__{i}")
             runner.run()
 
 
 if __name__ == "__main__":
-    for benchmark_cls in [OptunaKubernetesBenchmark, RaytuneBenchmark]:
-        experiment = Experiment(
-            benchmark_cls=benchmark_cls, name="horizontal", reps=1)
-        experiment.horizontal_exp()
+    for benchmark_cls in [RaytuneBenchmark, OptunaKubernetesBenchmark]:
+        if isinstance(benchmark_cls, OptunaKubernetesBenchmark):
+            experiment = Experiment(
+                benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2, dockertag="tawalaye/optuna-trial:latest")
+        else:
+            experiment = Experiment(
+                benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2)
+        experiment.vertical_exp()
