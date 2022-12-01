@@ -42,9 +42,11 @@ class Experiment:
                     workerMemory=4
                 )
             )
+            self.resource_definition.update({"goal": f"worker_{worker_num}"})
             self.start_benchmark("horizontal")
 
     def vertical_exp(self):
+
         memory_list = [4, 6]  # [4, 6, 8, 10, 12]
         cpu_list = [4, 6]  # # [4, 6, 8, 10, 12]
 
@@ -54,6 +56,7 @@ class Experiment:
                 workerMemory=memory,
                 workerCount=2
             ))
+            self.resource_definition.update({"goal": f"cpuem_{cpu}_{memory}"})
             self.start_benchmark("vertical")
 
     def pruning_exp(self):
@@ -74,11 +77,11 @@ class Experiment:
 
 
 if __name__ == "__main__":
-    for benchmark_cls in [RaytuneBenchmark, OptunaKubernetesBenchmark]:
+    for benchmark_cls in [OptunaKubernetesBenchmark, RaytuneBenchmark]:
         if benchmark_cls is OptunaKubernetesBenchmark:
             experiment = Experiment(
                 benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2, dockertag="tawalaya/optuna-trial:latest")
         else:
             experiment = Experiment(
                 benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2)
-        experiment.horizontal_exp()
+        experiment.vertical_exp()
