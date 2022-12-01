@@ -79,7 +79,6 @@ if __name__ == "__main__":
             experiment = Experiment(
                 benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2, dockertag="tawalaya/optuna-trial:latest")
         else:
-            continue
             experiment = Experiment(
                 benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2)
         experiment.horizontal_exp()
