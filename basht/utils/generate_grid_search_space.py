@@ -39,16 +39,22 @@ def generate_grid_search_space(hyperparameter: dict) -> dict:
 if __name__ == "__main__":
     search_space = {
         "learning_rate": {
-            "start": 1e-2,
-            "end": 5e-2,
-            "step_size": 1e-2
+            "start": 1e-4,
+            "end": 1e-2,
+            "step_size": 2e-3
+        },
+        "weight_decay": {
+            "start": 1e-6,
+            "end": 1e-4,
+            "step_size": 2e-5
         },
         "hidden_layer_config": {
             "start": [10],
-            "end": [10, 30],
-            "step_size": [10, 1]
+            "end": [100, 100],
+            "step_size": [100, 1]
         }
     }
 
     search_space = generate_grid_search_space(search_space)
     print(search_space)
+    print(sum([len(value) for value in search_space.values()]))
