@@ -49,7 +49,7 @@ class RaytuneBenchmark(Benchmark):
         self.docker_image_tag = resources.get("dockerImageTag")
         pruning = resources.get("pruning")
         if pruning:
-            self.pruning_obj = scheduler_dict.get(pruning)()
+            self.pruning_obj = scheduler_dict.get(pruning)
         else:
             self.pruning_obj = None
         # K8s setup
@@ -246,12 +246,12 @@ class RaytuneBenchmark(Benchmark):
         search_space = self.create_ray_grid(self.search_space)
         config = dict(
                 hyperparameters=search_space,
-                workload=self.workload,
-                scheduler=self.pruning_obj
+                workload=self.workload
             )
         self.analysis = tune.run(
             RaytuneBenchmark.raytune_func,
             config=config,
+            scheduler=self.pruning_obj(mode="max"),
             sync_config=tune.SyncConfig(
                 syncer=None  # Disable syncing
             ),
@@ -411,14 +411,14 @@ class RaytuneBenchmark(Benchmark):
 
 
 def main():
-    # from urllib.request import urlopen
+    from urllib.request import urlopen
 
     from basht.benchmark_runner import BenchmarkRunner
     # from basht.utils.yaml import YMLHandler
 
     resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
-    # resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()# resource_definition["metricsIP"]
-    # resource_definition["kubernetesMasterIP"] = "192.168.49.2"
+    resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()# resource_definition["metricsIP"]
+    resource_definition["kubernetesMasterIP"] = "192.168.49.2"
 
     runner = BenchmarkRunner(
         benchmark_cls=RaytuneBenchmark, resources=resource_definition)
