@@ -7,6 +7,7 @@ from kubernetes.client import ApiException
 from kubernetes.utils import FailToCreateError, create_from_yaml
 from ray import tune
 from ray.tune import Stopper
+from ray.tune.schedulers import HyperBandScheduler, MedianStoppingRule
 
 from basht.benchmark_runner import Benchmark
 from basht.config import Path
@@ -30,6 +31,10 @@ class RaytuneBenchmark(Benchmark):
     _path = path.dirname(__file__)
 
     def __init__(self, resources) -> None:
+        scheduler_dict = {
+            "median": MedianStoppingRule,
+            "hyperband": HyperBandScheduler
+        }
         self.namespace = resources.get("kubernetesNamespace")
         self.workerCpu = resources.get("workerCpu")
         self.workerMemory = resources.get("workerMemory")
@@ -42,6 +47,11 @@ class RaytuneBenchmark(Benchmark):
         self.workload = resources.get("workload")
         self.storageClass = resources.get("kubernetesStorageClass")
         self.docker_image_tag = resources.get("dockerImageTag")
+        pruning = resources.get("pruning")
+        if pruning:
+            self.pruning_obj = scheduler_dict.get(pruning)()
+        else:
+            self.pruning_obj = None
         # K8s setup
         config.load_kube_config(context=resources.get("kubernetesContext"))
         self.k8s_api_client = client.ApiClient()
@@ -236,7 +246,8 @@ class RaytuneBenchmark(Benchmark):
         search_space = self.create_ray_grid(self.search_space)
         config = dict(
                 hyperparameters=search_space,
-                workload=self.workload
+                workload=self.workload,
+                scheduler=self.pruning_obj
             )
         self.analysis = tune.run(
             RaytuneBenchmark.raytune_func,
@@ -407,7 +418,7 @@ def main():
 
     resource_definition = YMLHandler.load_yaml(path.join(path.dirname(__file__), "resource_definition.yml"))
     # resource_definition["metricsIP"] = urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip()# resource_definition["metricsIP"]
-    # resource_definition["kubernetesMasterIP"] = "130.149.158.143"
+    # resource_definition["kubernetesMasterIP"] = "192.168.49.2"
 
     runner = BenchmarkRunner(
         benchmark_cls=RaytuneBenchmark, resources=resource_definition)

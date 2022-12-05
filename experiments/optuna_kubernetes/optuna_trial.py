@@ -71,7 +71,8 @@ class OptunaTrial:
 
 def main():
     pruning_dict = {
-        "median": optuna.pruners.MedianPruner()
+        "median": optuna.pruners.MedianPruner(),
+        "hyperband": optuna.pruners.HyperbandPruner()
     }
 
     try:

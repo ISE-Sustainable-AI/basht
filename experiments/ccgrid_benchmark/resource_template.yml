@@ -10,10 +10,10 @@ kubernetesStorageClass: zfs
 workerCount: $workerCount
 metricsIP: $metrics_ip # 130.149.158.237
 prometheus_url: $prometheus_url
+pruning: $pruning
 studyName: optuna-study
 deleteAfterRun: true
 trials: 30
-pruning:
 workload:
   dl_framework: torch
   task:
