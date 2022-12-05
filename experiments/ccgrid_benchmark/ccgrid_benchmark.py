@@ -4,6 +4,7 @@ from basht.utils.yaml import YamlTemplateFiller, YMLHandler
 import os
 from basht.benchmark_runner import BenchmarkRunner
 from urllib.request import urlopen
+from basht.config import Path
 
 
 class Experiment:
@@ -25,9 +26,9 @@ class Experiment:
                     image_tag=dockertag,
                     metrics_ip=metrics_ip if metrics_ip else urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
                     prometheus_url=prometheus_url,
-                    workerCpu=2,
-                    workerMemory=1,
-                    workerCount=1,
+                    workerCpu=4,
+                    workerMemory=4,
+                    workerCount=4,
                 )
 
     def horizontal_exp(self):
@@ -48,7 +49,7 @@ class Experiment:
     def vertical_exp(self):
 
         memory_list = [4, 6]  # [4, 6, 8, 10, 12]
-        cpu_list = [4, 6]  # # [4, 6, 8, 10, 12]
+        cpu_list = [4, 6]  # [4, 6, 8, 10, 12]
 
         for cpu, memory in zip(cpu_list, memory_list):
             self.resource_definition.update(dict(
@@ -60,9 +61,19 @@ class Experiment:
             self.start_benchmark("vertical")
 
     def pruning_exp(self):
-        pruning = None
-        search_spaces = None
-        pass
+        pruners = ["median", "hyperband"]
+        search_spaces = ["small", "medium", "big", "vbig", "large", "xlarge"]
+        search_spaces_folder_path = os.path.join(Path.root_path, "experiments/ccgrid_benchmark/search_spaces")
+
+        for search_space, pruning in zip(search_spaces, pruners):
+            search_space_values = YMLHandler.load_yaml(
+                os.path.join(search_spaces_folder_path, f"{search_space}.yml"))
+            run_values = dict(
+                pruning=pruning,
+                hyperparameter=search_space_values
+            )
+            self.resource_definition.update(run_values)
+            self.start_benchmark("pruning")
 
     def start_benchmark(self, exp_type):
         filled_template = YamlTemplateFiller.load_and_fill_yaml_template(
