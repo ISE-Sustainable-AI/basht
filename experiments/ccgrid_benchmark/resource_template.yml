@@ -13,7 +13,8 @@ prometheus_url: $prometheus_url
 pruning: $pruning
 studyName: optuna-study
 deleteAfterRun: true
-trials: 30
+goal: $goal
+trials:
 workload:
   dl_framework: torch
   task:
@@ -38,11 +39,11 @@ hyperparameter:
   learning_rate:
     start: 1e-4
     end: 1e-2
-    step_size: 3e-3
+    step_size: 2e-3
   weight_decay:
     start: 1e-6
     end: 1e-4
-    step_size: 5e-5
+    step_size: 2e-5
   hidden_layer_config:
     start: [10]
     end: [100, 100]

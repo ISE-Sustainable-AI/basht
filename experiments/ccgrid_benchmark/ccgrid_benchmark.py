@@ -33,7 +33,7 @@ class Experiment:
 
     def horizontal_exp(self):
         start = 2
-        end = 3
+        end = 6
 
         for worker_num in range(start, end+1):
             self.resource_definition.update(
@@ -88,7 +88,7 @@ class Experiment:
 
 
 if __name__ == "__main__":
-    for benchmark_cls in [OptunaKubernetesBenchmark, RaytuneBenchmark]:
+    for benchmark_cls in [RaytuneBenchmark]:
         if benchmark_cls is OptunaKubernetesBenchmark:
             experiment = Experiment(
                 benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2, dockertag="tawalaya/optuna-trial:latest")
