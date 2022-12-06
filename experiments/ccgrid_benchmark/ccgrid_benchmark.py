@@ -29,6 +29,7 @@ class Experiment:
                     workerCpu=4,
                     workerMemory=4,
                     workerCount=4,
+                    pruning=None
                 )
 
     def horizontal_exp(self):
@@ -48,8 +49,8 @@ class Experiment:
 
     def vertical_exp(self):
 
-        memory_list = [4, 6]  # [4, 6, 8, 10, 12]
-        cpu_list = [4, 6]  # [4, 6, 8, 10, 12]
+        memory_list = [4, 6, 8, 10, 12]
+        cpu_list = [4, 6, 8, 10, 12]
 
         for cpu, memory in zip(cpu_list, memory_list):
             self.resource_definition.update(dict(
