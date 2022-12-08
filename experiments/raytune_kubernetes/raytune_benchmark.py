@@ -251,7 +251,7 @@ class RaytuneBenchmark(Benchmark):
         self.analysis = tune.run(
             RaytuneBenchmark.raytune_func,
             config=config,
-            scheduler=self.pruning_obj(mode="max"),
+            scheduler=self.pruning_obj(mode="max") if self.pruning_obj else None,
             sync_config=tune.SyncConfig(
                 syncer=None  # Disable syncing
             ),

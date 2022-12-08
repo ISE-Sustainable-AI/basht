@@ -5,6 +5,7 @@ import os
 from basht.benchmark_runner import BenchmarkRunner
 from urllib.request import urlopen
 from basht.config import Path
+import itertools
 
 
 class Experiment:
@@ -62,16 +63,18 @@ class Experiment:
             self.start_benchmark("vertical")
 
     def pruning_exp(self):
+        # For pruning we use 75 Epochs
         pruners = ["median", "hyperband"]
-        search_spaces = ["small", "medium", "big", "vbig", "large", "xlarge"]
+        search_spaces = ["small", "medium", "big", "vbig", "large"]
         search_spaces_folder_path = os.path.join(Path.root_path, "experiments/ccgrid_benchmark/search_spaces")
 
-        for search_space, pruning in zip(search_spaces, pruners):
+        for search_space, pruning in itertools.product(search_spaces, pruners):
             search_space_values = YMLHandler.load_yaml(
                 os.path.join(search_spaces_folder_path, f"{search_space}.yml"))
             run_values = dict(
                 pruning=pruning,
-                hyperparameter=search_space_values
+                hyperparameter=search_space_values,
+                goal=f"pruning_{pruning}_space_{search_space}"
             )
             self.resource_definition.update(run_values)
             self.start_benchmark("pruning")
@@ -96,4 +99,6 @@ if __name__ == "__main__":
         else:
             experiment = Experiment(
                 benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2)
-        experiment.vertical_exp()
+        experiment.pruning_exp()
+
+# Raytune Horizontal is missing

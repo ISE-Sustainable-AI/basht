@@ -33,18 +33,6 @@ workload:
         val_batch_size: 50
         test_batch_size: 50
   model_cls: mlp
-  epochs: 100
+  epochs: 75
   device: cpu
-hyperparameter:
-  learning_rate:
-    start: 1e-4
-    end: 1e-2
-    step_size: 2e-3
-  weight_decay:
-    start: 1e-6
-    end: 1e-4
-    step_size: 2e-5
-  hidden_layer_config:
-    start: [10]
-    end: [100, 100]
-    step_size: [100, 1]
+hyperparameter: $hyperparameter
