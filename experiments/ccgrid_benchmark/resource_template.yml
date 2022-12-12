@@ -33,6 +33,6 @@ workload:
         val_batch_size: 50
         test_batch_size: 50
   model_cls: mlp
-  epochs: 75
+  epochs: 100
   device: cpu
 hyperparameter: $hyperparameter

@@ -20,6 +20,9 @@ class Experiment:
         self.name = name
         self.reps = reps
         self.template_path = os.path.join(os.path.dirname(__file__), "resource_template.yml")
+        search_spaces_folder_path = os.path.join(Path.root_path, "experiments/ccgrid_benchmark/search_spaces")
+        search_space_values = YMLHandler.load_yaml(
+                os.path.join(search_spaces_folder_path, "big.yml"))
         self.resource_definition = dict(
                     kubecontext=k8s_context,
                     namespace=k8s_namespace,
@@ -30,11 +33,12 @@ class Experiment:
                     workerCpu=4,
                     workerMemory=4,
                     workerCount=4,
-                    pruning=None
+                    pruning=None,
+                    hyperparameter=search_space_values
                 )
 
     def horizontal_exp(self):
-        start = 2
+        start = 5
         end = 6
 
         for worker_num in range(start, end+1):
@@ -63,7 +67,6 @@ class Experiment:
             self.start_benchmark("vertical")
 
     def pruning_exp(self):
-        # For pruning we use 75 Epochs
         pruners = ["median", "hyperband"]
         search_spaces = ["small", "medium", "big", "vbig", "large"]
         search_spaces_folder_path = os.path.join(Path.root_path, "experiments/ccgrid_benchmark/search_spaces")
@@ -99,6 +102,6 @@ if __name__ == "__main__":
         else:
             experiment = Experiment(
                 benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2)
-        experiment.pruning_exp()
+        experiment.horizontal_exp()
 
 # Raytune Horizontal is missing
