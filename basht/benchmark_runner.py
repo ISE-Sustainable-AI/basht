@@ -172,10 +172,8 @@ class BenchmarkRunner():
 
             for benchmark_fun in run_process:
                 with Latency(benchmark_fun) as latency:
-                    result = benchmark_fun()
+                    benchmark_fun()
                 self.latency_tracker.track(latency)
-                if benchmark_fun.__name__ == "test":
-                    self.result_tracker.track(benchmark_fun, result)
 
             # Get the results of the benchmark
             benchmark_results = self.metrics_storage.get_benchmark_results()

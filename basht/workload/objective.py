@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from sklearn.metrics import classification_report
 from basht.workload.models.model_interface import ObjModel
-from basht.decorators import latency_decorator, validation_latency_decorator
+from basht.decorators import latency_decorator, result_tracking_decorator
 from numpy import random
 from datetime import datetime
 import torch
@@ -234,9 +234,11 @@ class Objective:
                 objective_action()
         return self.objective_storage.get_current_epoch_results()
 
-    @validation_latency_decorator
+    @latency_decorator
+    @result_tracking_decorator
     def validate(self):
         return self._functional_objective.validate()
 
+    @result_tracking_decorator
     def test(self):
         return self._functional_objective.test()

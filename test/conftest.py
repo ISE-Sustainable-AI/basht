@@ -2,7 +2,7 @@ import pytest
 import requests
 import os
 
-from basht.decorators import latency_decorator, validation_latency_decorator
+from basht.decorators import latency_decorator, result_tracking_decorator
 from basht.config import Path
 from basht.utils.yaml import YMLHandler
 from basht.workload.objective import Objective
@@ -26,11 +26,12 @@ def objective():
         def set_hyperparameters(self, hyperparameters: dict):
             pass
 
-        @validation_latency_decorator
+        @result_tracking_decorator
+        @latency_decorator
         def validate(self):
             return {"macro avg": {"f1-score": 0.5}}
 
-        @latency_decorator
+        @result_tracking_decorator
         def test(self):
             return {"score": 0.5}
     return TestObjective

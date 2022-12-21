@@ -4,32 +4,6 @@ from basht.metrics import Latency
 from basht.results_tracker import ResultTracker
 
 
-def validation_latency_decorator(func):
-    """
-    A Decorator to record the latency of the decorated function. Once it is recorded the LatencyTracker
-    writes the result into the postgres database.
-
-    We assume that that the decorated function returns a dictionary with the following keys:
-        - "macro avg": the macro average of the validation with the keys:
-            - "f1-score": the f1-score
-
-    """
-    def result_func(*args, **kwargs):
-        func.__self__ = args[0]
-        with Latency(func) as latency:
-            result = func(*args, **kwargs)
-        latency_tracker = LatencyTracker()
-        tracker = ResultTracker()
-
-        latency_tracker.track(latency)
-        # XXX this locks us into the f1-score, we probably want to track all callification metrics not just f1-score. MG please help :)
-        tracker.track(func, result)
-        func.__self__ = None
-        return result
-
-    return result_func
-
-
 def latency_decorator(func):
     """A Decorator to record the latency of the decorated function. Once it is recorded the LatencyTracker
     writes the result into the postgres databse.
@@ -56,3 +30,21 @@ def latency_decorator(func):
             func.__self__ = None
         return result
     return latency_func
+
+
+def result_tracking_decorator(func):
+    """This function tracks classification results of a given function. It intended to be used for validation
+    or test functions of objectives. An numpy classification metric dict should be returned by these functions
+
+    Args:
+        func (_type_): _description_
+    """
+    def result_func(*args, **kwargs):
+        func.__self__ = args[0]
+        result_tracker = ResultTracker()
+        result = func(*args, **kwargs)
+        result_tracker.track(func, result)
+        func.__self__ = None
+        return result
+
+    return result_func
