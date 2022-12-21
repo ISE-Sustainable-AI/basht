@@ -44,7 +44,9 @@ def prometeus_url():
         if resp.status_code != 200:
             pytest.skip("Prometheus is availible")
     except Exception:
-        pytest.skip("Could not connect to Prometheus.")
+        # pytest.skip("Could not connect to Prometheus.")
+        url = None
+        print("Performing Test without Prometheus. Prometheus URL could not be found.")
     return url
 
 
