@@ -1,9 +1,6 @@
 import logging
 from basht.metrics_storage import MetricsStorage
 from basht.resource_tracker import ResourceTracker
-import unittest
-from basht.metrics import Latency
-
 from time import sleep
 
 
@@ -14,11 +11,12 @@ def test_metrics(prometeus_url, prepared_objective):
     resourceTracker = ResourceTracker(prometheus_url=prometeus_url)
     try:
         metrics_storage.start_db()
-        sleep(2)
+        sleep(5)
         resourceTracker.start()
+        objective.load()
         objective.train()
-        score = objective.validate()
-        objective.test()
+        vali_score = objective.validate()
+        test_score = objective.test()
 
         sleep(15)
 
@@ -26,9 +24,12 @@ def test_metrics(prometeus_url, prepared_objective):
         logging.info(result)
 
         assert len(result["latency"]) > 0
-        assert len(result["classification"]) > 0
-        assert len(result["resources"]) > 0
-        assert isinstance(score, dict)
+        assert len(result["classification"]) == 2
+        assert len([entry for entry in result["classification"] if entry["function_name"] == "test"]) == 1
+        if prometeus_url:
+            assert len(result["resources"]) > 0
+        assert isinstance(vali_score, dict)
+        assert isinstance(test_score, dict)
     except Exception as e:
         assert False, e
     finally:
