@@ -15,7 +15,6 @@ from basht.latency_tracker import LatencyTracker
 from basht.metrics_storage import MetricsStorage
 from basht.resource_tracker import ResourceTracker
 from basht.metrics import Latency
-from basht.results_tracker import ResultTracker
 
 
 class Benchmark(ABC):
@@ -125,7 +124,6 @@ class BenchmarkRunner():
         self.create_benchmark_folder(self.benchmark_folder)
         self.resources = resources
         self.workload_definition = resources.get("workload")
-        self.result_tracker = ResultTracker()
 
         # add input and output size to the benchmark.
         self.benchmark = benchmark_cls(resources)

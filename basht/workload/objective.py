@@ -234,8 +234,8 @@ class Objective:
                 objective_action()
         return self.objective_storage.get_current_epoch_results()
 
-    @latency_decorator
     @result_tracking_decorator
+    @latency_decorator
     def validate(self):
         return self._functional_objective.validate()
 
