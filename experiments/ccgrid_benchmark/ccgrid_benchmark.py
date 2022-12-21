@@ -5,6 +5,7 @@ import os
 from basht.benchmark_runner import BenchmarkRunner
 from urllib.request import urlopen
 from basht.config import Path
+import itertools
 
 
 class Experiment:
@@ -19,6 +20,9 @@ class Experiment:
         self.name = name
         self.reps = reps
         self.template_path = os.path.join(os.path.dirname(__file__), "resource_template.yml")
+        search_spaces_folder_path = os.path.join(Path.root_path, "experiments/ccgrid_benchmark/search_spaces")
+        search_space_values = YMLHandler.load_yaml(
+                os.path.join(search_spaces_folder_path, "big.yml"))
         self.resource_definition = dict(
                     kubecontext=k8s_context,
                     namespace=k8s_namespace,
@@ -29,11 +33,13 @@ class Experiment:
                     workerCpu=4,
                     workerMemory=4,
                     workerCount=4,
+                    pruning=None,
+                    hyperparameter=search_space_values
                 )
 
     def horizontal_exp(self):
-        start = 2
-        end = 3
+        start = 5
+        end = 6
 
         for worker_num in range(start, end+1):
             self.resource_definition.update(
@@ -48,8 +54,8 @@ class Experiment:
 
     def vertical_exp(self):
 
-        memory_list = [4, 6]  # [4, 6, 8, 10, 12]
-        cpu_list = [4, 6]  # [4, 6, 8, 10, 12]
+        memory_list = [4, 6, 8, 10, 12]
+        cpu_list = [4, 6, 8, 10, 12]
 
         for cpu, memory in zip(cpu_list, memory_list):
             self.resource_definition.update(dict(
@@ -62,15 +68,16 @@ class Experiment:
 
     def pruning_exp(self):
         pruners = ["median", "hyperband"]
-        search_spaces = ["small", "medium", "big", "vbig", "large", "xlarge"]
+        search_spaces = ["small", "medium", "big", "vbig", "large"]
         search_spaces_folder_path = os.path.join(Path.root_path, "experiments/ccgrid_benchmark/search_spaces")
 
-        for search_space, pruning in zip(search_spaces, pruners):
+        for search_space, pruning in itertools.product(search_spaces, pruners):
             search_space_values = YMLHandler.load_yaml(
                 os.path.join(search_spaces_folder_path, f"{search_space}.yml"))
             run_values = dict(
                 pruning=pruning,
-                hyperparameter=search_space_values
+                hyperparameter=search_space_values,
+                goal=f"pruning_{pruning}_space_{search_space}"
             )
             self.resource_definition.update(run_values)
             self.start_benchmark("pruning")
@@ -88,11 +95,13 @@ class Experiment:
 
 
 if __name__ == "__main__":
-    for benchmark_cls in [OptunaKubernetesBenchmark, RaytuneBenchmark]:
+    for benchmark_cls in [RaytuneBenchmark]:
         if benchmark_cls is OptunaKubernetesBenchmark:
             experiment = Experiment(
                 benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2, dockertag="tawalaya/optuna-trial:latest")
         else:
             experiment = Experiment(
                 benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2)
-        experiment.vertical_exp()
+        experiment.horizontal_exp()
+
+# Raytune Horizontal is missing

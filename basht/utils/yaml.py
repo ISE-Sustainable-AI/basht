@@ -24,7 +24,7 @@ class YMLHandler:
         """
         with open(yaml_path, "w") as f:
             f.write("# generated file - do not edit\n")
-            ruamel.yaml.dump(obj, f)
+            ruamel.yaml.dump(obj, f, Dumper=ruamel.yaml.RoundTripDumper)
 
 
 class YamlTemplateFiller:
