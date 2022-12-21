@@ -61,13 +61,14 @@ class Result(Metric):
         super().__init__()
 
         # add fingerprinting data to self
-        self.fp = _fingerprint(self,objective)
+        self.fp = _fingerprint(self, objective)
         self.timestamp = datetime.now().ctime()
         self.value = None
         self.measure = None
 
         self.hyperparameters = None
         self.classification_metrics = None
+        self.function_name = objective.__name__
 
     def to_dict(self):
         return dict(
@@ -77,6 +78,7 @@ class Result(Metric):
             hyperparameters=json.dumps(self.hyperparameters, indent=None),
             classification_metrics=json.dumps(self.classification_metrics,indent=None),
             measure=self.measure,
+            function_name=self.function_name,
             **self.fp
         )
 
