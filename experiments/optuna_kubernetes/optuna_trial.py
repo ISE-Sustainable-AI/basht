@@ -72,7 +72,8 @@ class OptunaTrial:
 def main():
     pruning_dict = {
         "median": optuna.pruners.MedianPruner(),
-        "hyperband": optuna.pruners.HyperbandPruner()
+        "hyperband": optuna.pruners.HyperbandPruner(),
+        None: optuna.pruners.NopPruner()
     }
 
     try:
@@ -82,10 +83,8 @@ def main():
         study_name = resource_def.get("studyName")
         database_conn = os.environ.get("DB_CONN")
         hyperparameter = resource_def.get("hyperparameter")
-
-        pruning_obj = None
-        if resource_def.get("pruning"):
-            pruning_obj = pruning_dict.get(resource_def.get("pruning"))
+        pruning_obj = pruning_dict.get(resource_def.get("pruning"))
+        print(pruning_obj)
 
         search_space = generate_grid_search_space(hyperparameter)
         workload_def = resource_def.get("workload")
