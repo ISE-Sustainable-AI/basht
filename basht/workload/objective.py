@@ -10,7 +10,6 @@ from basht.workload.task_components import Splitter, Loader, Batcher, Preprocess
     TorchStandardBatcher, TorchStandardSplitter, MnistLoader, FMnistLoader
 from basht.workload.models import MLP
 from basht.workload.objective_storage import ObjectiveStorage
-from dataclasses import dataclass, field, asdict
 
 
 class FunctionalObjective(ABC):
@@ -228,7 +227,7 @@ class Objective:
             # TODO: loss summarization should be custom
             self.objective_storage.add_training_scores(sum(batch_losses)/len(batch_losses))
             if with_validation:
-                validation_results = self._functional_objective.validate()
+                validation_results = self.validate()
                 self.objective_storage.add_validation_scores(validation_results)
             if objective_action:
                 objective_action()
