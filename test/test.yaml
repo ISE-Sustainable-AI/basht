@@ -1,6 +1,7 @@
 kubernetesContext: "minikube"
 metricsIP:  auto
 kubernetesMasterIP: minikube
+pruning:  $pruning
 deleteAfterRun: true
 workload: # this is given to every trial and thus defines the performed work
   dl_framework: torch
