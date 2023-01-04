@@ -49,7 +49,8 @@ class OptunaTrial:
             dl_framework=self.dl_framework, model_cls=self.model_cls, epochs=self.epochs, device=self.device,
             task=self.task, hyperparameter=hyperparameter)
         self.objective.load()
-        if self.pruning:
+        if self.pruning or not isinstance(self.pruning, optuna.pruners.NopPruner):
+            # TODO: no pruning should not require a validation - this has to be tested again
             objective_storage_interface = ObjectiveStorageInterface(self.objective)
             objective_action = ObjectiveAction(
                 OptunaTrial.pruning_function, trial=trial,
