@@ -251,7 +251,7 @@ class RaytuneBenchmark(Benchmark):
         self.analysis = tune.run(
             RaytuneBenchmark.raytune_func,
             config=config,
-            scheduler=self.pruning_obj(mode="max") if self.pruning_obj else None,
+            scheduler=self.pruning_obj(metric="macro_f1_score", mode="max") if self.pruning_obj else None,
             sync_config=tune.SyncConfig(
                 syncer=None  # Disable syncing
             ),
@@ -360,7 +360,7 @@ class RaytuneBenchmark(Benchmark):
             )
             log.info("PersistentVolumeClaim deleted successfully")
         except ApiException as e:
-             if not RaytuneBenchmark._is_status(e, 404):
+            if not RaytuneBenchmark._is_status(e, 404):
                 log.error("failed to delete volume claim, unclean environment")
                 raise e
 
@@ -394,10 +394,9 @@ class RaytuneBenchmark(Benchmark):
                     return True
         return False
 
-
     @staticmethod
     def _is_create_conflict(e):
-       return RaytuneBenchmark._is_status(e, 409)
+        return RaytuneBenchmark._is_status(e, 409)
 
     def _watch_namespace(self):
         c = client.CoreV1Api()
