@@ -49,7 +49,8 @@ class OptunaTrial:
             dl_framework=self.dl_framework, model_cls=self.model_cls, epochs=self.epochs, device=self.device,
             task=self.task, hyperparameter=hyperparameter)
         self.objective.load()
-        if self.pruning:
+        if self.pruning or not isinstance(self.pruning, optuna.pruners.NopPruner):
+            # TODO: no pruning should not require a validation - this has to be tested again
             objective_storage_interface = ObjectiveStorageInterface(self.objective)
             objective_action = ObjectiveAction(
                 OptunaTrial.pruning_function, trial=trial,
@@ -72,7 +73,8 @@ class OptunaTrial:
 def main():
     pruning_dict = {
         "median": optuna.pruners.MedianPruner(),
-        "hyperband": optuna.pruners.HyperbandPruner()
+        "hyperband": optuna.pruners.HyperbandPruner(),
+        None: optuna.pruners.NopPruner()
     }
 
     try:
@@ -82,10 +84,8 @@ def main():
         study_name = resource_def.get("studyName")
         database_conn = os.environ.get("DB_CONN")
         hyperparameter = resource_def.get("hyperparameter")
-
-        pruning_obj = None
-        if resource_def.get("pruning"):
-            pruning_obj = pruning_dict.get(resource_def.get("pruning"))
+        pruning_obj = pruning_dict.get(resource_def.get("pruning"))
+        print(pruning_obj)
 
         search_space = generate_grid_search_space(hyperparameter)
         workload_def = resource_def.get("workload")

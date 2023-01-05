@@ -67,7 +67,7 @@ class Experiment:
             self.start_benchmark("vertical")
 
     def pruning_exp(self):
-        pruners = ["median", "hyperband"]
+        pruners = ["median", "hyperband", None]
         search_spaces = ["small", "medium", "big", "vbig", "large"]
         search_spaces_folder_path = os.path.join(Path.root_path, "experiments/ccgrid_benchmark/search_spaces")
 
@@ -95,7 +95,7 @@ class Experiment:
 
 
 if __name__ == "__main__":
-    for benchmark_cls in [RaytuneBenchmark]:
+    for benchmark_cls in [OptunaKubernetesBenchmark, RaytuneBenchmark]:
         if benchmark_cls is OptunaKubernetesBenchmark:
             experiment = Experiment(
                 benchmark_cls=benchmark_cls, name="ccgrid_run2", reps=2, dockertag="tawalaya/optuna-trial:latest")

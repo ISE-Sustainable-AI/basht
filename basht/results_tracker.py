@@ -3,6 +3,7 @@ from basht.latency_tracker import Tracker #TODO: move to utils
 from basht.metrics import Result
 from basht.metrics_storage import MetricsStorageStrategy
 
+
 class ResultTracker(Tracker):
     def __init__(self,store=MetricsStorageStrategy):
         self.store = store()
@@ -14,7 +15,7 @@ class ResultTracker(Tracker):
         r.value = result["macro avg"]["f1-score"]
         r.measure = "f1-score"
 
-        r.hyperparameters = objective_function.__self__.hyperparameter
+        r.hyperparameters = objective_function.__self__.hyperparameter  # function needs to be part of an object
         r.classification_metrics = result
 
         try:

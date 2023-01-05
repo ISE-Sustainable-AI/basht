@@ -125,6 +125,7 @@ class MetricsStorage:
             Column("process_id", Integer, nullable=True),
             Column("hostname", String),
             Column("obj_hash", BigInteger, nullable=True),
+            Column("function_name", String)
         )
 
     def get_benchmark_results(self):

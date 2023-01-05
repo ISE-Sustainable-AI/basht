@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from sklearn.metrics import classification_report
 from basht.workload.models.model_interface import ObjModel
-from basht.decorators import latency_decorator, validation_latency_decorator
+from basht.decorators import latency_decorator, result_tracking_decorator
 from numpy import random
 from datetime import datetime
 import torch
@@ -10,7 +10,6 @@ from basht.workload.task_components import Splitter, Loader, Batcher, Preprocess
     TorchStandardBatcher, TorchStandardSplitter, MnistLoader, FMnistLoader
 from basht.workload.models import MLP, CNN
 from basht.workload.objective_storage import ObjectiveStorage
-from dataclasses import dataclass, field, asdict
 
 
 class FunctionalObjective(ABC):
@@ -228,15 +227,17 @@ class Objective:
             # TODO: loss summarization should be custom
             self.objective_storage.add_training_scores(sum(batch_losses)/len(batch_losses))
             if with_validation:
-                validation_results = self._functional_objective.validate()
+                validation_results = self.validate()
                 self.objective_storage.add_validation_scores(validation_results)
             if objective_action:
                 objective_action()
         return self.objective_storage.get_current_epoch_results()
 
-    @validation_latency_decorator
+    @result_tracking_decorator
+    @latency_decorator
     def validate(self):
         return self._functional_objective.validate()
 
+    @result_tracking_decorator
     def test(self):
         return self._functional_objective.test()

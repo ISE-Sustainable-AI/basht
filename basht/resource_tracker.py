@@ -20,23 +20,20 @@ class ResourceTracker:
     # update every 2 seconds ... maybe make this tuneable
     UPDATE_INTERVAL = 2
 
-    def __init__(self, prometheus_url, resouce_store=MetricsStorageStrategy ):
-        if prometheus_url is None:
-            raise ValueError("Prometheus URL is required.")
+    def __init__(self, prometheus_url=None, resouce_store=MetricsStorageStrategy ):
         self.prometheus_url = prometheus_url
-        self.prm = PrometheusConnect(url=self.prometheus_url, disable_ssl=True)
-
-        if not self.prm.check_prometheus_connection():
-            raise ValueError("Could not connect to Prometheus.")
-
-        self.store = resouce_store()
-        self.store.setup()
-
-        self.timer = RepeatTimer(self.UPDATE_INTERVAL, self.update)
-
-        self._check_metrics()
-
-        self.namespace = None
+        if self.prometheus_url:
+            self.prm = PrometheusConnect(url=self.prometheus_url, disable_ssl=True)
+            if not self.prm.check_prometheus_connection():
+                raise ValueError("Could not connect to Prometheus.")
+            self.store = resouce_store()
+            self.store.setup()
+            self.timer = RepeatTimer(self.UPDATE_INTERVAL, self.update)
+            self._check_metrics()
+            self.namespace = None
+        else:
+            self.prm = None
+            print(f"No prometheus_url provided. {self.__class__.__name__} will be inactive.")
 
     def _check_metrics(self):
         available = set(self.prm.all_metrics())
@@ -59,7 +56,6 @@ class ResourceTracker:
             self.node_map = dict(map(lambda x: (x["internal_ip"], x["node"]), map(lambda x: x["metric"], info)))
         else:
             self.node_map = {}
-
 
     def update(self):
         try:
@@ -128,11 +124,12 @@ class ResourceTracker:
         return data
 
     def track(self):
-        data = self._query()
+        if self.prm:
+            data = self._query()
 
-        #insert the data
-        for n in data:
-            self.store.store(n,table_name="resources")
+            #insert the data
+            for n in data:
+                self.store.store(n,table_name="resources")
 
     def _try_norm(self, instance: str):
         if instance in self.node_map:
@@ -143,9 +140,11 @@ class ResourceTracker:
             return instance
 
     def start(self):
-        logging.debug("Starting resource tracker.")
-        self.timer.start()
+        if self.prm:
+            logging.debug("Starting resource tracker.")
+            self.timer.start()
 
     def stop(self):
-        logging.debug("Stopping resource tracker.")
-        self.timer.cancel()
+        if self.prm:
+            logging.debug("Stopping resource tracker.")
+            self.timer.cancel()

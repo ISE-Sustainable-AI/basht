@@ -1,5 +1,6 @@
 from string import Template
 import ruamel.yaml
+from ruamel.yaml import YAML
 
 
 class YMLHandler:
@@ -27,6 +28,16 @@ class YMLHandler:
             ruamel.yaml.dump(obj, f, Dumper=ruamel.yaml.RoundTripDumper)
 
 
+class NullRepresenter:
+    def __init__(self):
+        self.count = 0
+
+    def __call__(self, repr, data):
+        ret_val = repr.represent_scalar(u'tag:yaml.org,2002:null', u'null' if self.count == 0 else u'')
+        self.count += 1
+        return ret_val
+
+
 class YamlTemplateFiller:
 
     def __init__(self) -> None:
@@ -44,9 +55,22 @@ class YamlTemplateFiller:
         Returns:
             _type_: _description_
         """
+
+        yaml_values = YamlTemplateFiller._adjust_substitute_for_yml(yaml_values=yaml_values)
         with open(yaml_path, "r") as f:
             job_template = Template(f.read())
-        filled_template = ruamel.yaml.safe_load_all(job_template.substitute(yaml_values))
+        yaml = YAML()
+        null_representer = NullRepresenter()
+        yaml.representer.add_representer(type(None), null_representer)
+        filled_template = yaml.load_all(job_template.substitute(yaml_values))
         if as_dict:
             filled_template = next(filled_template)
         return filled_template
+
+    @staticmethod
+    def _adjust_substitute_for_yml(yaml_values):
+        for key, value in yaml_values.items():
+            if not value:
+                yaml_values[key] = "null"
+        return yaml_values
+
