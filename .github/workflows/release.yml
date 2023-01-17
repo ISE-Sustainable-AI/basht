@@ -22,13 +22,13 @@ jobs:
         pip install -e .["test"]
     - name: Test Package
       run: |
-        pytest --cov=ml_benchmark test/
+        pytest --cov=basht test/
         echo $GITHUB_REF
     - name: Build Dist
       run: |
         VERSION=$(echo $GITHUB_REF | sed 's#.*/v##')
         PLACEHOLDER='__version__ = "develop"'
-        VERSION_FILE='ml_benchmark/__init__.py'
+        VERSION_FILE='basht/__init__.py'
         sed -i "s/$PLACEHOLDER/__version__ = \"${VERSION}\"/g" "$VERSION_FILE"
         pip install build==0.8.0 twine==4.0.1
         python -m build .
