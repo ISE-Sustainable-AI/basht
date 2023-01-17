@@ -1,26 +1,50 @@
 
 workerCpu: 2
-workerMemory: 2
-workerCount: 4
-trials: 5
-epochs: 5
+workerMemory: 4
+workerCount: 2
+trials: 20
+pruning: 
 metricsIP:  auto ##urlopen("https://checkip.amazonaws.com").read().decode("utf-8").strip(),
 kubernetesMasterIP: minikube ##subprocess.check_output("minikube ip", shell=True).decode("utf-8").strip("\n")
-dockerImageTag: tawalaya/optuna-trial:latest
+dockerImageTag: optuna-trial:latest
 dockerImageBuilder: minikube
 kubernetesNamespace: optuna-study
-kubernetesContext: "minikube"
+kubernetesContext: minikube
+studyName: optuna-study
 deleteAfterRun: True
+workload: # this is given to every trial and thus defines the performed work
+  dl_framework: torch
+  task:
+    loader: mnist
+    preprocessors:
+      - ImageFlattner
+    splitter:
+      type: StandardSplitter
+      config:
+        val_split: 0.2
+        test_split: 0.2
+    batcher:
+      type: StandardBatcher
+      config:
+        train_batch_size: 50
+        val_batch_size: 50
+        test_batch_size: 50
+  model_cls: mlp
+  epochs: 5
+  device: cpu
 hyperparameter:
   learning_rate:
     start: 1e-4
     end: 1e-2
-    step_size: 1e-5
-  weight_decay:
-    start: 1e-6
-    end: 1e-4
-    step_size: 1e-5
-#  hidden_layer_config:
-#    start: [10]
-#    end: [100, 100, 100]
-#    step_size: [10, 1]
+    step_size: 1e-3
+  # weight_decay:
+  #   start: 1e-6
+  #   end: 1e-4
+  #   step_size: 1e-5
+  # hidden_layer_config:
+  #   start: [10]
+  #   end: [100, 100, 100]
+  #   step_size: [10, 1]
+
+
+# TODO: distinguish between Platform and Application definition as well

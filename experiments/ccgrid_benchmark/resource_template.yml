@@ -1,0 +1,38 @@
+kubernetesContext: $kubecontext # kube-user@ise-kube
+kubernetesNamespace: $namespace #might need to switch kubernetes context before
+kubernetesMasterIP: $kubemasterIP # 192.168.49.2
+dockerImageTag: $image_tag
+workerCpu: $workerCpu
+workerMemory: $workerMemory
+dockerImageBuilder: docker
+rayNodePort: 30003
+kubernetesStorageClass: zfs
+workerCount: $workerCount
+metricsIP: $metrics_ip # 130.149.158.237
+prometheus_url: $prometheus_url
+pruning: $pruning
+studyName: optuna-study
+deleteAfterRun: true
+goal: $goal
+trials:
+workload:
+  dl_framework: torch
+  task:
+    loader: mnist
+    preprocessors:
+      - ImageFlattner
+    splitter:
+      type: StandardSplitter
+      config:
+        val_split: 0.2
+        test_split: 0.2
+    batcher:
+      type: StandardBatcher
+      config:
+        train_batch_size: 50
+        val_batch_size: 50
+        test_batch_size: 50
+  model_cls: mlp
+  epochs: 100
+  device: cpu
+hyperparameter: $hyperparameter

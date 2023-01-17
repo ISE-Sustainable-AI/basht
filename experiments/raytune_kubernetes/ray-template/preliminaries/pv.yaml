@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ray-results
+spec:
+  storageClassName: $storageClass
+  resources:
+    requests:
+      storage: 5Gi
+  accessModes:
+    - ReadWriteMany

@@ -1,0 +1,2 @@
+ray[tune]
+kubernetes==24.2.0

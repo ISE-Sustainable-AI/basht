@@ -1,0 +1,9 @@
+{
+    "kubernetesNamespace": "st-hpo",
+    "workerCpu": 2,
+    "workerMemory": 4,
+    "workerCount": 1,
+    "metricsIP": "130.149.158.216",
+    "nfsServer": "130.149.158.216",
+    "nfsPath": "/exports"
+}
