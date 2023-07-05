@@ -39,11 +39,16 @@ For minikube, install the `requirements.txt` in `experiments/optuna_minikube` if
 Before starting the minikube example you need to start your minikube vm with `minikube start`. Then execute `experiments/optuna_minikube/optuna_minikube_benchmark.py`.
 ## Class Explanation
 
+<!-- MARKDOWN-AUTO-DOCS:START (WORKFLOW_ARTIFACT_TABLE) -->
+<!-- MARKDOWN-AUTO-DOCS:END -->
+
 |Class|Description|
 |---|---|
 |MNISTTask|Use it to get the Data for the Model. Please do not change its configuration|
 |MLPObjective|The Job that needs to be executed. Adjustments should not be neccessary.|
 |MLP|The model that is trained over the MNIST Task.|
+
+
 
 
 # Benchmark Methodolegy

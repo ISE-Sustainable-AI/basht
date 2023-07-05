@@ -18,10 +18,21 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Setup graphviz
+      uses: ts-graphviz/setup-graphviz@v1
     - name: Install dependencies
       run: |
         pip install torch==1.11.0 torchvision==0.12.0
+        pip install pylint
         pip install -e .["test"]
+    - name: create documentation
+      run: pyreverse -o png ml_benchmark --output-directory docs
+    - name: class diagram
+      uses: actions/upload-artifact@v3
+      with:
+        name: class-diagram
+        path: ${{ github.workspace }}/docs/classes.png
+        if-no-files-found: warn
     - name: Test Package
       run: |
         pytest --cov=ml_benchmark test/
