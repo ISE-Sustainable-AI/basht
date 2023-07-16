@@ -8,7 +8,7 @@ import torch
 from basht.workload.task import TorchTask
 from basht.workload.task_components import Splitter, Loader, Batcher, Preprocessor, TorchImageFlattner, \
     TorchStandardBatcher, TorchStandardSplitter, MnistLoader, FMnistLoader
-from basht.workload.models import MLP
+from basht.workload.models import MLP, CNN
 from basht.workload.objective_storage import ObjectiveStorage
 
 
