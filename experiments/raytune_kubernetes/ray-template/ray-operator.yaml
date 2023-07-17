@@ -26,9 +26,9 @@ spec:
             - name: AUTOSCALER_MAX_NUM_FAILURES
               value: "inf"
             - name: NODE_NAME
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: spec.nodeName
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           resources:
             requests:
               cpu: 1
